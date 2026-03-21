@@ -381,7 +381,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
       <input type="number" class="form-input" id="sitePrice" placeholder="15000" min="0">
     </div>
     <div class="form-group">
-      <label class="form-label">料金タイブ</label>
+      <label class="form-label">料金タイプ</label>
       <select class="form-select" id="siteRateType">
         <option value="daily">日給</option>
         <option value="hourly">時給</option>
@@ -566,7 +566,7 @@ async function handleSetup(e){
   if(password !== passwordConfirm){showToast('パスワードが一致しません');return}
 
   const btn = e.target.querySelector('button[type="submit"]');
-  if(btn){btn.disabled=true;btn.textContent='処理仭...';}
+  if(btn){btn.disabled=true;btn.textContent='処理中...';}
 
   try {
     const company = await dbInsert('companies', { name: companyName });
