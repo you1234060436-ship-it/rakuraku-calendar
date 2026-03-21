@@ -382,7 +382,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
       <input type="number" class="form-input" id="sitePrice" placeholder="15000" min="0">
     </div>
     <div class="form-group">
-      <label class="form-label">料金タイブ</label>
+      <label class="form-label">料金タイプ</label>
       <select class="form-select" id="siteRateType">
         <option value="daily">日給</option>
         <option value="hourly">時給</option>
@@ -879,7 +879,69 @@ function updSummary(){
 function renderToday(){
   const td = new Date();
   const ds = `${td.getFullYear()}-${String(td.getMonth()+1).padStart(2,'0')}-${String(td.getDate()).padStart(2,'0')}`;
-  let te = entriesmentById('entryModal').classList.add('show');
+  let te = entries.filter(e => e.date === ds);
+  if(userRole === 'worker') te = te.filter(e => e.memberId === currentUserId);
+
+  const c = document.getElementById('todayEntries');
+  if(!te.length){
+    c.innerHTML = `<div class="section-title">今日の記録</div><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">今日の出勤はまだ登録されていません<br>日付をタップして登録しましょう</div></div>`;
+    return;
+  }
+
+  let h = '<div class="section-title">今日の記録</div>';
+  te.forEach(e => {
+    const s = sites.find(x => x.id === e.siteId);
+    if(!s) return;
+    const m = members.find(x => x.id === e.memberId);
+    let priceText = '';
+    if(canSeeRevenue()){
+      priceText = s.price ? (s.rateType === 'hourly' ? '¥' + s.price.toLocaleString() + '/h' + (e.hours ? ' × ' + e.hours + 'h = ¥' + (s.price * e.hours).toLocaleString() : '') : '¥' + s.price.toLocaleString()) : '単価未設定';
+    }
+    let metaText = priceText;
+    if(userRole !== 'worker' && m) metaText += (metaText ? ' · ' : '') + m.name;
+    if(e.memo) metaText += (metaText ? ' · ' : '') + e.memo;
+    h += `<div class="entry-card"><div class="entry-color" style="background:${s.color}"></div><div class="entry-info"><div class="entry-name">${s.name}</div><div class="entry-meta">${metaText}</div></div><button class="entry-del" onclick="delEntry('${ds}',${s.id},${e.memberId||0})">✕</button></div>`;
+  });
+  c.innerHTML = h;
+}
+
+// ===== Entry Modal =====
+function openEntry(ds){
+  selDate = ds;
+  selSiteId = null;
+  selMemberIds = [];
+  const p = ds.split('-');
+  document.getElementById('entryModalTitle').textContent = `${+p[1]}月${+p[2]}日の出勤登録`;
+  document.getElementById('entryMemo').value = '';
+  document.getElementById('saveEntryBtn').disabled = true;
+  document.getElementById('hoursGroup').style.display = 'none';
+  document.getElementById('entryHours').value = '';
+  document.getElementById('dayTypeGroup').style.display = 'none';
+  selectedDayType = 1;
+
+  let h = '';
+  sites.forEach(s => {
+    h += `<div class="site-chip" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (時給)' : ''}</div>`;
+  });
+  if(canManageSites()){
+    h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">＋ 新しい現場</div>`;
+  }
+  document.getElementById('siteChips').innerHTML = h;
+
+  const mg = document.getElementById('memberSelectGroup');
+  if(canSelectMembers()){
+    mg.style.display = '';
+    let mh = '';
+    members.forEach(m => {
+      mh += `<div class="site-chip" onclick="selChip(${m.id},this,'member')" data-id="${m.id}"><span class="chip-dot" style="background:${m.color}"></span>${m.name}</div>`;
+    });
+    document.getElementById('memberChips').innerHTML = mh;
+  } else {
+    mg.style.display = 'none';
+    selMemberIds = [currentUserId];
+  }
+
+  document.getElementById('entryModal').classList.add('show');
 }
 
 function selChip(id, el, type){
@@ -1345,79 +1407,6 @@ function renderSettings(){
     <div class="custom-section">
       <div class="custom-section-title">売上の色</div>
       <div class="custom-colors" id="pickStatMoney"></div>
-    </div>
-    <div class="custom-section">
-      <div class="custom-section-title">プレビュー</div>
-      <div class="live-preview" id="livePreview"></div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:14px">
-      <button onclick="resetCustom()" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;font-size:13px;font-weight:600">リセット</button>
-    </div>
-  </div>
-
-  <button class="logout-btn" onclick="handleLogout()">ログアウト</button>`;
-
-  document.getElementById('settingsContent').innerHTML = html;
-
-  if(userRole === 'master'){
-    renderAccountsList();
-  }
-}
-
-let accountCreateRole = 'submaster';
-let accountPasswordMode = 'manual';
-
-function renderAccountsList(){
-  const listEl = document.getElementById('accountsList');
-  if(!listEl) return;
-
-  let html = '';
-  accounts.filter(a => a.id !== 1).forEach(acc => {
-    const roleBadges = { master: 'マスター', submaster: '職長', worker: '作業員' };
-    let pwDisplay = '●●●●';
-    html += `<div class="account-card">
-      <div class="account-info">
-        <span class="account-role ${acc.role}">${roleBadges[acc.role]}</span>
-        <div class="account-name-team">${acc.name}</div>
-        <div style="font-size:11px;color:var(--text-light)">${acc.team || ''}</div>
-        <div class="account-password-display" id="pwdDisplay_${acc.id}" style="display:none">${acc.password}</div>
-      </div>
-      <div class="account-actions" style="flex-wrap:wrap;justify-content:flex-end">
-        ${acc.role === 'worker' ? `<button class="account-btn promote" onclick="changeRole(${acc.id},'submaster')">職長に昇格</button>` : ''}
-        ${acc.role === 'submaster' ? `<button class="account-btn demote" onclick="changeRole(${acc.id},'worker')">作業員に変更</button>` : ''}
-        <button class="account-btn show" onclick="togglePasswordDisplay(${acc.id})">表示</button>
-        <button class="account-btn copy" onclick="copyPassword(${acc.id})">コピー</button>
-        <button class="account-btn line" onclick="inviteViaLine(${acc.id})">LINE招待</button>
-        <button class="account-btn delete" onclick="deleteAccount(${acc.id})">削除</button>
-      </div>
-    </div>`;
-  });
-
-  listEl.innerHTML = html;
-}
-
-function togglePasswordDisplay(accountId){
-  const display = document.getElementById(`pwdDisplay_${accountId}`);
-  const btn = event.target;
-  if(display.style.display === 'none'){
-    display.style.display = '';
-    btn.textContent = '隠す';
-  } else {
-    display.style.display = 'none';
-    btn.textContent = '表示';
-  }
-}
-
-function copyPassword(accountId){
-  const display = document.getElementById(`pwdDisplay_${accountId}`);
-  const pw = display.textContent;
-  navigator.clipboard.writeText(pw).then(() => {
-    showToast('コピーしました');
-  });
-}
-
-function inviteViaLine(accountId){
-  const acc = accounts.find(a => a.id === accountIdv class="custom-colors" id="pickStatMoney"></div>
     </div>
     <div class="custom-section">
       <div class="custom-section-title">プレビュー</div>
