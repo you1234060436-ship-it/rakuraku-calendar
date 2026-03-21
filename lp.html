@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>楽々カレンダー - 現場の出勤＆売上管理アプリ</title>
+<meta name="description" content="楽々カレンダーは、建設・製造・警備・介護の現場で使える出勤＆売上管理アプリ。カレンダーに記録するだけで、出勤日数も売上も自動集計。無料で使えます。">
+<meta name="keywords" content="出勤管理,売上管理,カレンダーアプリ,建設業,現場管理,勤怠管理,フリーランス">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;color:#1a1a2e;line-height:1.7;overflow-x:hidden}
+.hero{background:linear-gradient(135deg,#0f3460 0%,#16213e 50%,#1a1a2e 100%);color:#fff;padding:80px 20px 60px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(233,196,106,0.08) 0%,transparent 50%);animation:float 20s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-30px)}}
+.hero h1{font-size:clamp(2rem,5vw,3.2rem);margin-bottom:12px;position:relative}
+.hero .accent{color:#e9c46a;font-size:clamp(2.4rem,6vw,4rem);display:block;margin-bottom:8px}
+.hero p{font-size:clamp(1rem,2.5vw,1.3rem);opacity:0.9;max-width:600px;margin:0 auto 30px}
+.cta-btn{display:inline-block;background:#e9c46a;color:#1a1a2e;padding:16px 48px;border-radius:50px;font-size:1.1rem;font-weight:700;text-decoration:none;transition:all 0.3s;box-shadow:0 4px 15px rgba(233,196,106,0.3)}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(233,196,106,0.4)}
+.section{padding:70px 20px;max-width:900px;margin:0 auto}
+.section h2{font-size:clamp(1.5rem,3.5vw,2rem);text-align:center;margin-bottom:40px;color:#0f3460}
+.section h2 span{color:#e76f51;border-bottom:3px solid #e76f51;padding-bottom:4px}
+.problems{background:#f8f9fa}
+.problem-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px}
+.problem-card{background:#fff;border-radius:16px;padding:28px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:4px solid #e76f51}
+.problem-card .emoji{font-size:2rem;margin-bottom:8px;display:block}
+.problem-card h3{font-size:1.1rem;margin-bottom:8px;color:#e76f51}
+.problem-card p{font-size:0.95rem;color:#555}
+.features{background:#fff}
+.feature-list{display:flex;flex-direction:column;gap:32px}
+.feature-item{display:flex;align-items:flex-start;gap:20px;background:#f0f7ff;border-radius:16px;padding:28px}
+.feature-item .num{background:#0f3460;color:#e9c46a;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;flex-shrink:0}
+.feature-item h3{font-size:1.15rem;margin-bottom:6px;color:#0f3460}
+.feature-item p{font-size:0.95rem;color:#555}
+.pricing{background:#f8f9fa}
+.price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px;max-width:800px;margin:0 auto}
+.price-card{background:#fff;border-radius:16px;padding:32px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,0.06);transition:transform 0.3s}
+.price-card:hover{transform:translateY(-4px)}
+.price-card.popular{border:3px solid #e9c46a;position:relative}
+.price-card.popular::after{content:'おすすめ';position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:#e9c46a;color:#1a1a2e;padding:4px 16px;border-radius:20px;font-size:0.8rem;font-weight:700}
+.price-card h3{font-size:1.2rem;margin-bottom:8px;color:#0f3460}
+.price-card .price{font-size:2.5rem;font-weight:700;color:#1a1a2e;margin:12px 0}
+.price-card .price small{font-size:0.9rem;font-weight:400;color:#888}
+.price-card ul{list-style:none;text-align:left;margin:20px 0}
+.price-card ul li{padding:6px 0;font-size:0.95rem;color:#555}
+.price-card ul li::before{content:'✓ ';color:#2a9d8f;font-weight:700}
+.use-cases{background:#fff}
+.case-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px}
+.case-card{text-align:center;padding:28px;background:#f8f9fa;border-radius:16px}
+.case-card .emoji{font-size:2.5rem;margin-bottom:12px;display:block}
+.case-card h3{font-size:1.1rem;margin-bottom:8px;color:#0f3460}
+.case-card p{font-size:0.9rem;color:#555}
+.final-cta{background:linear-gradient(135deg,#0f3460,#16213e);color:#fff;text-align:center;padding:70px 20px}
+.final-cta h2{font-size:clamp(1.5rem,3.5vw,2.2rem);margin-bottom:16px}
+.final-cta p{font-size:1.1rem;opacity:0.9;margin-bottom:30px}
+.links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.links a{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.15);color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600;transition:background 0.3s}
+.links a:hover{background:rgba(255,255,255,0.25)}
+footer{text-align:center;padding:30px 20px;background:#1a1a2e;color:rgba(255,255,255,0.5);font-size:0.85rem}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>
+    <span class="accent">楽々カレンダー</span>
+    現場の出勤＆売上、これ1つで完結。
+  </h1>
+  <p>カレンダーに記録するだけ。出勤日数も売上も自動で集計。建設・製造・警備・介護の現場で使える、一牪シンプルな管理アプリ。</p>
+  <a href="https://you1234060436-ship-it.github.io/rakuraku-calendar/" class="cta-btn">無料で使ってみる</a>
+</div>
+
+<div class="problems section">
+  <h2>こんな<span>困りごと</span>ありませんか？</h2>
+  <div class="problem-grid">
+    <div class="problem-card">
+      <span class="emoji">📝</span>
+      <h3>紙やExcelで出勤管理がバラバラ</h3>
+      <p>現場ごとに紙で記録して、月末にExcelに手入力...ミスも多いし時間もかかる。</p>
+    </div>
+    <div class="problem-card">
+      <span class="emoji">💰</span>
+      <h3>売上がすぐに把握できない</h3>
+      <p>「今月いくら稼いだ？」がパッと分からない。現場ごとの単価計算が面倒。</p>
+    </div>
+    <div class="problem-card">
+      <span class="emoji">😵</span>
+      <h3>既存アプリが難しすぎる</h3>
+      <p>KING OF TIMEやジンジャーは高機能すぎて設定だけで疲れる。もっとシンプルでいい。</p>
+    </div>
+  </div>
+</div>
+
+<div class="features section">
+  <h2>楽々カレンダーなら<span>30秒</span>で解決</h2>
+  <div class="feature-list">
+    <div class="feature-item">
+      <div class="num">1</div>
+      <div>
+        <h3>カレンダーをタップ → 現場名を選ぶ → 終わり</h3>
+        <p>過去に入力した現場名がリストで出るから、タップするだけ。毎日30秒で記録完了。</p>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="num">2</div>
+      <div>
+        <h3>出勤日数と売上が自動で集計される</h3>
+        <p>現場ごとの出勤日数、日当×日数の売上計算、月間合計...全部自動。電卓いらず。</p>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="num">3</div>
+      <div>
+        <h3>スマホでもPCでも同じ画面で使える</h3>
+        <p>現場ではスマホでサッと入力、事務所ではPCで月末集計。データは自動で同期。</p>
+      </div>
+    </div>
+    <div class="feature-item">
+      <div class="num">4</div>
+      <div>
+        <h3>チーム全員の出勤を一括管理（ビジネスプラン）</h3>
+        <p>メンバーの出勤状況を一覧で確認。現場別の人数、売上もまとめて見える。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pricing section">
+  <h2><span>料金</span>プラン</h2>
+  <div class="price-grid">
+    <div class="price-card">
+      <h3>無料プラン</h3>
+      <div class="price">¥0<small>/月</small></div>
+      <ul>
+        <li>カレンダーに現場名を記録</li>
+        <li>過去の現場名をタップで入力</li>
+        <li>現場ごとの出勤日数を自動集計</li>
+        <li>日当の設定・売上自動計算</li>
+        <li>スマホ・PC両対応</li>
+      </ul>
+      <a href="https://you1234060436-ship-it.github.io/rakuraku-calendar/" class="cta-btn" style="background:#0f3460;color:#fff;font-size:0.95rem;padding:12px 32px">今すぐ無料で始める</a>
+    </div>
+    <div class="price-card popular">
+      <h3>ビジネスプラン</h3>
+      <div class="price">¥980<small>/月〜</small></div>
+      <ul>
+        <li>無料プランの全機能</li>
+        <li>メンバーの出勤を一括管理</li>
+        <li>現場別の売上自動集計</li>
+        <li>部署・チーム単位での管理</li>
+        <li>CSVエクスポート機能</li>
+      </ul>
+      <a href="#" class="cta-btn" style="font-size:0.95rem;padding:12px 32px">近日公開</a>
+    </div>
+  </div>
+</div>
+
+<div class="use-cases section">
+  <h2>こんな<span>業種</span>で使われています</h2>
+  <div class="case-grid">
+    <div class="case-card">
+      <span class="emoji">🏗️</span>
+      <h3>建設業</h3>
+      <p>現場が毎日変わっても、タップで選んで記録するだけ。日当計算も自動。</p>
+    </div>
+    <div class="case-card">
+      <span class="emoji">🏭</span>
+      <h3>製造業</h3>
+      <p>ライン・シフトごとの出勤管理に。月末の集計作業が大幅に短縮。</p>
+    </div>
+    <div class="case-card">
+      <span class="emoji">🛡️</span>
+      <h3>警備業</h3>
+      <p>配置先ごとの勤務日数を自動集計。請求書作成の手間が激減。</p>
+    </div>
+    <div class="case-card">
+      <span class="emoji">🏥</span>
+      <h3>介護業</h3>
+      <p>施設・訪問先ごとの勤務を管理。スタッフの稼働状況がひと目で分かる。</p>
+    </div>
+  </div>
+</div>
+
+<div class="final-cta">
+  <h2>今日から、現場の管理をラクにしよう。</h2>
+  <p>アカウント登録不要。開いたらすぐ使えます。</p>
+  <div class="links">
+    <a href="https://you1234060436-ship-it.github.io/rakuraku-calendar/">
+      🏢 ビジネス版を使う
+    </a>
+    <a href="https://you1234060436-ship-it.github.io/rakuraku-calendar/personal.html">
+      👤 個人版を使う
+    </a>
+  </div>
+</div>
+
+<footer>
+  &copy; 2026 楽々カレンダー All Rights Reserved.
+</footer>
+
+</body>
+</html>
