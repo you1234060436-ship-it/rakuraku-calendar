@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>æ¥½ãã«ã¬ã³ãã¼ åäººç</title>
+<title>楽々カレンダー 個人版</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--primary:#4A90D9;--primary-light:#E8F0FE;--accent:#FF6B35;--bg:#F8F9FA;--text:#333;--text-light:#888;--white:#FFF;--border:#E0E0E0;--success:#4CAF50;--shadow:0 2px 8px rgba(0,0,0,0.08);--danger:#E53935}
@@ -213,16 +213,16 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <!-- ===== Setup Screen ===== -->
 <div class="setup-screen" id="setupScreen">
   <div class="setup-card">
-    <div class="setup-logo">æ¥½ãã«ã¬ã³ãã¼</div>
-    <div class="setup-subtitle">åäººç åæè¨­å®</div>
+    <div class="setup-logo">楽々カレンダー</div>
+    <div class="setup-subtitle">個人版 初期設定</div>
     <form onsubmit="handleSetup(event)">
-      <label class="setup-input-label">ããªãã®åå <span style="color:var(--danger)">*</span></label>
-      <input type="text" class="setup-input" id="setupCompanyName" placeholder="ä¾ï¼ç°ä¸­å¤ªé" required>
-      <label class="setup-input-label">ãã¹ã¯ã¼ã <span style="color:var(--danger)">*</span></label>
-      <input type="password" class="setup-input" id="setupPassword" placeholder="4æå­ä»¥ä¸" minlength="4" required>
-      <label class="setup-input-label">ãã¹ã¯ã¼ãï¼ç¢ºèªï¼ <span style="color:var(--danger)">*</span></label>
-      <input type="password" class="setup-input" id="setupPasswordConfirm" placeholder="ããä¸åº¦å¥å" minlength="4" required>
-      <button type="submit" class="setup-btn">ã»ããã¢ããå®äº</button>
+      <label class="setup-input-label">あなたの名前 <span style="color:var(--danger)">*</span></label>
+      <input type="text" class="setup-input" id="setupCompanyName" placeholder="例：田中太郎" required>
+      <label class="setup-input-label">パスワード <span style="color:var(--danger)">*</span></label>
+      <input type="password" class="setup-input" id="setupPassword" placeholder="4文字以上" minlength="4" required>
+      <label class="setup-input-label">パスワード（確認） <span style="color:var(--danger)">*</span></label>
+      <input type="password" class="setup-input" id="setupPasswordConfirm" placeholder="もう一度入力" minlength="4" required>
+      <button type="submit" class="setup-btn">セットアップ完了</button>
     </form>
   </div>
 </div>
@@ -231,11 +231,11 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <div class="login-company-name" id="loginCompanyName"></div>
-    <div class="login-logo">æ¥½ãã«ã¬ã³ãã¼</div>
-    <div class="login-sub">åäººçã¸ã­ã°ã¤ã³</div>
+    <div class="login-logo">楽々カレンダー</div>
+    <div class="login-sub">個人版へログイン</div>
     <form onsubmit="handleLogin(event)">
-      <input type="password" class="login-input" id="loginPassword" placeholder="ãã¹ã¯ã¼ããå¥å" autocomplete="off">
-      <button type="submit" class="login-btn">ã­ã°ã¤ã³</button>
+      <input type="password" class="login-input" id="loginPassword" placeholder="パスワードを入力" autocomplete="off">
+      <button type="submit" class="login-btn">ログイン</button>
     </form>
   </div>
 </div>
@@ -243,31 +243,31 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <!-- ===== Main App ===== -->
 <div class="header" id="mainHeader">
   <div>
-    <h1><span class="role-badge" id="roleBadge"></span>æ¥½ãã«ã¬ã³ãã¼</h1>
-    <div class="header-sub">åºå¤ï¼å£²ä¸ç®¡ç<span style="margin-left:8px" id="accountDisplayName"></span></div>
+    <h1><span class="role-badge" id="roleBadge"></span>楽々カレンダー</h1>
+    <div class="header-sub">出勤＆売上管理<span style="margin-left:8px" id="accountDisplayName"></span></div>
   </div>
-  <div class="plan-badge plan-personal" id="planBadge">åäººç</div>
+  <div class="plan-badge plan-personal" id="planBadge">個人版</div>
 </div>
 
 <div class="main" id="mainContent">
   <!-- Calendar Page -->
   <div id="page-calendar" class="page active">
     <div class="month-nav">
-      <button onclick="changeMonth(-1)">â</button>
+      <button onclick="changeMonth(-1)">◀</button>
       <div class="month-title" id="monthTitle"></div>
-      <button onclick="changeMonth(1)">â¶</button>
+      <button onclick="changeMonth(1)">▶</button>
     </div>
     <div class="calendar-grid">
-      <div class="weekday-row"><span>æ¥</span><span>æ</span><span>ç«</span><span>æ°´</span><span>æ¨</span><span>é</span><span>å</span></div>
+      <div class="weekday-row"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
       <div class="days-grid" id="daysGrid"></div>
     </div>
     <div class="summary-cards">
-      <div class="summary-card" id="cardDays"><div class="summary-label">ä»æã®åºå¤</div><div class="summary-value days" id="totalDays">0<span class="summary-unit">æ¥</span></div></div>
-      <div class="summary-card" id="cardRevenue"><div class="summary-label">ä»æã®å£²ä¸</div><div class="summary-value money" id="totalRevenue">Â¥0</div></div>
+      <div class="summary-card" id="cardDays"><div class="summary-label">今月の出勤</div><div class="summary-value days" id="totalDays">0<span class="summary-unit">日</span></div></div>
+      <div class="summary-card" id="cardRevenue"><div class="summary-label">今月の売上</div><div class="summary-value money" id="totalRevenue">¥0</div></div>
     </div>
     <div class="summary-cards" style="padding-top:0">
-      <div class="summary-card" style="border-left:3px solid var(--primary)"><div class="summary-label">ç´¯è¨åºå¤</div><div class="summary-value days" id="grandTotalDays" style="font-size:18px">0<span class="summary-unit">æ¥</span></div></div>
-      <div class="summary-card" id="cardGrandRevenue" style="border-left:3px solid var(--accent)"><div class="summary-label">ç´¯è¨å£²ä¸</div><div class="summary-value money" id="grandTotalRevenue" style="font-size:18px">Â¥0</div></div>
+      <div class="summary-card" style="border-left:3px solid var(--primary)"><div class="summary-label">累計出勤</div><div class="summary-value days" id="grandTotalDays" style="font-size:18px">0<span class="summary-unit">日</span></div></div>
+      <div class="summary-card" id="cardGrandRevenue" style="border-left:3px solid var(--accent)"><div class="summary-label">累計売上</div><div class="summary-value money" id="grandTotalRevenue" style="font-size:18px">¥0</div></div>
     </div>
     <div class="section-pad" id="todayEntries"></div>
   </div>
@@ -275,43 +275,43 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
   <!-- Stats Page -->
   <div id="page-stats" class="page">
     <div class="month-nav">
-      <button onclick="changeStatMonth(-1)">â</button>
+      <button onclick="changeStatMonth(-1)">◀</button>
       <div class="month-title" id="statMonth"></div>
-      <button onclick="changeStatMonth(1)">â¶</button>
+      <button onclick="changeStatMonth(1)">▶</button>
     </div>
     <div class="stats-overview">
-      <div class="summary-card"><div class="summary-label">åºå¤æ¥æ°</div><div class="summary-value days" id="sDays">0<span class="summary-unit">æ¥</span></div></div>
-      <div class="summary-card" id="statsRevCard"><div class="summary-label">å£²ä¸åè¨</div><div class="summary-value money" id="sRev">Â¥0</div></div>
+      <div class="summary-card"><div class="summary-label">出勤日数</div><div class="summary-value days" id="sDays">0<span class="summary-unit">日</span></div></div>
+      <div class="summary-card" id="statsRevCard"><div class="summary-label">売上合計</div><div class="summary-value money" id="sRev">¥0</div></div>
     </div>
     <div class="stats-overview" style="padding-top:0">
-      <div class="summary-card" style="border-left:3px solid var(--primary)"><div class="summary-label">ç´¯è¨åºå¤ï¼å¨æéï¼</div><div class="summary-value days" id="sGrandDays" style="font-size:18px">0<span class="summary-unit">æ¥</span></div></div>
-      <div class="summary-card" id="statsGrandRevCard" style="border-left:3px solid var(--accent)"><div class="summary-label">ç´¯è¨å£²ä¸ï¼å¨æéï¼</div><div class="summary-value money" id="sGrandRev" style="font-size:18px">Â¥0</div></div>
+      <div class="summary-card" style="border-left:3px solid var(--primary)"><div class="summary-label">累計出勤（全期間）</div><div class="summary-value days" id="sGrandDays" style="font-size:18px">0<span class="summary-unit">日</span></div></div>
+      <div class="summary-card" id="statsGrandRevCard" style="border-left:3px solid var(--accent)"><div class="summary-label">累計売上（全期間）</div><div class="summary-value money" id="sGrandRev" style="font-size:18px">¥0</div></div>
     </div>
     <div class="section-pad">
-      <div class="section-title">æå¥æ¨ç§»</div>
+      <div class="section-title">月別推移</div>
       <div style="background:var(--white);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)">
         <div class="bar-chart" id="barChart"></div>
       </div>
-      <div class="section-title" style="margin-top:14px">ç¾å ´å¥ã®åè¨³</div>
+      <div class="section-title" style="margin-top:14px">現場別の内訳</div>
       <div class="site-stats" id="siteStats"></div>
     </div>
   </div>
 
   <!-- Sites Page -->
   <div id="page-sites" class="page">
-    <div style="padding:14px 14px 6px"><div class="section-title">ç»é²æ¸ã¿ã®ç¾å ´</div></div>
+    <div style="padding:14px 14px 6px"><div class="section-title">登録済みの現場</div></div>
     <div id="sitesContent" style="padding:0 14px 14px"></div>
   </div>
 
   
   <div id="page-report" class="page">
-    <div style="padding:14px 14px 6px"><div class="section-title">ç¾å ´å¥ã¬ãã¼ã</div></div>
+    <div style="padding:14px 14px 6px"><div class="section-title">現場別レポート</div></div>
     <div id="reportContent" style="padding:0 14px 14px"></div>
   </div>
 
   <!-- Settings Page -->
   <div id="page-settings" class="page">
-    <div style="padding:14px 14px 6px"><div class="section-title">è¨­å®</div></div>
+    <div style="padding:14px 14px 6px"><div class="section-title">設定</div></div>
     <div id="settingsContent" style="padding:0 14px 14px">
       <!-- Account Management Section (Master only) -->
       <div id="accountManagementSection"></div>
@@ -320,12 +320,12 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 
       <!-- Logout Button -->
           <div style="background:linear-gradient(135deg, #4A90D9 0%, #2E7D52 100%);border-radius:12px;padding:16px;margin-bottom:16px;color:#fff">
-      <div style="font-weight:700;margin-bottom:8px">ãã¼ã ã§ä½¿ããªã</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:4px">æ¥½ãã«ã¬ã³ãã¼ ãã¸ãã¹ç</div>
-      <div style="font-size:12px;opacity:0.9;margin-bottom:12px">ã¡ã³ãã¼ç®¡çã»è¤æ°ã¢ã«ã¦ã³ãã»ã¬ãã¼ãæ©è½</div>
-      <div style="font-size:12px;font-weight:600">14æ¥éç¡æãã©ã¤ã¢ã« â</div>
+      <div style="font-weight:700;margin-bottom:8px">チームで使うなら</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">楽々カレンダー ビジネス版</div>
+      <div style="font-size:12px;opacity:0.9;margin-bottom:12px">メンバー管理・複数アカウント・レポート機能</div>
+      <div style="font-size:12px;font-weight:600">14日間無料トライアル →</div>
     </div>
-    <button class="logout-btn" onclick="handleLogout()">ã­ã°ã¢ã¦ã</button>
+    <button class="logout-btn" onclick="handleLogout()">ログアウト</button>
     </div>
   </div>
 </div>
@@ -336,84 +336,84 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <div class="modal-overlay" id="entryModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="entryModalTitle">åºå¤ç»é²</div>
-      <button class="modal-close" onclick="closeM('entryModal')">â</button>
+      <div class="modal-title" id="entryModalTitle">出勤登録</div>
+      <button class="modal-close" onclick="closeM('entryModal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">ç¾å ´ãé¸æ</label>
+      <label class="form-label">現場を選択</label>
       <div class="site-chips" id="siteChips"></div>
     </div>
     <div class="form-group" id="memberSelectGroup" style="display:none">
-      <label class="form-label">ã¡ã³ãã¼ãé¸æ <button type="button" style="float:right;padding:2px 8px;font-size:11px;background:var(--primary-light);color:var(--primary);border:none;border-radius:4px;cursor:pointer" onclick="selectAllMembers()">å¨å¡é¸æ</button></label>
+      <label class="form-label">メンバーを選択 <button type="button" style="float:right;padding:2px 8px;font-size:11px;background:var(--primary-light);color:var(--primary);border:none;border-radius:4px;cursor:pointer" onclick="selectAllMembers()">全員選択</button></label>
       <div class="site-chips" id="memberChips"></div>
     </div>
     <div class="form-group" id="hoursGroup" style="display:none">
-      <label class="form-label">å¤åæé</label>
+      <label class="form-label">勤務時間</label>
       <input type="number" class="form-input" id="entryHours" placeholder="0.5" step="0.5" min="0">
     </div>
     <div class="form-group" id="dayTypeGroup" style="display:none">
-      <label class="form-label">å¤ååºå</label>
+      <label class="form-label">勤務区分</label>
       <div style="display:flex;gap:10px">
-        <button type="button" class="day-type-btn selected" id="dayType1" onclick="selectDayType(1)" style="flex:1;padding:12px;border:2px solid var(--primary);border-radius:8px;background:var(--primary);color:#fff;font-size:15px;font-weight:700;cursor:pointer">1æ¥</button>
-        <button type="button" class="day-type-btn" id="dayTypeHalf" onclick="selectDayType(0.5)" style="flex:1;padding:12px;border:2px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:15px;font-weight:700;cursor:pointer">åæ¥</button>
+        <button type="button" class="day-type-btn selected" id="dayType1" onclick="selectDayType(1)" style="flex:1;padding:12px;border:2px solid var(--primary);border-radius:8px;background:var(--primary);color:#fff;font-size:15px;font-weight:700;cursor:pointer">1日</button>
+        <button type="button" class="day-type-btn" id="dayTypeHalf" onclick="selectDayType(0.5)" style="flex:1;padding:12px;border:2px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:15px;font-weight:700;cursor:pointer">半日</button>
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label">ã¡ã¢ï¼ãªãã·ã§ã³ï¼</label>
-      <input type="text" class="form-input" id="entryMemo" placeholder="ç¹è¨äºé ãªã©">
+      <label class="form-label">メモ（オプション）</label>
+      <input type="text" class="form-input" id="entryMemo" placeholder="特記事項など">
     </div>
-    <button class="add-btn" id="saveEntryBtn" onclick="saveEntry()" disabled>ç»é²ãã</button>
+    <button class="add-btn" id="saveEntryBtn" onclick="saveEntry()" disabled>登録する</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="siteModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="siteModalTitle">ç¾å ´ãè¿½å </div>
-      <button class="modal-close" onclick="closeM('siteModal')">â</button>
+      <div class="modal-title" id="siteModalTitle">現場を追加</div>
+      <button class="modal-close" onclick="closeM('siteModal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">ç¾å ´å</label>
-      <input type="text" class="form-input" id="siteName" placeholder="ä¾ï¼â¯â¯ãã«ãã£ã³ã°">
+      <label class="form-label">現場名</label>
+      <input type="text" class="form-input" id="siteName" placeholder="例：◯◯ビルディング">
     </div>
     <div class="form-group">
-      <label class="form-label">åä¾¡</label>
+      <label class="form-label">単価</label>
       <input type="number" class="form-input" id="sitePrice" placeholder="15000" min="0">
     </div>
     <div class="form-group">
-      <label class="form-label">æéã¿ã¤ã</label>
+      <label class="form-label">料金タイブ</label>
       <select class="form-select" id="siteRateType">
-        <option value="daily">æ¥çµ¦</option>
-        <option value="hourly">æçµ¦</option>
+        <option value="daily">日給</option>
+        <option value="hourly">時給</option>
       </select>
     </div>
     <div class="form-group">
-      <label class="form-label">è²ãé¸æ</label>
+      <label class="form-label">色を選択</label>
       <div class="custom-colors" id="siteColorPicker"></div>
     </div>
     <div class="form-group">
-      <label class="form-label">ã¡ã¢ï¼ãªãã·ã§ã³ï¼</label>
-      <input type="text" class="form-input" id="siteMemo" placeholder="åèãªã©">
+      <label class="form-label">メモ（オプション）</label>
+      <input type="text" class="form-input" id="siteMemo" placeholder="備考など">
     </div>
-    <button class="add-btn" id="saveSiteBtn" onclick="saveSite()">ç¾å ´ãç»é²</button>
+    <button class="add-btn" id="saveSiteBtn" onclick="saveSite()">現場を登録</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="memberModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">ã¡ã³ãã¼ãè¿½å </div>
-      <button class="modal-close" onclick="closeM('memberModal')">â</button>
+      <div class="modal-title">メンバーを追加</div>
+      <button class="modal-close" onclick="closeM('memberModal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">ã¡ã³ãã¼å</label>
-      <input type="text" class="form-input" id="mmName" placeholder="ä¾ï¼ç°ä¸­å¤ªé">
+      <label class="form-label">メンバー名</label>
+      <input type="text" class="form-input" id="mmName" placeholder="例：田中太郎">
     </div>
     <div class="form-group">
-      <label class="form-label">é¨ç½²ã»ãã¼ã </label>
-      <input type="text" class="form-input" id="mmTeam" placeholder="ä¾ï¼Aç­">
+      <label class="form-label">部署・チーム</label>
+      <input type="text" class="form-input" id="mmTeam" placeholder="例：A班">
     </div>
-    <button class="add-btn" onclick="saveMember()">ã¡ã³ãã¼ãè¿½å </button>
+    <button class="add-btn" onclick="saveMember()">メンバーを追加</button>
   </div>
 </div>
 
@@ -487,7 +487,7 @@ let currentUserId = null;
 let userRole = null;
 let sites = [];
 let entries = [];
-let members = []; // åäººçã§ã¯ä½¿ç¨ããªã
+let members = []; // 個人版では使用しない
 let custom = {};
 let cY = new Date().getFullYear();
 let cM = new Date().getMonth();
@@ -561,24 +561,24 @@ async function handleSetup(e){
   const password = document.getElementById('setupPassword').value;
   const passwordConfirm = document.getElementById('setupPasswordConfirm').value;
 
-  if(!companyName){showToast('ä¼ç¤¾åãå¥åãã¦ãã ãã');return}
-  if(password.length < 4){showToast('ãã¹ã¯ã¼ãã¯4æå­ä»¥ä¸ã§å¥åãã¦ãã ãã');return}
-  if(password !== passwordConfirm){showToast('ãã¹ã¯ã¼ããä¸è´ãã¾ãã');return}
+  if(!companyName){showToast('会社名を入力してください');return}
+  if(password.length < 4){showToast('パスワードは4文字以上で入力してください');return}
+  if(password !== passwordConfirm){showToast('パスワードが一致しません');return}
 
   const btn = e.target.querySelector('button[type="submit"]');
-  if(btn){btn.disabled=true;btn.textContent='å¦çä¸­...';}
+  if(btn){btn.disabled=true;btn.textContent='処理中...';}
 
   try {
     const company = await dbInsert('companies', { name: companyName });
-    if(!company) throw new Error('ä¼ç¤¾ä½æå¤±æ');
+    if(!company) throw new Error('会社作成失敗');
     companyId = company.id;
     saveSession('company_id', companyId);
 
-    const acc = await dbInsert('accounts', { company_id: companyId, password, role: 'master', name: 'ç®¡çè', team: 'çµå¶' });
-    await dbInsert('team_members', { company_id: companyId, account_id: acc.id, name: 'ç®¡çè', team: 'çµå¶', color: AVATARS[0] });
+    const acc = await dbInsert('accounts', { company_id: companyId, password, role: 'master', name: '管理者', team: '経営' });
+    await dbInsert('team_members', { company_id: companyId, account_id: acc.id, name: '管理者', team: '経営', color: AVATARS[0] });
     await dbInsertMany('work_sites', [
-      { company_id: companyId, name: 'ãµã³ãã«ç¾å ´A', price: 15000, rate_type: 'daily', color: '#4A90D9', memo: '' },
-      { company_id: companyId, name: 'ãµã³ãã«ç¾å ´B', price: 1500, rate_type: 'hourly', color: '#FF6B35', memo: '' }
+      { company_id: companyId, name: 'サンプル現場A', price: 15000, rate_type: 'daily', color: '#4A90D9', memo: '' },
+      { company_id: companyId, name: 'サンプル現場B', price: 1500, rate_type: 'hourly', color: '#FF6B35', memo: '' }
     ]);
     custom = Object.assign({}, DEFAULT_CUSTOM);
     await dbUpsertSettings(companyId, custom);
@@ -594,22 +594,22 @@ async function handleSetup(e){
     buildTabs();
   } catch(err) {
     console.error('Setup error:', err);
-    showToast('ã¨ã©ã¼: ' + (err.message||err));
-    if(btn){btn.disabled=false;btn.textContent='ã»ããã¢ããå®äº';}
+    showToast('エラー: ' + (err.message||err));
+    if(btn){btn.disabled=false;btn.textContent='セットアップ完了';}
   }
 }
 
 async function handleLogin(e){
   e.preventDefault();
   const password = document.getElementById('loginPassword').value;
-  if(!password){showToast('ãã¹ã¯ã¼ããå¥åãã¦ãã ãã');return}
+  if(!password){showToast('パスワードを入力してください');return}
 
   const btn = e.target.querySelector('button[type="submit"]');
   if(btn) btn.disabled=true;
 
   try {
     const accs = await dbLoad('accounts', { company_id: companyId, password: password });
-    if(!accs.length){ showToast('ãã¹ã¯ã¼ããæ­£ããããã¾ãã'); if(btn) btn.disabled=false; return; }
+    if(!accs.length){ showToast('パスワードが正しくありません'); if(btn) btn.disabled=false; return; }
     currentAccount = accs[0];
     currentUserId = accs[0].id;
     userRole = accs[0].role;
@@ -621,7 +621,7 @@ async function handleLogin(e){
     renderCalendar();
     buildTabs();
   } catch(err) {
-    showToast('ã¨ã©ã¼: ' + (err.message||err));
+    showToast('エラー: ' + (err.message||err));
     if(btn) btn.disabled=false;
   }
 }
@@ -632,7 +632,7 @@ function handleLogout(){
   currentUserId = null;
   userRole = null;
   showScreen('login');
-  showToast('ã­ã°ã¢ã¦ããã¾ãã');
+  showToast('ログアウトしました');
 }
 
 function showScreen(screen){
@@ -650,12 +650,11 @@ function init(){
 }
 
 function updateRoleBadge(){
-  const badge = document.getElementById("roleBadge");
-  if(!badge) return;
+  const badge = document.getElementById('roleBadge');
   const badges = {
-    master: { text: '\u30DE\u30B9\u30BF\u30FC', cls: 'master' },
-    submaster: { text: 'è·é·', cls: 'submaster' },
-    worker: { text: 'ä½æ¥­å¡', cls: 'worker' }
+    master: { text: 'マスター', cls: 'master' },
+    submaster: { text: '職長', cls: 'submaster' },
+    worker: { text: '作業員', cls: 'worker' }
   };
   const b = badges[userRole];
   if(b){
@@ -707,10 +706,10 @@ window.addEventListener('DOMContentLoaded', async ()=>{
 // ===== Tabs =====
 function buildTabs(){
   let tabDefs = [
-    { id: 'calendar', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', label: 'ã«ã¬ã³ãã¼' },
-    { id: 'stats', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="12" width="4" height="8"/><rect x="10" y="8" width="4" height="12"/><rect x="16" y="4" width="4" height="16"/></svg>', label: 'éè¨' },
-    { id: 'sites', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>', label: 'ç¾å ´' },
-    { id: 'settings', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>', label: 'è¨­å®' }
+    { id: 'calendar', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', label: 'カレンダー' },
+    { id: 'stats', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="12" width="4" height="8"/><rect x="10" y="8" width="4" height="12"/><rect x="16" y="4" width="4" height="16"/></svg>', label: '集計' },
+    { id: 'sites', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>', label: '現場' },
+    { id: 'settings', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>', label: '設定' }
   ];
 
   document.getElementById('tabBar').innerHTML = tabDefs.map((t, i) => `<button class="tab-item${i === 0 ? ' active' : ''}" onclick="switchTab('${t.id}',this)">${t.icon}${t.label}</button>`).join('');
@@ -729,7 +728,7 @@ function switchTab(id, el){
 
 // ===== Calendar =====
 function renderCalendar(){
-  document.getElementById('monthTitle').textContent = `${cY}å¹´${cM+1}æ`;
+  document.getElementById('monthTitle').textContent = `${cY}年${cM+1}月`;
   const fd = new Date(cY, cM, 1).getDay();
   const dim = new Date(cY, cM+1, 0).getDate();
   const pDim = new Date(cY, cM, 0).getDate();
@@ -814,15 +813,15 @@ function updSummary(){
   let rev = 0;
   me.forEach(e => { rev += calcRev(e, sites.find(x => x.id === e.siteId)); });
   const meDays = sumDays(me);
-  document.getElementById('totalDays').innerHTML = `${meDays}<span class="summary-unit">æ¥</span>`;
+  document.getElementById('totalDays').innerHTML = `${meDays}<span class="summary-unit">日</span>`;
 
   if(userRole === 'worker'){
-    document.getElementById('cardDays').innerHTML = '<div class="summary-label">èªåã®åºå¤</div><div class="summary-value days">' + meDays + '<span class="summary-unit">æ¥</span></div>';
+    document.getElementById('cardDays').innerHTML = '<div class="summary-label">自分の出勤</div><div class="summary-value days">' + meDays + '<span class="summary-unit">日</span></div>';
   }
 
   const revCard = document.getElementById('cardRevenue');
   if(canSeeRevenue()){
-    document.getElementById('totalRevenue').textContent = `Â¥${rev.toLocaleString()}`;
+    document.getElementById('totalRevenue').textContent = `¥${rev.toLocaleString()}`;
     revCard.style.display = '';
   } else {
     revCard.style.display = 'none';
@@ -832,11 +831,11 @@ function updSummary(){
   if(userRole === 'worker') allE = allE.filter(e => e.memberId === currentUserId);
   let gRev = 0;
   allE.forEach(e => { gRev += calcRev(e, sites.find(x => x.id === e.siteId)); });
-  document.getElementById('grandTotalDays').innerHTML = `${sumDays(allE)}<span class="summary-unit">æ¥</span>`;
+  document.getElementById('grandTotalDays').innerHTML = `${sumDays(allE)}<span class="summary-unit">日</span>`;
 
   const gRevCard = document.getElementById('cardGrandRevenue');
   if(canSeeRevenue()){
-    document.getElementById('grandTotalRevenue').textContent = `Â¥${gRev.toLocaleString()}`;
+    document.getElementById('grandTotalRevenue').textContent = `¥${gRev.toLocaleString()}`;
     gRevCard.style.display = '';
   } else {
     gRevCard.style.display = 'none';
@@ -851,23 +850,23 @@ function renderToday(){
 
   const c = document.getElementById('todayEntries');
   if(!te.length){
-    c.innerHTML = `<div class="section-title">ä»æ¥ã®è¨é²</div><div class="empty"><div class="empty-icon">ð</div><div class="empty-text">ä»æ¥ã®åºå¤ã¯ã¾ã ç»é²ããã¦ãã¾ãã<br>æ¥ä»ãã¿ãããã¦ç»é²ãã¾ããã</div></div>`;
+    c.innerHTML = `<div class="section-title">今日の記録</div><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">今日の出勤はまだ登録されていません<br>日付をタップして登録しましょう</div></div>`;
     return;
   }
 
-  let h = '<div class="section-title">ä»æ¥ã®è¨é²</div>';
+  let h = '<div class="section-title">今日の記録</div>';
   te.forEach(e => {
     const s = sites.find(x => x.id === e.siteId);
     if(!s) return;
     const m = members.find(x => x.id === e.memberId);
     let priceText = '';
     if(canSeeRevenue()){
-      priceText = s.price ? (s.rateType === 'hourly' ? 'Â¥' + s.price.toLocaleString() + '/h' + (e.hours ? ' Ã ' + e.hours + 'h = Â¥' + (s.price * e.hours).toLocaleString() : '') : 'Â¥' + s.price.toLocaleString()) : 'åä¾¡æªè¨­å®';
+      priceText = s.price ? (s.rateType === 'hourly' ? '¥' + s.price.toLocaleString() + '/h' + (e.hours ? ' × ' + e.hours + 'h = ¥' + (s.price * e.hours).toLocaleString() : '') : '¥' + s.price.toLocaleString()) : '単価未設定';
     }
     let metaText = priceText;
-    if(userRole !== 'worker' && m) metaText += (metaText ? ' Â· ' : '') + m.name;
-    if(e.memo) metaText += (metaText ? ' Â· ' : '') + e.memo;
-    h += `<div class="entry-card"><div class="entry-color" style="background:${s.color}"></div><div class="entry-info"><div class="entry-name">${s.name}</div><div class="entry-meta">${metaText}</div></div><button class="entry-del" onclick="delEntry('${ds}',${s.id},${e.memberId||0})">â</button></div>`;
+    if(userRole !== 'worker' && m) metaText += (metaText ? ' · ' : '') + m.name;
+    if(e.memo) metaText += (metaText ? ' · ' : '') + e.memo;
+    h += `<div class="entry-card"><div class="entry-color" style="background:${s.color}"></div><div class="entry-info"><div class="entry-name">${s.name}</div><div class="entry-meta">${metaText}</div></div><button class="entry-del" onclick="delEntry('${ds}',${s.id},${e.memberId||0})">✕</button></div>`;
   });
   c.innerHTML = h;
 }
@@ -878,7 +877,7 @@ function openEntry(ds){
   selSiteId = null;
   selMemberIds = [];
   const p = ds.split('-');
-  document.getElementById('entryModalTitle').textContent = `${+p[1]}æ${+p[2]}æ¥ã®åºå¤ç»é²`;
+  document.getElementById('entryModalTitle').textContent = `${+p[1]}月${+p[2]}日の出勤登録`;
   document.getElementById('entryMemo').value = '';
   document.getElementById('saveEntryBtn').disabled = true;
   document.getElementById('hoursGroup').style.display = 'none';
@@ -888,10 +887,10 @@ function openEntry(ds){
 
   let h = '';
   sites.forEach(s => {
-    h += `<div class="site-chip" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (æçµ¦)' : ''}</div>`;
+    h += `<div class="site-chip" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (時給)' : ''}</div>`;
   });
   if(canManageSites()){
-    h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">ï¼ æ°ããç¾å ´</div>`;
+    h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">＋ 新しい現場</div>`;
   }
   document.getElementById('siteChips').innerHTML = h;
 
@@ -942,7 +941,7 @@ function selectAllMembers(){
     if(id) c.classList.add('selected');
   });
   updateEntryBtn();
-  showToast('å¨å¡é¸æãã¾ãã');
+  showToast('全員選択しました');
 }
 
 function updateEntryBtn(){
@@ -953,9 +952,9 @@ function updateEntryBtn(){
   document.getElementById('saveEntryBtn').disabled = !(selSiteId && needMember && hoursOk);
   const btn = document.getElementById('saveEntryBtn');
   if(selSiteId && needMember && !hoursOk){
-    btn.textContent = 'å¤åæéãå¥åãã¦ãã ãã';
+    btn.textContent = '勤務時間を入力してください';
   } else {
-    btn.textContent = 'ç»é²ãã';
+    btn.textContent = '登録する';
   }
 }
 
@@ -967,7 +966,7 @@ async function saveEntry(){
 
   const site = sites.find(x => x.id === selSiteId);
   if(site && site.rateType === 'hourly' && !parseFloat(document.getElementById('entryHours').value)){
-    showToast('å¤åæéãå¥åãã¦ãã ãã');
+    showToast('勤務時間を入力してください');
     return;
   }
 
@@ -986,8 +985,8 @@ async function saveEntry(){
   }
   closeM('entryModal');
   renderCalendar();
-  if(skipped > 0) showToast(`${added}ä»¶ç»é²ï¼${skipped}ä»¶ã¯ç»é²æ¸ã¿ï¼`);
-  else showToast(`${added}åã®åºå¤ãç»é²ãã¾ãã`);
+  if(skipped > 0) showToast(`${added}件登録（${skipped}件は登録済み）`);
+  else showToast(`${added}名の出勤を登録しました`);
 }
 
 async function delEntry(ds, sid, mid){
@@ -995,22 +994,22 @@ async function delEntry(ds, sid, mid){
   if(target && target.id) await dbDelete('attendance_entries', target.id);
   entries = entries.filter(e => !(e.date === ds && e.siteId === sid && e.memberId === mid));
   renderCalendar();
-  showToast('åé¤ãã¾ãã');
+  showToast('削除しました');
 }
 
 // ===== Stats Page =====
 function renderStats(){
-  document.getElementById('statMonth').textContent = `${statY}å¹´${statM+1}æ`;
+  document.getElementById('statMonth').textContent = `${statY}年${statM+1}月`;
   const ms = `${statY}-${String(statM+1).padStart(2,'0')}`;
   const me = entries.filter(e => e.date.startsWith(ms));
 
   let rev = 0;
   me.forEach(e => { rev += calcRev(e, sites.find(x => x.id === e.siteId)); });
-  document.getElementById('sDays').innerHTML = `${sumDays(me)}<span class="summary-unit">æ¥</span>`;
+  document.getElementById('sDays').innerHTML = `${sumDays(me)}<span class="summary-unit">日</span>`;
 
   const revCard = document.getElementById('statsRevCard');
   if(canSeeRevenue()){
-    document.getElementById('sRev').textContent = `Â¥${rev.toLocaleString()}`;
+    document.getElementById('sRev').textContent = `¥${rev.toLocaleString()}`;
     revCard.style.display = '';
   } else {
     revCard.style.display = 'none';
@@ -1019,11 +1018,11 @@ function renderStats(){
   let allE = entries;
   let gRev = 0;
   allE.forEach(e => { gRev += calcRev(e, sites.find(x => x.id === e.siteId)); });
-  document.getElementById('sGrandDays').innerHTML = `${sumDays(allE)}<span class="summary-unit">æ¥</span>`;
+  document.getElementById('sGrandDays').innerHTML = `${sumDays(allE)}<span class="summary-unit">日</span>`;
 
   const gRevCard = document.getElementById('statsGrandRevCard');
   if(canSeeRevenue()){
-    document.getElementById('sGrandRev').textContent = `Â¥${gRev.toLocaleString()}`;
+    document.getElementById('sGrandRev').textContent = `¥${gRev.toLocaleString()}`;
     gRevCard.style.display = '';
   } else {
     gRevCard.style.display = 'none';
@@ -1038,7 +1037,7 @@ function renderStats(){
     const me = entries.filter(e => e.date.startsWith(ms));
     let rev = 0;
     me.forEach(e => { rev += calcRev(e, sites.find(x => x.id === e.siteId)); });
-    barData.unshift({ month: `${m+1}æ`, days: sumDays(me), rev });
+    barData.unshift({ month: `${m+1}月`, days: sumDays(me), rev });
   }
 
   const maxDays = Math.max(...barData.map(d => d.days), 1);
@@ -1065,11 +1064,11 @@ function renderStats(){
   siteData.forEach(s => {
     let revText = '';
     if(canSeeRevenue()){
-      revText = `<div class="site-stat-amount">Â¥${s.rev.toLocaleString()}</div>`;
+      revText = `<div class="site-stat-amount">¥${s.rev.toLocaleString()}</div>`;
     }
-    siteHtml += `<div class="site-stat-card"><div class="site-stat-name">${s.name}</div><div class="site-stat-days">${s.days}æ¥</div>${revText}</div>`;
+    siteHtml += `<div class="site-stat-card"><div class="site-stat-name">${s.name}</div><div class="site-stat-days">${s.days}日</div>${revText}</div>`;
   });
-  document.getElementById('siteStats').innerHTML = siteHtml || '<div class="empty"><div class="empty-text">ãã®Month ã®è¨é²ãããã¾ãã</div></div>';
+  document.getElementById('siteStats').innerHTML = siteHtml || '<div class="empty"><div class="empty-text">このMonth の記録がありません</div></div>';
 }
 
 function changeStatMonth(d){
@@ -1082,33 +1081,33 @@ function changeStatMonth(d){
 // ===== Sites Page =====
 function renderSites(){
   if(!canManageSites()){
-    document.getElementById('sitesContent').innerHTML = '<div class="empty"><div class="empty-text">ç¾å ´ç®¡çã¯è·é·ä»¥ä¸ã®ã¿ä½¿ç¨ã§ãã¾ã</div></div>';
+    document.getElementById('sitesContent').innerHTML = '<div class="empty"><div class="empty-text">現場管理は職長以上のみ使用できます</div></div>';
     return;
   }
 
   let h = '';
   sites.forEach(s => {
-    const siteStr = s.rateType === 'hourly' ? `Â¥${s.price}/æé` : `Â¥${s.price}`;
+    const siteStr = s.rateType === 'hourly' ? `¥${s.price}/時間` : `¥${s.price}`;
     h += `<div class="site-card">
       <div class="site-left">
         <div class="site-color" style="background:${s.color}"></div>
         <div class="site-info">
           <div class="site-name">${s.name}</div>
-          <div class="site-meta">${siteStr}${s.memo ? ' Â· ' + s.memo : ''}</div>
+          <div class="site-meta">${siteStr}${s.memo ? ' · ' + s.memo : ''}</div>
         </div>
       </div>
       <div class="site-actions">
-        <button onclick="editSite(${s.id})">ç·¨é</button>
-        <button onclick="deleteSite(${s.id})" style="color:var(--danger);background:var(--danger)'+'22'">åé¤</button>
+        <button onclick="editSite(${s.id})">編集</button>
+        <button onclick="deleteSite(${s.id})" style="color:var(--danger);background:var(--danger)'+'22'">削除</button>
       </div>
     </div>`;
   });
-  h += `<button class="add-btn" onclick="openNewSite()" style="margin-top:14px">ï¼ ç¾å ´ãè¿½å </button>`;
+  h += `<button class="add-btn" onclick="openNewSite()" style="margin-top:14px">＋ 現場を追加</button>`;
   document.getElementById('sitesContent').innerHTML = h;
 }
 
 function openNewSite(){
-  document.getElementById('siteModalTitle').textContent = 'ç¾å ´ãè¿½å ';
+  document.getElementById('siteModalTitle').textContent = '現場を追加';
   document.getElementById('siteName').value = '';
   document.getElementById('sitePrice').value = '';
   document.getElementById('siteRateType').value = 'daily';
@@ -1121,13 +1120,13 @@ function openNewSite(){
 function editSite(siteId){
   const site = sites.find(s => s.id === siteId);
   if(!site) return;
-  document.getElementById('siteModalTitle').textContent = 'ç¾å ´ãç·¨é';
+  document.getElementById('siteModalTitle').textContent = '現場を編集';
   document.getElementById('siteName').value = site.name;
   document.getElementById('sitePrice').value = site.price;
   document.getElementById('siteRateType').value = site.rateType;
   document.getElementById('siteMemo').value = site.memo;
   siteColorSelection = site.color;
-  document.getElementById('saveSiteBtn').textContent = 'ç¾å ´ãæ´æ°';
+  document.getElementById('saveSiteBtn').textContent = '現場を更新';
   document.getElementById('saveSiteBtn').onclick = () => updateSite(siteId);
   renderSiteColorPicker();
   document.getElementById('siteModal').classList.add('show');
@@ -1138,15 +1137,15 @@ function renderSiteColorPicker(){
   picker.innerHTML = PALETTE.map(c => {
     const isActive = c === siteColorSelection;
     return `<div class="cc${isActive ? ' active' : ''}" style="background:${c};${c === '#FFFFFF' || c === '#F8F9FA' ? 'border:2px solid #CCC;' : ''}" onclick="siteColorSelection='${c}';renderSiteColorPicker()">
-      ${isActive ? 'â' : ''}
+      ${isActive ? '✓' : ''}
     </div>`;
   }).join('');
 }
 
 async function saveSite(){
-  if(sites.length >= 3){ showToast('åäººçã§ã¯ç¾å ´ã¯3ã¤ã¾ã§ã§ã'); return; }
+  if(sites.length >= 3){ showToast('個人版では現場は3つまでです'); return; }
   const name = document.getElementById('siteName').value.trim();
-  if(!name){ showToast('ç¾å ´åãå¥åãã¦ãã ãã'); return; }
+  if(!name){ showToast('現場名を入力してください'); return; }
   const price = parseFloat(document.getElementById('sitePrice').value) || 0;
   const rateType = document.getElementById('siteRateType').value;
   const memo = document.getElementById('siteMemo').value;
@@ -1155,12 +1154,12 @@ async function saveSite(){
   if(row) sites.push({ id: row.id, name, price, rateType, color: siteColorSelection, memo });
   closeM('siteModal');
   renderSites();
-  showToast('ç¾å ´ãè¿½å ãã¾ãã');
+  showToast('現場を追加しました');
 }
 
 async function updateSite(siteId){
   const name = document.getElementById('siteName').value.trim();
-  if(!name){ showToast('ç¾å ´åãå¥åãã¦ãã ãã'); return; }
+  if(!name){ showToast('現場名を入力してください'); return; }
   const price = parseFloat(document.getElementById('sitePrice').value) || 0;
   const rateType = document.getElementById('siteRateType').value;
   const memo = document.getElementById('siteMemo').value;
@@ -1170,17 +1169,17 @@ async function updateSite(siteId){
   if(site){ site.name=name; site.price=price; site.rateType=rateType; site.color=siteColorSelection; site.memo=memo; }
   closeM('siteModal');
   renderSites();
-  document.getElementById('saveSiteBtn').textContent = 'ç¾å ´ãç»é²';
+  document.getElementById('saveSiteBtn').textContent = '現場を登録';
   document.getElementById('saveSiteBtn').onclick = saveSite;
-  showToast('ç¾å ´ãæ´æ°ãã¾ãã');
+  showToast('現場を更新しました');
 }
 
 async function deleteSite(siteId){
-  if(!confirm('ãã®ç¾å ´ãåé¤ãã¾ããï¼')) return;
+  if(!confirm('この現場を削除しますか？')) return;
   await dbDelete('work_sites', siteId);
   sites = sites.filter(s => s.id !== siteId);
   renderSites();
-  showToast('åé¤ãã¾ãã');
+  showToast('削除しました');
 }
 
 // ===== Members Page =====
@@ -1198,7 +1197,7 @@ function renderMembers(){
       const me = entries.filter(e => e.date.startsWith(ms) && e.memberId === m.id);
       let rev = 0;
       me.forEach(e => { rev += calcRev(e, sites.find(x => x.id === e.siteId)); });
-      const revDisplay = canSeeRevenue() ? `<div class="member-revenue">Â¥${rev.toLocaleString()}</div>` : '';
+      const revDisplay = canSeeRevenue() ? `<div class="member-revenue">¥${rev.toLocaleString()}</div>` : '';
       h += `<div class="member-card">
         <div class="member-avatar" style="background:${m.color}">${m.name[0]}</div>
         <div class="member-info">
@@ -1206,7 +1205,7 @@ function renderMembers(){
           <div class="member-detail">${m.team}</div>
         </div>
         <div class="member-stats">
-          <div class="member-days">${sumDays(me)}æ¥</div>
+          <div class="member-days">${sumDays(me)}日</div>
           ${revDisplay}
         </div>
       </div>`;
@@ -1215,21 +1214,21 @@ function renderMembers(){
   });
 
   if(canManageSites()){
-    h += `<button class="add-btn" onclick="document.getElementById('memberModal').classList.add('show')" style="margin-top:8px;margin-bottom:14px">ï¼ ã¡ã³ãã¼ãè¿½å </button>`;
+    h += `<button class="add-btn" onclick="document.getElementById('memberModal').classList.add('show')" style="margin-top:8px;margin-bottom:14px">＋ メンバーを追加</button>`;
   }
   c.innerHTML = h;
 }
 
 async function saveMember(){
   const nm = document.getElementById('mmName').value.trim();
-  if(!nm){ showToast('ååãå¥åãã¦ãã ãã'); return; }
-  const tm = document.getElementById('mmTeam').value.trim() || 'æªåé¡';
+  if(!nm){ showToast('名前を入力してください'); return; }
+  const tm = document.getElementById('mmTeam').value.trim() || '未分類';
   const clr = AVATARS[members.length % AVATARS.length];
   const row = await dbInsert('team_members', { company_id: companyId, name: nm, team: tm, color: clr });
   if(row) members.push({ id: row.id, name: nm, team: tm, color: clr });
   closeM('memberModal');
   renderMembers();
-  showToast('ã¡ã³ãã¼ãè¿½å ãã¾ãã');
+  showToast('メンバーを追加しました');
   document.getElementById('mmName').value = '';
   document.getElementById('mmTeam').value = '';
 }
@@ -1242,11 +1241,11 @@ function renderReport(){
 
   let h = `<div class="report-card">
     <div class="report-title">
-      <span>${cM+1}æ ç¾å ´å¥ãµããªã¼</span>
-      <button class="csv-btn" onclick="exportCSV()">ð¥ CSVåºå</button>
+      <span>${cM+1}月 現場別サマリー</span>
+      <button class="csv-btn" onclick="exportCSV()">📥 CSV出力</button>
     </div>
     <table class="report-table">
-      <tr><th>ç¾å ´å</th><th class="num">äººæ¥</th><th class="num">å£²ä¸</th></tr>`;
+      <tr><th>現場名</th><th class="num">人日</th><th class="num">売上</th></tr>`;
 
   let totalD = 0, totalR = 0;
   sites.forEach(s => {
@@ -1257,20 +1256,20 @@ function renderReport(){
     se.forEach(e => { r += calcRev(e, s); });
     totalD += d;
     totalR += r;
-    h += `<tr><td>${s.name}</td><td class="num">${d}æ¥</td><td class="num">Â¥${r.toLocaleString()}</td></tr>`;
+    h += `<tr><td>${s.name}</td><td class="num">${d}日</td><td class="num">¥${r.toLocaleString()}</td></tr>`;
   });
 
-  h += `<tr><td>åè¨</td><td class="num">${totalD}æ¥</td><td class="num">Â¥${totalR.toLocaleString()}</td></tr></table></div>`;
+  h += `<tr><td>合計</td><td class="num">${totalD}日</td><td class="num">¥${totalR.toLocaleString()}</td></tr></table></div>`;
 
   h += `<div class="report-card">
-    <div class="report-title">ã¡ã³ãã¼ Ã ç¾å ´ åºå¤è¡¨</div>
+    <div class="report-title">メンバー × 現場 出勤表</div>
     <div style="overflow-x:auto">
       <table class="report-table">
-        <tr><th>ã¡ã³ãã¼</th>`;
+        <tr><th>メンバー</th>`;
 
   const activeSites = sites.filter(s => me.some(e => e.siteId === s.id));
   activeSites.forEach(s => { h += `<th class="num">${s.name.slice(0,4)}</th>`; });
-  h += `<th class="num">åè¨</th></tr>`;
+  h += `<th class="num">合計</th></tr>`;
 
   members.forEach(m => {
     const mme = me.filter(e => e.memberId === m.id);
@@ -1282,7 +1281,7 @@ function renderReport(){
       mt += d;
       h += `<td class="num">${d || '-'}</td>`;
     });
-    h += `<td class="num">${mt}æ¥</td></tr>`;
+    h += `<td class="num">${mt}日</td></tr>`;
   });
 
   h += `</table></div></div>`;
@@ -1292,7 +1291,7 @@ function renderReport(){
 function exportCSV(){
   const ms = `${cY}-${String(cM+1).padStart(2,'0')}`;
   const me = entries.filter(e => e.date.startsWith(ms));
-  let csv = 'æ¥ä»,ã¡ã³ãã¼,ç¾å ´å,åä¾¡,ã¡ã¢\n';
+  let csv = '日付,メンバー,現場名,単価,メモ\n';
   me.sort((a, b) => a.date.localeCompare(b.date)).forEach(e => {
     const s = sites.find(x => x.id === e.siteId);
     const m = members.find(x => x.id === e.memberId);
@@ -1301,9 +1300,9 @@ function exportCSV(){
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `æ¥½ãã«ã¬ã³ãã¼_${ms}.csv`;
+  a.download = `楽々カレンダー_${ms}.csv`;
   a.click();
-  showToast('CSVããã¦ã³ã­ã¼ããã¾ãã');
+  showToast('CSVをダウンロードしました');
 }
 
 // ===== Settings Page =====
@@ -1313,85 +1312,85 @@ function renderSettings(){
 
   if(userRole === 'master'){
     html += `<div class="settings-group" style="padding:16px">
-      <div class="account-creation-title">ã¢ã«ã¦ã³ãç®¡ç</div>
+      <div class="account-creation-title">アカウント管理</div>
 
       <div style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:14px">
-        <label class="form-label">ã­ã¼ã«é¸æ</label>
+        <label class="form-label">ロール選択</label>
         <div class="role-selector">
-          <button class="role-btn selected" onclick="document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountCreateRole='submaster'">è·é·ï¼ãµããã¹ã¿ã¼ï¼</button>
-          <button class="role-btn" onclick="document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountCreateRole='worker'">ä½æ¥­å¡</button>
+          <button class="role-btn selected" onclick="document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountCreateRole='submaster'">職長（サブマスター）</button>
+          <button class="role-btn" onclick="document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountCreateRole='worker'">作業員</button>
         </div>
 
-        <label class="form-label">ã¢ã«ã¦ã³ãå</label>
-        <input type="text" class="form-input" id="accountCreateName" placeholder="ä¾ï¼ç°ä¸­å¤ªé">
+        <label class="form-label">アカウント名</label>
+        <input type="text" class="form-input" id="accountCreateName" placeholder="例：田中太郎">
 
-        <label class="form-label">é¨ç½²ã»ãã¼ã </label>
-        <input type="text" class="form-input" id="accountCreateTeam" placeholder="ä¾ï¼Aç­ï¼ãªãã·ã§ã³ï¼">
+        <label class="form-label">部署・チーム</label>
+        <input type="text" class="form-input" id="accountCreateTeam" placeholder="例：A班（オプション）">
 
-        <label class="form-label">ãã¹ã¯ã¼ãæ±ºå®æ¹æ³</label>
+        <label class="form-label">パスワード決定方法</label>
         <div class="password-mode-selector">
-          <button class="pwd-btn selected" onclick="document.querySelectorAll('.pwd-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountPasswordMode='manual';document.getElementById('accountCreatePasswordInput').style.display=''">èªåã§æ±ºãã</button>
-          <button class="pwd-btn" onclick="document.querySelectorAll('.pwd-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountPasswordMode='random';document.getElementById('accountCreatePasswordInput').style.display='none'">ã©ã³ãã çºè¡</button>
+          <button class="pwd-btn selected" onclick="document.querySelectorAll('.pwd-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountPasswordMode='manual';document.getElementById('accountCreatePasswordInput').style.display=''">自分で決める</button>
+          <button class="pwd-btn" onclick="document.querySelectorAll('.pwd-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountPasswordMode='random';document.getElementById('accountCreatePasswordInput').style.display='none'">ランダム発行</button>
         </div>
 
         <div id="accountCreatePasswordInput" style="margin-bottom:12px">
-          <label class="form-label">ãã¹ã¯ã¼ã</label>
-          <input type="password" class="form-input" id="accountCreatePassword" placeholder="4æå­ä»¥ä¸" minlength="4">
+          <label class="form-label">パスワード</label>
+          <input type="password" class="form-input" id="accountCreatePassword" placeholder="4文字以上" minlength="4">
         </div>
 
-        <button class="add-btn" onclick="createNewAccount()">ãã¹ã¯ã¼ããçºè¡</button>
+        <button class="add-btn" onclick="createNewAccount()">パスワードを発行</button>
       </div>
 
-      <div class="account-creation-title" style="margin-top:16px;margin-bottom:12px">çºè¡æ¸ã¿ã¢ã«ã¦ã³ã</div>
+      <div class="account-creation-title" style="margin-top:16px;margin-bottom:12px">発行済みアカウント</div>
       <div id="accountsList"></div>
     </div>`;
   }
 
   html += `<div class="settings-group" style="padding:14px">
     <div class="custom-section">
-      <div class="custom-section-title">ã«ã¬ã³ãã¼ã®èæ¯è²</div>
+      <div class="custom-section-title">カレンダーの背景色</div>
       <div class="custom-colors" id="pickCalBg"></div>
     </div>
     <div class="custom-section">
-      <div class="custom-section-title">å¹³æ¥ã®æå­è²</div>
+      <div class="custom-section-title">平日の文字色</div>
       <div class="custom-colors" id="pickWeekday"></div>
     </div>
     <div class="custom-section">
-      <div class="custom-section-title">åæã®æå­è²</div>
+      <div class="custom-section-title">土曜の文字色</div>
       <div class="custom-colors" id="pickSaturday"></div>
     </div>
     <div class="custom-section">
-      <div class="custom-section-title">æ¥ç¥ã®æå­è²</div>
+      <div class="custom-section-title">日祝の文字色</div>
       <div class="custom-colors" id="pickSunday"></div>
     </div>
     <div class="custom-section">
-      <div class="custom-section-title">ãããã¼è²</div>
+      <div class="custom-section-title">ヘッダー色</div>
       <div class="custom-colors" id="pickHeader"></div>
     </div>
     <div class="custom-section">
-      <div class="custom-section-title">åºå¤æ¥æ°ã®è²</div>
+      <div class="custom-section-title">出勤日数の色</div>
       <div class="custom-colors" id="pickStatDays"></div>
     </div>
     <div class="custom-section">
-      <div class="custom-section-title">å£²ä¸ã®è²</div>
+      <div class="custom-section-title">売上の色</div>
       <div class="custom-colors" id="pickStatMoney"></div>
     </div>
     <div class="custom-section">
-      <div class="custom-section-title">ãã¬ãã¥ã¼</div>
+      <div class="custom-section-title">プレビュー</div>
       <div class="live-preview" id="livePreview"></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:14px">
-      <button onclick="resetCustom()" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;font-size:13px;font-weight:600">ãªã»ãã</button>
+      <button onclick="resetCustom()" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;font-size:13px;font-weight:600">リセット</button>
     </div>
   </div>
 
       <div style="background:linear-gradient(135deg, #4A90D9 0%, #2E7D52 100%);border-radius:12px;padding:16px;margin-bottom:16px;color:#fff">
-      <div style="font-weight:700;margin-bottom:8px">ãã¼ã ã§ä½¿ããªã</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:4px">æ¥½ãã«ã¬ã³ãã¼ ãã¸ãã¹ç</div>
-      <div style="font-size:12px;opacity:0.9;margin-bottom:12px">ã¡ã³ãã¼ç®¡çã»è¤æ°ã¢ã«ã¦ã³ãã»ã¬ãã¼ãæ©è½</div>
-      <div style="font-size:12px;font-weight:600">14æ¥éç¡æãã©ã¤ã¢ã« â</div>
+      <div style="font-weight:700;margin-bottom:8px">チームで使うなら</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">楽々カレンダー ビジネス版</div>
+      <div style="font-size:12px;opacity:0.9;margin-bottom:12px">メンバー管理・複数アカウント・レポート機能</div>
+      <div style="font-size:12px;font-weight:600">14日間無料トライアル →</div>
     </div>
-    <button class="logout-btn" onclick="handleLogout()">ã­ã°ã¢ã¦ã</button>`;
+    <button class="logout-btn" onclick="handleLogout()">ログアウト</button>`;
 
   document.getElementById('settingsContent').innerHTML = html;
 
@@ -1409,8 +1408,8 @@ function renderAccountsList(){
 
   let html = '';
   accounts.filter(a => a.id !== 1).forEach(acc => {
-    const roleBadges = { master: 'ãã¹ã¿ã¼', submaster: 'è·é·', worker: 'ä½æ¥­å¡' };
-    let pwDisplay = 'ââââ';
+    const roleBadges = { master: 'マスター', submaster: '職長', worker: '作業員' };
+    let pwDisplay = '●●●●';
     html += `<div class="account-card">
       <div class="account-info">
         <span class="account-role ${acc.role}">${roleBadges[acc.role]}</span>
@@ -1419,9 +1418,9 @@ function renderAccountsList(){
         <div class="account-password-display" id="pwdDisplay_${acc.id}" style="display:none">${acc.password}</div>
       </div>
       <div class="account-actions">
-        <button class="account-btn show" onclick="togglePasswordDisplay(${acc.id})">è¡¨ç¤º</button>
-        <button class="account-btn copy" onclick="copyPassword(${acc.id})">ã³ãã¼</button>
-        <button class="account-btn delete" onclick="deleteAccount(${acc.id})">åé¤</button>
+        <button class="account-btn show" onclick="togglePasswordDisplay(${acc.id})">表示</button>
+        <button class="account-btn copy" onclick="copyPassword(${acc.id})">コピー</button>
+        <button class="account-btn delete" onclick="deleteAccount(${acc.id})">削除</button>
       </div>
     </div>`;
   });
@@ -1434,10 +1433,10 @@ function togglePasswordDisplay(accountId){
   const btn = event.target;
   if(display.style.display === 'none'){
     display.style.display = '';
-    btn.textContent = 'é ã';
+    btn.textContent = '隠す';
   } else {
     display.style.display = 'none';
-    btn.textContent = 'è¡¨ç¤º';
+    btn.textContent = '表示';
   }
 }
 
@@ -1445,16 +1444,16 @@ function copyPassword(accountId){
   const display = document.getElementById(`pwdDisplay_${accountId}`);
   const pw = display.textContent;
   navigator.clipboard.writeText(pw).then(() => {
-    showToast('ã³ãã¼ãã¾ãã');
+    showToast('コピーしました');
   });
 }
 
 async function createNewAccount(){
   const role = accountCreateRole || 'submaster';
   const name = document.getElementById('accountCreateName').value.trim();
-  if(!name){ showToast('ã¢ã«ã¦ã³ãåãå¥åãã¦ãã ãã'); return; }
+  if(!name){ showToast('アカウント名を入力してください'); return; }
 
-  const team = document.getElementById('accountCreateTeam').value.trim() || 'æªåé¡';
+  const team = document.getElementById('accountCreateTeam').value.trim() || '未分類';
   let password = '';
 
   if(accountPasswordMode === 'random'){
@@ -1462,7 +1461,7 @@ async function createNewAccount(){
   } else {
     password = document.getElementById('accountCreatePassword').value;
     if(password.length < 4){
-      showToast('ãã¹ã¯ã¼ãã¯4æå­ä»¥ä¸ã§å¥åãã¦ãã ãã');
+      showToast('パスワードは4文字以上で入力してください');
       return;
     }
   }
@@ -1474,7 +1473,7 @@ async function createNewAccount(){
   const mem = await dbInsert('team_members', { company_id: companyId, account_id: acc?acc.id:null, name, team, color: clr });
   if(mem) members.push({ id: mem.id, accountId: mem.account_id, name, team, color: clr });
 
-  showToast(`ã¢ã«ã¦ã³ãä½æ: ${password}`);
+  showToast(`アカウント作成: ${password}`);
 
   document.getElementById('accountCreateName').value = '';
   document.getElementById('accountCreateTeam').value = '';
@@ -1487,14 +1486,14 @@ async function createNewAccount(){
 
 async function deleteAccount(accountId){
   const masterAcc = accounts.find(a => a.role === 'master');
-  if(masterAcc && accountId === masterAcc.id){ showToast('ãã¹ã¿ã¼ã¢ã«ã¦ã³ãã¯åé¤ã§ãã¾ãã'); return; }
-  if(!confirm('ãã®ã¢ã«ã¦ã³ããåé¤ãã¾ããï¼')) return;
+  if(masterAcc && accountId === masterAcc.id){ showToast('マスターアカウントは削除できません'); return; }
+  if(!confirm('このアカウントを削除しますか？')) return;
   await dbDelete('accounts', accountId);
   accounts = accounts.filter(a => a.id !== accountId);
   const linked = members.find(m => m.accountId === accountId);
   if(linked){ await dbDelete('team_members', linked.id); members = members.filter(m => m.id !== linked.id); }
   renderAccountsList();
-  showToast('åé¤ãã¾ãã');
+  showToast('削除しました');
 }
 
 // ===== Japanese Holiday Detection =====
@@ -1567,8 +1566,8 @@ function renderCustomPickers(){
     el.innerHTML = PALETTE.map(c => {
       const isActive = custom[key] === c;
       const isDisabled = isTextPicker && c.toUpperCase() === custom.calBg.toUpperCase();
-      return `<div class="cc${isActive ? ' active' : ''}${isDisabled ? ' disabled' : ''}" style="background:${c};${c === '#FFFFFF' || c === '#F8F9FA' ? 'border:2px solid #CCC;' : ''}" onclick="${isDisabled ? '' : `pickCustom('${key}','${c}')`}" title="${isDisabled ? 'èæ¯è²ã¨åãè²ã¯é¸ã¹ã¾ãã' : ''}">
-        ${isActive ? 'â' : ''}
+      return `<div class="cc${isActive ? ' active' : ''}${isDisabled ? ' disabled' : ''}" style="background:${c};${c === '#FFFFFF' || c === '#F8F9FA' ? 'border:2px solid #CCC;' : ''}" onclick="${isDisabled ? '' : `pickCustom('${key}','${c}')`}" title="${isDisabled ? '背景色と同じ色は選べません' : ''}">
+        ${isActive ? '✓' : ''}
       </div>`;
     }).join('');
   });
@@ -1624,21 +1623,21 @@ function renderLivePreview(){
   if(!el) return;
 
   const revenueSample = canSeeRevenue() ? `<div style="flex:1;background:var(--white);border-radius:8px;padding:8px;text-align:center;box-shadow:var(--shadow)">
-    <div style="font-size:10px;color:var(--text-light)">å£²ä¸</div>
-    <div style="font-size:18px;font-weight:700;color:${custom.statMoney}">Â¥225,000</div>
+    <div style="font-size:10px;color:var(--text-light)">売上</div>
+    <div style="font-size:18px;font-weight:700;color:${custom.statMoney}">¥225,000</div>
   </div>` : '';
 
   el.innerHTML = `
     <div class="preview-cal" style="background:${custom.calBg};border:1px solid var(--border)">
-      <div style="font-weight:700;color:${custom.header};margin-bottom:4px">2026å¹´3æ</div>
+      <div style="font-weight:700;color:${custom.header};margin-bottom:4px">2026年3月</div>
       <div style="display:flex;justify-content:center;gap:6px;font-size:11px;margin-bottom:4px">
-        <span style="color:${custom.sunday}">æ¥</span>
-        <span style="color:${custom.weekday}">æ</span>
-        <span style="color:${custom.weekday}">ç«</span>
-        <span style="color:${custom.weekday}">æ°´</span>
-        <span style="color:${custom.weekday}">æ¨</span>
-        <span style="color:${custom.weekday}">é</span>
-        <span style="color:${custom.saturday}">å</span>
+        <span style="color:${custom.sunday}">日</span>
+        <span style="color:${custom.weekday}">月</span>
+        <span style="color:${custom.weekday}">火</span>
+        <span style="color:${custom.weekday}">水</span>
+        <span style="color:${custom.weekday}">木</span>
+        <span style="color:${custom.weekday}">金</span>
+        <span style="color:${custom.saturday}">土</span>
       </div>
       <div class="preview-row">
         <span class="preview-day" style="color:${custom.sunday}">15</span>
@@ -1646,14 +1645,14 @@ function renderLivePreview(){
         <span class="preview-day" style="color:${custom.weekday}">17</span>
         <span class="preview-day" style="color:${custom.weekday}">18</span>
         <span class="preview-day" style="color:${custom.weekday}">19</span>
-        <span class="preview-day" style="color:${custom.sunday}">20<span style="font-size:8px;display:block">ç¥</span></span>
+        <span class="preview-day" style="color:${custom.sunday}">20<span style="font-size:8px;display:block">祝</span></span>
         <span class="preview-day" style="color:${custom.saturday}">21</span>
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:4px">
       <div style="flex:1;background:var(--white);border-radius:8px;padding:8px;text-align:center;box-shadow:var(--shadow)">
-        <div style="font-size:10px;color:var(--text-light)">åºå¤æ¥æ°</div>
-        <div style="font-size:18px;font-weight:700;color:${custom.statDays}">15<span style="font-size:12px">æ¥</span></div>
+        <div style="font-size:10px;color:var(--text-light)">出勤日数</div>
+        <div style="font-size:18px;font-weight:700;color:${custom.statDays}">15<span style="font-size:12px">日</span></div>
       </div>
       ${revenueSample}
     </div>
@@ -1666,7 +1665,7 @@ async function resetCustom(){
   applyCustomColors();
   renderCustomPickers();
   renderCalendar();
-  showToast('ããã©ã«ãã«æ»ãã¾ãã');
+  showToast('デフォルトに戻しました');
 }
 
 document.getElementById('entryHours').addEventListener('input', updateEntryBtn);
