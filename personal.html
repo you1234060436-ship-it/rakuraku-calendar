@@ -574,8 +574,8 @@ async function handleSetup(e){
     companyId = company.id;
     saveSession('company_id', companyId);
 
-    const acc = await dbInsert('accounts', { company_id: companyId, password, role: 'master', name: '管理者', team: '経営' });
-    await dbInsert('team_members', { company_id: companyId, account_id: acc.id, name: '管理者', team: '経営', color: AVATARS[0] });
+    const acc = await dbInsert('accounts', { company_id: companyId, password, role: 'master', name: 'ユーザー', team: '' });
+    await dbInsert('team_members', { company_id: companyId, account_id: acc.id, name: 'ユーザー', team: '', color: AVATARS[0] });
     await dbInsertMany('work_sites', [
       { company_id: companyId, name: 'サンプル現場A', price: 15000, rate_type: 'daily', color: '#4A90D9', memo: '' },
       { company_id: companyId, name: 'サンプル現場B', price: 1500, rate_type: 'hourly', color: '#FF6B35', memo: '' }
@@ -1310,41 +1310,6 @@ function renderSettings(){
   const content = document.getElementById('settingsContent');
   let html = '';
 
-  if(userRole === 'master'){
-    html += `<div class="settings-group" style="padding:16px">
-      <div class="account-creation-title">アカウント管理</div>
-
-      <div style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:14px">
-        <label class="form-label">ロール選択</label>
-        <div class="role-selector">
-          <button class="role-btn selected" onclick="document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountCreateRole='submaster'">職長（サブマスター）</button>
-          <button class="role-btn" onclick="document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountCreateRole='worker'">作業員</button>
-        </div>
-
-        <label class="form-label">アカウント名</label>
-        <input type="text" class="form-input" id="accountCreateName" placeholder="例：田中太郎">
-
-        <label class="form-label">部署・チーム</label>
-        <input type="text" class="form-input" id="accountCreateTeam" placeholder="例：A班（オプション）">
-
-        <label class="form-label">パスワード決定方法</label>
-        <div class="password-mode-selector">
-          <button class="pwd-btn selected" onclick="document.querySelectorAll('.pwd-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountPasswordMode='manual';document.getElementById('accountCreatePasswordInput').style.display=''">自分で決める</button>
-          <button class="pwd-btn" onclick="document.querySelectorAll('.pwd-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountPasswordMode='random';document.getElementById('accountCreatePasswordInput').style.display='none'">ランダム発行</button>
-        </div>
-
-        <div id="accountCreatePasswordInput" style="margin-bottom:12px">
-          <label class="form-label">パスワード</label>
-          <input type="password" class="form-input" id="accountCreatePassword" placeholder="4文字以上" minlength="4">
-        </div>
-
-        <button class="add-btn" onclick="createNewAccount()">パスワードを発行</button>
-      </div>
-
-      <div class="account-creation-title" style="margin-top:16px;margin-bottom:12px">発行済みアカウント</div>
-      <div id="accountsList"></div>
-    </div>`;
-  }
 
   html += `<div class="settings-group" style="padding:14px">
     <div class="custom-section">
