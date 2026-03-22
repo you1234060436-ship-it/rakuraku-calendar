@@ -917,20 +917,28 @@ function updSummary(){
 
 function renderToday(){
   const td = new Date();
-  const ds = `${td.getFullYear()}-${String(td.getMonth()+1).padStart(2,'0')}-${String(td.getDate()).padStart(2,'0')}`;
-  let te = entries.filter(e => e.date === ds);
+  const curMonth = `${td.getFullYear()}-${String(td.getMonth()+1).padStart(2,'0')}`;
+  let te = entries.filter(e => e.date.startsWith(curMonth));
   if(userRole === 'worker') te = te.filter(e => e.memberId === currentUserId);
+  te.sort((a, b) => b.date.localeCompare(a.date));
 
   const c = document.getElementById('todayEntries');
   if(!te.length){
-    c.innerHTML = `<div class="section-title">今日の記録</div><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">今日の出勤はまだ登録されていません<br>日付をタップして登録しましょう</div></div>`;
+    c.innerHTML = `<div class="section-title">今月の記録</div><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">今月の出勤はまだ登録されていません<br>日付をタップして登録しましょう</div></div>`;
     return;
   }
 
-  let h = '<div class="section-title">今日の記録</div>';
+  let h = '<div class="section-title">今月の記録</div>';
+  let lastDate = '';
   te.forEach(e => {
     const s = sites.find(x => x.id === e.siteId);
     if(!s) return;
+    const dp = e.date.split('-');
+    const dateLabel = `${+dp[1]}/${+dp[2]}`;
+    if(e.date !== lastDate){
+      h += `<div style="font-size:12px;color:#888;margin:10px 0 4px;font-weight:600">${dateLabel}</div>`;
+      lastDate = e.date;
+    }
     const m = members.find(x => x.id === e.memberId);
     let priceText = '';
     if(canSeeRevenue()){
@@ -939,7 +947,7 @@ function renderToday(){
     let metaText = priceText;
     if(userRole !== 'worker' && m) metaText += (metaText ? ' · ' : '') + m.name;
     if(e.memo) metaText += (metaText ? ' · ' : '') + e.memo;
-    h += `<div class="entry-card"><div class="entry-color" style="background:${s.color}"></div><div class="entry-info"><div class="entry-name">${s.name}</div><div class="entry-meta">${metaText}</div></div><button class="entry-del" onclick="delEntry('${ds}',${s.id},${e.memberId||0})">✕</button></div>`;
+    h += `<div class="entry-card"><div class="entry-color" style="background:${s.color}"></div><div class="entry-info"><div class="entry-name">${s.name}</div><div class="entry-meta">${metaText}</div></div><button class="entry-del" onclick="delEntry('${e.date}',${s.id},${e.memberId||0})">✕</button></div>`;
   });
   c.innerHTML = h;
 }
@@ -1133,7 +1141,8 @@ function renderStats(){
     if(se.length > 0){
       let rev = 0;
       se.forEach(e => { rev += calcRev(e, s); });
-      siteData.push({ name: s.name, days: sumDays(se), rev });
+      const dh = sumDaysAndHours(se);
+      siteData.push({ name: s.name, dh, rev, rateType: s.rateType });
     }
   });
 
@@ -1143,9 +1152,10 @@ function renderStats(){
     if(canSeeRevenue()){
       revText = `<div class="site-stat-amount">¥${s.rev.toLocaleString()}</div>`;
     }
-    siteHtml += `<div class="site-stat-card"><div class="site-stat-name">${s.name}</div><div class="site-stat-days">${s.days}日</div>${revText}</div>`;
+    const daysLabel = s.rateType === 'hourly' ? s.dh.hours + 'h' : s.dh.days + '日';
+    siteHtml += `<div class="site-stat-card"><div class="site-stat-name">${s.name}</div><div class="site-stat-days">${daysLabel}</div>${revText}</div>`;
   });
-  document.getElementById('siteStats').innerHTML = siteHtml || '<div class="empty"><div class="empty-text">このMonth の記録がありません</div></div>';
+  document.getElementById('siteStats').innerHTML = siteHtml || '<div class="empty"><div class="empty-text">この月の記録がありません</div></div>';
 }
 
 function changeStatMonth(d){
