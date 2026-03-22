@@ -799,6 +799,24 @@ function updateAccountDisplay(){
 window.addEventListener('DOMContentLoaded', async ()=>{
   ['raku_setup','raku_accounts','raku_session','raku_sites','raku_entries','raku_members','raku_custom'].forEach(k => localStorage.removeItem(k));
 
+  // URL招待パラメータを最優先でチェック
+  const urlParams = new URLSearchParams(location.search);
+  const inviteName = urlParams.get('name');
+  const invitePw = urlParams.get('pw');
+  const inviteCompany = urlParams.get('cid');
+  if(inviteName && invitePw && inviteCompany){
+    // URLパラメータをクリア（パスワードを履歴に残さない）
+    history.replaceState(null, '', location.pathname);
+    companyId = inviteCompany;
+    saveSession('company_id', companyId);
+    const companies = await dbLoad('companies', { id: companyId });
+    if(companies.length){
+      setup = { companyName: companies[0].name };
+      await autoLoginFromInvite(inviteName, invitePw);
+      return;
+    }
+  }
+
   companyId = loadSession('company_id', null);
   if(!companyId){
     showScreen('setup');
@@ -824,15 +842,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
       showScreen('login');
     }
   } else {
-    // URL招待パラメータで自動ログイン
-    const urlParams = new URLSearchParams(location.search);
-    const inviteName = urlParams.get('name');
-    const invitePw = urlParams.get('pw');
-    if(inviteName && invitePw){
-      await autoLoginFromInvite(inviteName, invitePw);
-    } else {
-      showScreen('login');
-    }
+    showScreen('login');
   }
 
   const urlParams = new URLSearchParams(location.search);
@@ -1599,7 +1609,7 @@ async function resetAccountPassword(accountId){
   document.getElementById('inviteResultRole').textContent = roleName;
   document.getElementById('inviteResultPassword').textContent = newPw;
   document.getElementById('inviteResultLineBtn').onclick = function(){
-    const loginUrl = `${appUrl}?name=${encodeURIComponent(acc.name)}&pw=${encodeURIComponent(newPw)}`;
+    const loginUrl = `${appUrl}?name=${encodeURIComponent(acc.name)}&pw=${encodeURIComponent(newPw)}&cid=${companyId}`;
     const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップでログイン\n${loginUrl}\n\n※リンクを開くと自動でログインできます`;
     window.open('https://line.me/R/share?text=' + encodeURIComponent(msg), '_blank');
     closeM('inviteResultModal');
@@ -1653,7 +1663,7 @@ async function createNewAccount(){
     const companyName = setup?.companyName || '会社';
     const baseUrl2 = location.origin + location.pathname;
     const appUrl = baseUrl2 + '?name=' + encodeURIComponent(acc.name) + '&pw=' + encodeURIComponent(rawPassword);
-    const loginUrl = `${appUrl}?name=${encodeURIComponent(name)}&pw=${encodeURIComponent(rawPassword)}`;
+    const loginUrl = `${appUrl}?name=${encodeURIComponent(name)}&pw=${encodeURIComponent(rawPassword)}&cid=${companyId}`;
     const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップでログイン\n${loginUrl}\n\n※リンクを開くと自動でログインできます`;
     window.open('https://line.me/R/share?text=' + encodeURIComponent(msg), '_blank');
     closeM('inviteResultModal');
