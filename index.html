@@ -262,7 +262,10 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
     <h1><span class="role-badge" id="roleBadge"></span>楽々カレンダー</h1>
     <div class="header-sub">出勤＆売上管理<span style="margin-left:8px" id="accountDisplayName"></span></div>
   </div>
-  <div class="plan-badge plan-biz" id="planBadge">ビジネス版</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button onclick="appRefresh()" style="padding:5px 12px;border:1.5px solid var(--border);border-radius:6px;background:var(--white);color:var(--text-light);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>更新</button>
+    <div class="plan-badge plan-biz" id="planBadge">ビジネス版</div>
+  </div>
 </div>
 
 <div class="main" id="mainContent">
@@ -2017,6 +2020,25 @@ async function resetCustom(){
 }
 
 document.getElementById('entryHours').addEventListener('input', updateEntryBtn);
+
+// ===== App Refresh =====
+async function appRefresh(){
+  showToast('更新中...');
+  try {
+    if('serviceWorker' in navigator && navigator.serviceWorker.controller){
+      navigator.serviceWorker.controller.postMessage('clearCache');
+      const reg = await navigator.serviceWorker.getRegistration();
+      if(reg) await reg.update();
+    }
+    if('caches' in window){
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    setTimeout(() => location.reload(true), 500);
+  } catch(e){
+    location.reload(true);
+  }
+}
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}</script>
 </body>
