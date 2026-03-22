@@ -25,6 +25,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP'
 .setup-screen{display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;min-height:100vh}
 body.screen-setup .setup-screen{display:flex}
 body.screen-setup .header,body.screen-setup .main,body.screen-setup .tab-bar{display:none!important}
+body.screen-setup-confirm #setupScreen{display:none}
+body.screen-setup-confirm #setupConfirmScreen{display:flex!important}
+body.screen-setup-confirm .header,body.screen-setup-confirm .main,body.screen-setup-confirm .tab-bar,body.screen-setup-confirm .login-screen{display:none!important}
 
 .setup-card{background:var(--white);border-radius:16px;padding:28px;box-shadow:0 4px 16px rgba(0,0,0,0.1);width:100%;max-width:400px}
 .setup-logo{font-size:32px;font-weight:800;color:#4A90D9;text-align:center;margin-bottom:8px}
@@ -256,6 +259,19 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
       <div style="text-align:center;margin-top:16px"><button type="button" onclick="showScreen('setup')" style="background:none;border:none;color:var(--primary);font-size:13px;cursor:pointer;text-decoration:underline">新規セットアップはこちら</button></div>
       <div style="text-align:center;margin-top:8px"><a href="privacy.html" style="font-size:11px;color:#888;text-decoration:none">プライバシーポリシー</a></div>
     </form>
+  </div>
+</div>
+
+<!-- ===== Setup Confirm Screen ===== -->
+<div class="setup-screen" id="setupConfirmScreen" style="display:none">
+  <div class="setup-card" style="text-align:center">
+    <div style="font-size:40px;margin-bottom:12px">📋</div>
+    <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">セットアップ完了！</div>
+    <div style="font-size:13px;color:var(--text-light);margin-bottom:20px;line-height:1.6">以下の情報はログイン時に必要です。<br>スクリーンショットまたはメモに保存してください。</div>
+    <div id="setupConfirmInfo" style="background:var(--bg);border:2px dashed var(--border);border-radius:12px;padding:20px;margin-bottom:20px;text-align:left">
+    </div>
+    <div style="font-size:11px;color:var(--danger);margin-bottom:20px;line-height:1.5">※ パスワードは後から確認できません。<br>必ず記録してから進んでください。</div>
+    <button type="button" onclick="confirmSetupDone()" style="width:100%;padding:14px;border:none;border-radius:10px;background:var(--primary);color:white;font-size:16px;font-weight:600;cursor:pointer">記録しました ▶ アプリへ</button>
   </div>
 </div>
 
@@ -651,15 +667,29 @@ async function handleSetup(e){
     currentUserId = acc.id;
     userRole = 'master';
     saveSession('account_id', currentUserId);
-    showScreen('app');
-    init();
-    renderCalendar();
-    buildTabs();
+    // 確認画面を表示（パスワードメモ推奨）
+    showSetupConfirm(companyName, password);
   } catch(err) {
     console.error('Setup error:', err);
     showToast('エラー: ' + (err.message||err));
     if(btn){btn.disabled=false;btn.textContent='セットアップ完了';}
   }
+}
+
+function showSetupConfirm(companyName, password){
+  document.getElementById('setupConfirmInfo').innerHTML = `
+    <div style="margin-bottom:12px"><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">会社名</div><div style="font-size:18px;font-weight:700;color:var(--text)">${companyName}</div></div>
+    <div><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">マスターパスワード</div><div style="font-size:18px;font-weight:700;color:var(--primary);letter-spacing:2px">${password}</div></div>
+  `;
+  document.body.className = 'screen-setup-confirm';
+}
+
+function confirmSetupDone(){
+  showScreen('app');
+  init();
+  renderCalendar();
+  buildTabs();
+  showToast('楽々カレンダーへようこそ！');
 }
 
 // URL招待リンクからの自動ログイン
