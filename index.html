@@ -250,6 +250,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
     <div class="login-logo">楽々カレンダー</div>
     <div class="login-sub">ビジネス版へログイン</div>
     <form onsubmit="handleLogin(event)">
+      <input type="text" class="login-input" id="loginCompanyInput" placeholder="会社名を入力" autocomplete="off" style="margin-bottom:10px">
       <input type="password" class="login-input" id="loginPassword" placeholder="パスワードを入力" autocomplete="off">
       <button type="submit" class="login-btn">ログイン</button>
       <div style="text-align:center;margin-top:16px"><button type="button" onclick="showScreen('setup')" style="background:none;border:none;color:var(--primary);font-size:13px;cursor:pointer;text-decoration:underline">新規セットアップはこちら</button></div>
@@ -711,40 +712,48 @@ async function autoLoginFromInvite(name, pw){
 async function handleLogin(e){
   e.preventDefault();
   const password = document.getElementById('loginPassword').value;
+  const companyInput = document.getElementById('loginCompanyInput');
+  const companyNameInput = companyInput ? companyInput.value.trim() : '';
   if(!password){showToast('パスワードを入力してください');return}
 
   const btn = e.target.querySelector('button[type="submit"]');
   if(btn) btn.disabled=true;
 
   try {
-    // 会社の全アカウントを取得してJS側でパスワード照合
-    const query = companyId ? { company_id: companyId } : {};
-    const allAccs = await dbLoad('accounts', query);
+    let targetCompanyId = companyId;
+
+    if(!targetCompanyId){
+      if(!companyNameInput){showToast('会社名を入力してください'); if(btn) btn.disabled=false; return;}
+      const companies = await dbLoad('companies', {});
+      const matched = companies.filter(c => c.name === companyNameInput);
+      if(!matched.length){ showToast('会社名が見つかりません'); if(btn) btn.disabled=false; return; }
+      targetCompanyId = matched[0].id;
+    }
+
+    const allAccs = await dbLoad('accounts', { company_id: targetCompanyId });
     const hashedPw = await hashPassword(password);
 
-    // ハッシュで照合
     let acc = allAccs.find(a => a.password === hashedPw);
 
-    // 旧平文パスワードとの互換性チェック
     if(!acc){
       acc = allAccs.find(a => a.password === password);
       if(acc){
-        // 平文→ハッシュにマイグレーション
         await dbUpdate('accounts', acc.id, { password: hashedPw });
         acc.password = hashedPw;
       }
     }
-    if(!acc){ showToast('パスワードが正しくありません'); if(btn) btn.disabled=false; return; }
+    if(!acc){ showToast('会社名またはパスワードが正しくありません'); if(btn) btn.disabled=false; return; }
     currentAccount = acc;
     currentUserId = acc.id;
     userRole = acc.role;
-    if(!companyId && acc.company_id){
-      companyId = acc.company_id;
+    if(!companyId){
+      companyId = targetCompanyId;
       saveSession('company_id', companyId);
     }
     saveSession('account_id', currentUserId);
     await loadAllData();
     document.getElementById('loginPassword').value = '';
+    if(companyInput) companyInput.value = '';
     showScreen('app');
     init();
     renderCalendar();
@@ -796,8 +805,16 @@ async function handleDeleteMyAccount(){
 
 function showScreen(screen){
   document.body.className = 'screen-' + screen;
-  if(screen === 'login' && setup){
-    document.getElementById('loginCompanyName').textContent = setup.companyName;
+  if(screen === 'login'){
+    const companyNameEl = document.getElementById('loginCompanyName');
+    const companyInputEl = document.getElementById('loginCompanyInput');
+    if(setup && companyId){
+      companyNameEl.textContent = setup.companyName;
+      if(companyInputEl) companyInputEl.style.display = 'none';
+    } else {
+      companyNameEl.textContent = '';
+      if(companyInputEl) companyInputEl.style.display = '';
+    }
   }
 }
 
