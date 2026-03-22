@@ -358,6 +358,12 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
     <div class="form-group">
       <label class="form-label">現場を選択</label>
       <div class="site-chips" id="siteChips"></div>
+      <div id="customSiteInputWrap" style="display:none;margin-top:8px">
+        <div style="display:flex;gap:6px">
+          <input type="text" class="form-input" id="customSiteName" placeholder="現場名を入力" style="flex:1">
+          <button type="button" onclick="confirmCustomSite()" style="padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer">追加</button>
+        </div>
+      </div>
     </div>
     <div class="form-group" id="memberSelectGroup" style="display:none">
       <label class="form-label">メンバーを選択 <button type="button" style="float:right;padding:2px 8px;font-size:11px;background:var(--primary-light);color:var(--primary);border:none;border-radius:4px;cursor:pointer" onclick="selectAllMembers()">全員選択</button></label>
@@ -1069,9 +1075,12 @@ function openEntry(ds){
     h += `<div class="site-chip" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (時給)' : ''}</div>`;
   });
   if(canManageSites()){
-    h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">＋ 新しい現場</div>`;
+    h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">＋ 現場を管理</div>`;
   }
+  h += `<div class="site-chip" onclick="showCustomSiteInput()" style="border-style:dashed;color:var(--secondary)">✏️ 直接入力</div>`;
   document.getElementById('siteChips').innerHTML = h;
+  document.getElementById('customSiteInputWrap').style.display = 'none';
+  document.getElementById('customSiteName').value = '';
 
   const mg = document.getElementById('memberSelectGroup');
   if(canSelectMembers()){
@@ -1110,6 +1119,55 @@ function selChip(id, el, type){
     }
   }
   updateEntryBtn();
+}
+
+function showCustomSiteInput(){
+  document.getElementById('customSiteInputWrap').style.display = '';
+  document.getElementById('customSiteName').focus();
+  document.querySelectorAll('#siteChips .site-chip').forEach(c => c.classList.remove('selected'));
+  selSiteId = null;
+  updateEntryBtn();
+}
+
+async function confirmCustomSite(){
+  const name = document.getElementById('customSiteName').value.trim();
+  if(!name){ showToast('現場名を入力してください'); return; }
+  let existing = sites.find(s => s.name === name);
+  if(existing){
+    selSiteId = existing.id;
+    document.getElementById('customSiteInputWrap').style.display = 'none';
+    document.querySelectorAll('#siteChips .site-chip').forEach(c => {
+      if(+c.dataset.id === existing.id) c.classList.add('selected');
+      else c.classList.remove('selected');
+    });
+    document.getElementById('hoursGroup').style.display = existing.rateType === 'hourly' ? '' : 'none';
+    document.getElementById('dayTypeGroup').style.display = existing.rateType === 'daily' ? '' : 'none';
+    if(existing.rateType === 'daily'){ selectedDayType = 1; updateDayTypeBtns(); }
+    updateEntryBtn();
+    showToast('「' + name + '」を選択しました');
+    return;
+  }
+  const clr = PALETTE[sites.length % PALETTE.length];
+  const newSite = await dbInsert('sites', { company_id: companyId, name, price: 0, rate_type: 'daily', color: clr, memo: '' });
+  if(newSite){
+    sites.push({ id: newSite.id, name: newSite.name, price: 0, rateType: 'daily', color: clr, memo: '' });
+    selSiteId = newSite.id;
+    let h = '';
+    sites.forEach(s => {
+      const sel = s.id === selSiteId ? ' selected' : '';
+      h += `<div class="site-chip${sel}" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (時給)' : ''}</div>`;
+    });
+    if(canManageSites()){
+      h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">＋ 現場を管理</div>`;
+    }
+    h += `<div class="site-chip" onclick="showCustomSiteInput()" style="border-style:dashed;color:var(--secondary)">✏️ 直接入力</div>`;
+    document.getElementById('siteChips').innerHTML = h;
+    document.getElementById('customSiteInputWrap').style.display = 'none';
+    document.getElementById('dayTypeGroup').style.display = '';
+    selectedDayType = 1; updateDayTypeBtns();
+    updateEntryBtn();
+    showToast('「' + name + '」を追加しました');
+  }
 }
 
 function selectAllMembers(){
