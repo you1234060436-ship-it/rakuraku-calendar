@@ -230,6 +230,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
       <label class="setup-input-label">パスワード（確認） <span style="color:var(--danger)">*</span></label>
       <input type="password" class="setup-input" id="setupPasswordConfirm" placeholder="もう一度入力" minlength="4" required>
       <button type="submit" class="setup-btn">セットアップ完了</button>
+      <div style="text-align:center;margin-top:12px"><a href="privacy.html" style="font-size:11px;color:#888;text-decoration:none">プライバシーポリシー</a></div>
     </form>
   </div>
 </div>
@@ -243,6 +244,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
     <form onsubmit="handleLogin(event)">
       <input type="password" class="login-input" id="loginPassword" placeholder="パスワードを入力" autocomplete="off">
       <button type="submit" class="login-btn">ログイン</button>
+      <div style="text-align:center;margin-top:12px"><a href="privacy.html" style="font-size:11px;color:#888;text-decoration:none">プライバシーポリシー</a></div>
     </form>
   </div>
 </div>
@@ -436,9 +438,24 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 let sb;
 try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { console.error('Supabase init failed:', e); }
 
+// ===== Password Hashing =====
+async function hashPassword(pw){
+  const enc = new TextEncoder().encode(pw);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
 // ===== Session Storage Functions =====
-function saveSession(key, val){ localStorage.setItem('raku_'+key, JSON.stringify(val)); }
+const SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+function saveSession(key, val){
+  localStorage.setItem('raku_'+key, JSON.stringify(val));
+  localStorage.setItem('raku_session_ts', Date.now().toString());
+}
 function loadSession(key, fb){ try{return JSON.parse(localStorage.getItem('raku_'+key))||fb}catch(e){return fb} }
+function isSessionExpired(){
+  const ts = parseInt(localStorage.getItem('raku_session_ts') || '0');
+  return Date.now() - ts > SESSION_MAX_AGE;
+}
 
 // ===== Supabase Database Helpers =====
 async function dbLoad(table, filter){
@@ -581,7 +598,8 @@ async function handleSetup(e){
     companyId = company.id;
     saveSession('company_id', companyId);
 
-    const acc = await dbInsert('accounts', { company_id: companyId, password, role: 'master', name: 'ユーザー', team: '' });
+    const hashedPw = await hashPassword(password);
+    const acc = await dbInsert('accounts', { company_id: companyId, password: hashedPw, role: 'master', name: 'ユーザー', team: '' });
     await dbInsert('team_members', { company_id: companyId, account_id: acc.id, name: 'ユーザー', team: '', color: AVATARS[0] });
     await dbInsertMany('work_sites', [
       { company_id: companyId, name: 'サンプル現場A', price: 15000, rate_type: 'daily', color: '#4A90D9', memo: '' },
@@ -615,7 +633,17 @@ async function handleLogin(e){
   if(btn) btn.disabled=true;
 
   try {
-    const accs = await dbLoad('accounts', { company_id: companyId, password: password });
+    const hashedPw = await hashPassword(password);
+    let accs = await dbLoad('accounts', { company_id: companyId, password: hashedPw });
+    // 旧平文パスワードとの互換性チェック
+    if(!accs.length){
+      accs = await dbLoad('accounts', { company_id: companyId, password: password });
+      if(accs.length){
+        // 平文→ハッシュにマイグレーション
+        await dbUpdate('accounts', accs[0].id, { password: hashedPw });
+        accs[0].password = hashedPw;
+      }
+    }
     if(!accs.length){ showToast('パスワードが正しくありません'); if(btn) btn.disabled=false; return; }
     currentAccount = accs[0];
     currentUserId = accs[0].id;
@@ -699,6 +727,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   ['raku_setup','raku_accounts','raku_session','raku_sites','raku_entries','raku_members','raku_custom'].forEach(k => localStorage.removeItem(k));
 
   companyId = loadSession('company_id', null);
+  if(isSessionExpired()){ localStorage.clear(); companyId=null; }
   if(!companyId){
     showScreen('setup');
     return;
