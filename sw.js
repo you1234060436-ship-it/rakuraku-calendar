@@ -1,7 +1,11 @@
-const CACHE_NAME = 'rakuraku-v1';
+const CACHE_NAME = 'rakuraku-v2';
 const ASSETS = [
+  '/',
   '/index.html',
-  '/personal.html'
+  '/personal.html',
+  '/privacy.html',
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
 self.addEventListener('install', e => {
@@ -21,14 +25,21 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Network first, fall back to cache
+  if(e.request.url.includes('supabase') || e.request.url.includes('/api/')) return;
   e.respondWith(
-    fetch(e.request)
-      .then(res => {
+    fetch(e.request).then(res => {
+      if(res.ok){
         const clone = res.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        return res;
-      })
-      .catch(() => caches.match(e.request))
+      }
+      return res;
+    }).catch(() => caches.match(e.request))
   );
+});
+
+self.addEventListener('message', e => {
+  if(e.data === 'skipWaiting') self.skipWaiting();
+  if(e.data === 'clearCache'){
+    caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+  }
 });
