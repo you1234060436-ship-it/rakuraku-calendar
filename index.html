@@ -650,6 +650,40 @@ async function handleSetup(e){
   }
 }
 
+// URL招待リンクからの自動ログイン
+async function autoLoginFromInvite(name, pw){
+  try {
+    const hashedPw = await hashPassword(pw);
+    let accs = await dbLoad('accounts', { company_id: companyId, name: name, password: hashedPw });
+    if(!accs.length){
+      accs = await dbLoad('accounts', { company_id: companyId, name: name, password: pw });
+      if(accs.length){
+        await dbUpdate('accounts', accs[0].id, { password: hashedPw });
+        accs[0].password = hashedPw;
+      }
+    }
+    if(!accs.length){
+      showScreen('login');
+      document.getElementById('loginPassword').value = pw;
+      showToast('自動ログインできませんでした。パスワードを確認してください');
+      return;
+    }
+    currentAccount = accs[0];
+    currentUserId = accs[0].id;
+    userRole = accs[0].role;
+    saveSession('account_id', currentUserId);
+    await loadAllData();
+    showScreen('app');
+    init();
+    renderCalendar();
+    buildTabs();
+    showToast(name + 'さん、ようこそ！');
+  } catch(err){
+    showScreen('login');
+    showToast('エラー: ' + (err.message||err));
+  }
+}
+
 async function handleLogin(e){
   e.preventDefault();
   const password = document.getElementById('loginPassword').value;
@@ -790,7 +824,15 @@ window.addEventListener('DOMContentLoaded', async ()=>{
       showScreen('login');
     }
   } else {
-    showScreen('login');
+    // URL招待パラメータで自動ログイン
+    const urlParams = new URLSearchParams(location.search);
+    const inviteName = urlParams.get('name');
+    const invitePw = urlParams.get('pw');
+    if(inviteName && invitePw){
+      await autoLoginFromInvite(inviteName, invitePw);
+    } else {
+      showScreen('login');
+    }
   }
 
   const urlParams = new URLSearchParams(location.search);
@@ -1557,10 +1599,8 @@ async function resetAccountPassword(accountId){
   document.getElementById('inviteResultRole').textContent = roleName;
   document.getElementById('inviteResultPassword').textContent = newPw;
   document.getElementById('inviteResultLineBtn').onclick = function(){
-    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップしてログイン
-${appUrl}
-
-※リンクを開くと自動でログインできます`;
+    const loginUrl = `${appUrl}?name=${encodeURIComponent(acc.name)}&pw=${encodeURIComponent(newPw)}`;
+    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップでログイン\n${loginUrl}\n\n※リンクを開くと自動でログインできます`;
     window.open('https://line.me/R/share?text=' + encodeURIComponent(msg), '_blank');
     closeM('inviteResultModal');
   };
@@ -1613,10 +1653,8 @@ async function createNewAccount(){
     const companyName = setup?.companyName || '会社';
     const baseUrl2 = location.origin + location.pathname;
     const appUrl = baseUrl2 + '?name=' + encodeURIComponent(acc.name) + '&pw=' + encodeURIComponent(rawPassword);
-    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップしてログイン
-${appUrl}
-
-※リンクを開くと自動でログインできます`;
+    const loginUrl = `${appUrl}?name=${encodeURIComponent(name)}&pw=${encodeURIComponent(rawPassword)}`;
+    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップでログイン\n${loginUrl}\n\n※リンクを開くと自動でログインできます`;
     window.open('https://line.me/R/share?text=' + encodeURIComponent(msg), '_blank');
     closeM('inviteResultModal');
   };
