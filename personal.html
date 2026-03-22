@@ -1305,6 +1305,85 @@ function exportCSV(){
   showToast('CSVをダウンロードしました');
 }
 
+// ===== Data Export / Import =====
+async function exportAllData(){
+  if(!sb || !companyId){ showToast('データがありません'); return; }
+  try {
+    const [companies, accs, mems, ws, ae, cs] = await Promise.all([
+      dbLoad('companies', { id: companyId }),
+      dbLoad('accounts', { company_id: companyId }),
+      dbLoad('team_members', { company_id: companyId }),
+      dbLoad('work_sites', { company_id: companyId }),
+      dbLoad('attendance_entries', { company_id: companyId }),
+      dbLoad('company_settings', { company_id: companyId })
+    ]);
+    const payload = {
+      version: 1,
+      exported_at: new Date().toISOString(),
+      app: 'rakuraku-calendar-personal',
+      data: { companies, accounts: accs, team_members: mems, work_sites: ws, attendance_entries: ae, company_settings: cs }
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const d = new Date();
+    a.download = `楽々カレンダー_バックアップ_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
+    a.click();
+    showToast('バックアップを保存しました');
+  } catch(e) { console.error(e); showToast('エクスポートに失敗しました'); }
+}
+
+async function importAllData(){
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = async (ev) => {
+    const file = ev.target.files[0];
+    if(!file) return;
+    try {
+      const text = await file.text();
+      const payload = JSON.parse(text);
+      if(!payload.data || !payload.version){ showToast('無効なバックアップファイルです'); return; }
+      if(!confirm('現在のデータを上書きして復元しますか？\nこの操作は取り消せません。')) return;
+      const d = payload.data;
+      if(d.companies && d.companies.length > 0){
+        const c = d.companies[0];
+        const { data: existing } = await sb.from('companies').select('id').eq('id', c.id).single();
+        if(!existing) await sb.from('companies').insert(c);
+        companyId = c.id;
+        saveSession('company_id', companyId);
+      }
+      if(d.accounts && d.accounts.length > 0){
+        for(const acc of d.accounts){
+          const { data: ex } = await sb.from('accounts').select('id').eq('id', acc.id).maybeSingle();
+          if(ex) await sb.from('accounts').update(acc).eq('id', acc.id);
+          else await sb.from('accounts').insert(acc);
+        }
+        const mainAcc = d.accounts.find(a => a.role === 'master') || d.accounts[0];
+        if(mainAcc){ saveSession('account_id', mainAcc.id); currentUserId = mainAcc.id; }
+      }
+      if(d.team_members && d.team_members.length > 0){
+        await sb.from('team_members').delete().eq('company_id', companyId);
+        await sb.from('team_members').insert(d.team_members);
+      }
+      if(d.work_sites && d.work_sites.length > 0){
+        await sb.from('work_sites').delete().eq('company_id', companyId);
+        await sb.from('work_sites').insert(d.work_sites);
+      }
+      if(d.attendance_entries && d.attendance_entries.length > 0){
+        await sb.from('attendance_entries').delete().eq('company_id', companyId);
+        await sb.from('attendance_entries').insert(d.attendance_entries);
+      }
+      if(d.company_settings && d.company_settings.length > 0){
+        for(const cs of d.company_settings) await sb.from('company_settings').upsert(cs);
+      }
+      showToast('データを復元しました。再読み込みします...');
+      setTimeout(() => location.reload(), 1500);
+    } catch(e) { console.error(e); showToast('インポートに失敗しました: ' + e.message); }
+  };
+  input.click();
+}
+
 // ===== Settings Page =====
 function renderSettings(){
   const content = document.getElementById('settingsContent');
@@ -1348,6 +1427,15 @@ function renderSettings(){
       <button onclick="resetCustom()" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;font-size:13px;font-weight:600">リセット</button>
     </div>
   </div>
+
+      <div class="settings-group" style="padding:14px;margin-bottom:16px">
+        <div style="font-weight:700;font-size:15px;margin-bottom:12px">データバックアップ</div>
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:12px">データをJSONファイルとして保存・復元できます。機種変更やブラウザ変更時にご利用ください。</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="exportAllData()" style="flex:1;padding:12px;border:none;border-radius:8px;background:#4A90D9;color:#fff;font-size:14px;font-weight:600;cursor:pointer">バックアップ保存</button>
+          <button onclick="importAllData()" style="flex:1;padding:12px;border:1.5px solid #4A90D9;border-radius:8px;background:var(--white);color:#4A90D9;font-size:14px;font-weight:600;cursor:pointer">データ復元</button>
+        </div>
+      </div>
 
       <div style="background:linear-gradient(135deg, #4A90D9 0%, #2E7D52 100%);border-radius:12px;padding:16px;margin-bottom:16px;color:#fff">
       <div style="font-weight:700;margin-bottom:8px">チームで使うなら</div>
