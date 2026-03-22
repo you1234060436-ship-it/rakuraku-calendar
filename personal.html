@@ -79,6 +79,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 .day-cell.today{font-weight:700;background:rgba(0,0,0,0.06)}
 .day-cell.other-month{color:#CCC!important}
 .day-dots{display:flex;gap:2px;position:absolute;bottom:4px}
+.hol-name{font-size:7px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-top:1px;opacity:0.85}
 .day-dot{width:5px;height:5px;border-radius:50%}
 
 /* ===== Summary Cards ===== */
@@ -767,6 +768,7 @@ function renderCalendar(){
     let de = entries.filter(e => e.date === ds);
     if(userRole === 'worker') de = de.filter(e => e.memberId === currentUserId);
     const hol = isHoliday(ds);
+    const holName = hol ? getHolidayName(ds) : '';
     let cls = 'day-cell';
     if(isT) cls += ' today';
     if(dw === 0) cls += ' sunday';
@@ -792,7 +794,8 @@ function renderCalendar(){
       dots += '</div>';
     }
 
-    h += `<div class="${cls}" style="color:${dayColor}" data-ds="${ds}" onclick="openEntry('${ds}')">${d}${dots}</div>`;
+    const holLabel = holName ? `<div class="hol-name">${holName}</div>` : '';
+    h += `<div class="${cls}" style="color:${dayColor}" data-ds="${ds}" onclick="openEntry('${ds}')">${d}${holLabel}${dots}</div>`;
   }
 
   const tot = fd + dim;
@@ -1575,11 +1578,13 @@ async function deleteAccount(accountId){
 
 // ===== Japanese Holiday Detection =====
 function getJPHolidays(year){
-  const h = new Set();
-  const add = (m, d) => h.add(`${year}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  const h = new Map();
+  const fmt = (m, d) => `${year}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const add = (m, d, name) => h.set(fmt(m, d), name);
 
-  add(1, 1); add(2, 11); add(2, 23); add(4, 29); add(5, 3); add(5, 4); add(5, 5);
-  add(8, 11); add(11, 3); add(11, 23);
+  add(1, 1, '元日'); add(2, 11, '建国記念の日'); add(2, 23, '天皇誕生日');
+  add(4, 29, '昭和の日'); add(5, 3, '憲法記念日'); add(5, 4, 'みどりの日'); add(5, 5, 'こどもの日');
+  add(8, 11, '山の日'); add(11, 3, '文化の日'); add(11, 23, '勤労感謝の日');
 
   function nthMonday(y, m, n){
     let count = 0;
@@ -1594,24 +1599,39 @@ function getJPHolidays(year){
     return 1;
   }
 
-  add(1, nthMonday(year, 1, 2));
-  add(7, nthMonday(year, 7, 3));
-  add(9, nthMonday(year, 9, 3));
-  add(10, nthMonday(year, 10, 2));
+  add(1, nthMonday(year, 1, 2), '成人の日');
+  add(7, nthMonday(year, 7, 3), '海の日');
+  add(9, nthMonday(year, 9, 3), '敬老の日');
+  add(10, nthMonday(year, 10, 2), 'スポーツの日');
 
   const vernal = Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
   const autumnal = Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
-  add(3, vernal);
-  add(9, autumnal);
+  add(3, vernal, '春分の日');
+  add(9, autumnal, '秋分の日');
 
-  h.forEach(ds => {
+  const keys = [...h.keys()];
+  keys.forEach(ds => {
     const dt = new Date(ds);
     if(dt.getDay() === 0){
       const nx = new Date(dt);
       nx.setDate(nx.getDate() + 1);
-      h.add(nx.toISOString().slice(0, 10));
+      const nxStr = nx.toISOString().slice(0, 10);
+      if(!h.has(nxStr)) h.set(nxStr, '振替休日');
     }
   });
+
+  keys.sort();
+  for(let i = 0; i < keys.length - 1; i++){
+    const d1 = new Date(keys[i]);
+    const d2 = new Date(keys[i + 1]);
+    const diff = (d2 - d1) / 86400000;
+    if(diff === 2){
+      const mid = new Date(d1);
+      mid.setDate(mid.getDate() + 1);
+      const midStr = mid.toISOString().slice(0, 10);
+      if(!h.has(midStr) && mid.getDay() !== 0) h.set(midStr, '国民の休日');
+    }
+  }
 
   return h;
 }
@@ -1621,6 +1641,11 @@ function isHoliday(dateStr){
   const y = parseInt(dateStr.slice(0, 4));
   if(!holidayCache[y]) holidayCache[y] = getJPHolidays(y);
   return holidayCache[y].has(dateStr);
+}
+function getHolidayName(dateStr){
+  const y = parseInt(dateStr.slice(0, 4));
+  if(!holidayCache[y]) holidayCache[y] = getJPHolidays(y);
+  return holidayCache[y].get(dateStr) || '';
 }
 
 // ===== Customization System =====
