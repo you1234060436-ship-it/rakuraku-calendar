@@ -552,6 +552,24 @@ const DEFAULT_CUSTOM = {
 // ===== Utility Functions =====
 function closeM(id){document.getElementById(id).classList.remove('show')}
 function sumDays(arr){ return arr.reduce((s, e) => s + (e.hours || 1), 0); }
+function sumDaysAndHours(arr){
+  let days = 0, hours = 0;
+  arr.forEach(e => {
+    const site = sites.find(x => x.id === e.siteId);
+    if(site && site.rateType === 'hourly'){
+      hours += (e.hours || 0);
+    } else {
+      days += (e.hours || 1);
+    }
+  });
+  return { days, hours };
+}
+function formatDaysHours(dh){
+  let parts = [];
+  if(dh.days > 0) parts.push(dh.days + '<span class="summary-unit">日</span>');
+  if(dh.hours > 0) parts.push(dh.hours + '<span class="summary-unit">h</span>');
+  return parts.length ? parts.join(' / ') : '0<span class="summary-unit">日</span>';
+}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
 function canSeeRevenue(){return userRole==='master'}
 function canSelectMembers(){return userRole==='master'||userRole==='submaster'}
@@ -867,11 +885,11 @@ function updSummary(){
 
   let rev = 0;
   me.forEach(e => { rev += calcRev(e, sites.find(x => x.id === e.siteId)); });
-  const meDays = sumDays(me);
-  document.getElementById('totalDays').innerHTML = `${meDays}<span class="summary-unit">日</span>`;
+  const meDH = sumDaysAndHours(me);
+  document.getElementById('totalDays').innerHTML = formatDaysHours(meDH);
 
   if(userRole === 'worker'){
-    document.getElementById('cardDays').innerHTML = '<div class="summary-label">自分の出勤</div><div class="summary-value days">' + meDays + '<span class="summary-unit">日</span></div>';
+    document.getElementById('cardDays').innerHTML = '<div class="summary-label">自分の出勤</div><div class="summary-value days">' + formatDaysHours(meDH) + '</div>';
   }
 
   const revCard = document.getElementById('cardRevenue');
@@ -886,7 +904,7 @@ function updSummary(){
   if(userRole === 'worker') allE = allE.filter(e => e.memberId === currentUserId);
   let gRev = 0;
   allE.forEach(e => { gRev += calcRev(e, sites.find(x => x.id === e.siteId)); });
-  document.getElementById('grandTotalDays').innerHTML = `${sumDays(allE)}<span class="summary-unit">日</span>`;
+  document.getElementById('grandTotalDays').innerHTML = formatDaysHours(sumDaysAndHours(allE));
 
   const gRevCard = document.getElementById('cardGrandRevenue');
   if(canSeeRevenue()){
@@ -1045,11 +1063,15 @@ async function saveEntry(){
 }
 
 async function delEntry(ds, sid, mid){
-  const target = entries.find(e => e.date === ds && e.siteId === sid && e.memberId === mid);
-  if(target && target.id) await dbDelete('attendance_entries', target.id);
-  entries = entries.filter(e => !(e.date === ds && e.siteId === sid && e.memberId === mid));
-  renderCalendar();
-  showToast('削除しました');
+  const target = entries.find(e => e.date === ds && String(e.siteId) === String(sid) && String(e.memberId||0) === String(mid||0));
+  if(target && target.id){
+    await dbDelete('attendance_entries', target.id);
+    entries = entries.filter(e => e.id !== target.id);
+    renderCalendar();
+    showToast('削除しました');
+  } else {
+    showToast('削除対象が見つかりませんでした');
+  }
 }
 
 // ===== Stats Page =====
@@ -1060,7 +1082,7 @@ function renderStats(){
 
   let rev = 0;
   me.forEach(e => { rev += calcRev(e, sites.find(x => x.id === e.siteId)); });
-  document.getElementById('sDays').innerHTML = `${sumDays(me)}<span class="summary-unit">日</span>`;
+  document.getElementById('sDays').innerHTML = formatDaysHours(sumDaysAndHours(me));
 
   const revCard = document.getElementById('statsRevCard');
   if(canSeeRevenue()){
@@ -1073,7 +1095,7 @@ function renderStats(){
   let allE = entries;
   let gRev = 0;
   allE.forEach(e => { gRev += calcRev(e, sites.find(x => x.id === e.siteId)); });
-  document.getElementById('sGrandDays').innerHTML = `${sumDays(allE)}<span class="summary-unit">日</span>`;
+  document.getElementById('sGrandDays').innerHTML = formatDaysHours(sumDaysAndHours(allE));
 
   const gRevCard = document.getElementById('statsGrandRevCard');
   if(canSeeRevenue()){
