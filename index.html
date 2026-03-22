@@ -925,7 +925,7 @@ function renderCalendar(){
     const dw = new Date(cY, cM, d).getDay();
     const isT = cY === td.getFullYear() && cM === td.getMonth() && d === td.getDate();
     let de = entries.filter(e => e.date === ds);
-    if(userRole === 'worker') de = de.filter(e => e.memberId === currentUserId);
+    if(userRole === 'worker'){ const mm = members.find(m => m.accountId === currentUserId); de = de.filter(e => e.memberId === (mm ? mm.id : currentUserId)); }
     const hol = isHoliday(ds);
     const holName = hol ? getHolidayName(ds) : '';
     let cls = 'day-cell';
@@ -993,7 +993,7 @@ function calcRev(entry, site){
 function updSummary(){
   const ms = `${cY}-${String(cM+1).padStart(2,'0')}`;
   let me = entries.filter(e => e.date.startsWith(ms));
-  if(userRole === 'worker') me = me.filter(e => e.memberId === currentUserId);
+  if(userRole === 'worker'){ const mm = members.find(m => m.accountId === currentUserId); me = me.filter(e => e.memberId === (mm ? mm.id : currentUserId)); }
 
   let rev = 0;
   me.forEach(e => { rev += calcRev(e, sites.find(x => x.id === e.siteId)); });
@@ -1013,7 +1013,7 @@ function updSummary(){
   }
 
   let allE = entries;
-  if(userRole === 'worker') allE = allE.filter(e => e.memberId === currentUserId);
+  if(userRole === 'worker'){ const mm = members.find(m => m.accountId === currentUserId); allE = allE.filter(e => e.memberId === (mm ? mm.id : currentUserId)); }
   let gRev = 0;
   allE.forEach(e => { gRev += calcRev(e, sites.find(x => x.id === e.siteId)); });
   document.getElementById('grandTotalDays').innerHTML = `${sumDays(allE)}<span class="summary-unit">日</span>`;
@@ -1031,7 +1031,7 @@ function renderToday(){
   const td = new Date();
   const ds = `${td.getFullYear()}-${String(td.getMonth()+1).padStart(2,'0')}-${String(td.getDate()).padStart(2,'0')}`;
   let te = entries.filter(e => e.date === ds);
-  if(userRole === 'worker') te = te.filter(e => e.memberId === currentUserId);
+  if(userRole === 'worker'){ const mm = members.find(m => m.accountId === currentUserId); te = te.filter(e => e.memberId === (mm ? mm.id : currentUserId)); }
 
   const c = document.getElementById('todayEntries');
   if(!te.length){
@@ -1092,7 +1092,8 @@ function openEntry(ds){
     document.getElementById('memberChips').innerHTML = mh;
   } else {
     mg.style.display = 'none';
-    selMemberIds = [currentUserId];
+    const myMember = members.find(m => m.accountId === currentUserId);
+    selMemberIds = [myMember ? myMember.id : currentUserId];
   }
 
   document.getElementById('entryModal').classList.add('show');
@@ -1148,7 +1149,8 @@ async function confirmCustomSite(){
     return;
   }
   const clr = PALETTE[sites.length % PALETTE.length];
-  const newSite = await dbInsert('sites', { company_id: companyId, name, price: 0, rate_type: 'daily', color: clr, memo: '' });
+  const newSite = await dbInsert('work_sites', { company_id: companyId, name, price: 0, rate_type: 'daily', color: clr, memo: '' });
+  if(!newSite){ showToast('現場の追加に失敗しました'); return; }
   if(newSite){
     sites.push({ id: newSite.id, name: newSite.name, price: 0, rateType: 'daily', color: clr, memo: '' });
     selSiteId = newSite.id;
@@ -1198,7 +1200,10 @@ function updateEntryBtn(){
 async function saveEntry(){
   if(!selDate || !selSiteId) return;
   let mids = selMemberIds;
-  if(userRole === 'worker') mids = [currentUserId];
+  if(userRole === 'worker'){
+    const myMember = members.find(m => m.accountId === currentUserId);
+    mids = [myMember ? myMember.id : currentUserId];
+  }
   if(!mids.length) return;
 
   const site = sites.find(x => x.id === selSiteId);
