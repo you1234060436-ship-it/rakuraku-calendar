@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>楽々カレンダー 個人版</title>
+<link rel="manifest" href="manifest-personal.json">
+<meta name="theme-color" content="#4A90D9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="楽々カレンダー">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--primary:#4A90D9;--primary-light:#E8F0FE;--accent:#FF6B35;--bg:#F8F9FA;--text:#333;--text-light:#888;--white:#FFF;--border:#E0E0E0;--success:#4CAF50;--shadow:0 2px 8px rgba(0,0,0,0.08);--danger:#E53935}
@@ -1723,5 +1729,6 @@ async function resetCustom(){
 
 document.getElementById('entryHours').addEventListener('input', updateEntryBtn);
 </script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}</script>
 </body>
 </html>
