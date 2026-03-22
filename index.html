@@ -791,6 +791,28 @@ function showScreen(screen){
   }
 }
 
+function showCompanySelect(companyList){
+  const loginCard = document.querySelector('.login-card');
+  let h = '<div class="login-logo">楽々カレンダー</div>';
+  h += '<div class="login-sub">会社を選択してください</div>';
+  h += '<div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">';
+  companyList.forEach(function(c){
+    h += '<button type="button" onclick="selectCompany(\'' + c.id + '\',\'' + c.name.replace(/'/g,"\\'") + '\')" style="padding:14px;border:2px solid var(--border);border-radius:10px;background:var(--white);font-size:16px;font-weight:600;cursor:pointer">' + c.name + '</button>';
+  });
+  h += '</div>';
+  loginCard.innerHTML = h;
+  showScreen('login');
+}
+
+async function selectCompany(cid, cname){
+  companyId = cid;
+  saveSession('company_id', companyId);
+  setup = { companyName: cname };
+  const loginCard = document.querySelector('.login-card');
+  loginCard.innerHTML = '<div class="login-company-name" id="loginCompanyName">' + cname + '</div><div class="login-logo">楽々カレンダー</div><div class="login-sub">ビジネス版へログイン</div><form onsubmit="handleLogin(event)"><input type="password" class="login-input" id="loginPassword" placeholder="パスワードを入力" autocomplete="off"><button type="submit" class="login-btn">ログイン</button><div style="text-align:center;margin-top:12px"><a href="privacy.html" style="font-size:11px;color:#888;text-decoration:none">プライバシーポリシー</a></div></form>';
+  showScreen('login');
+}
+
 // ===== Initialization =====
 function init(){
   updateRoleBadge();
@@ -842,12 +864,44 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   }
 
   companyId = loadSession('company_id', null);
+
+  // セッション有効期限チェック
+  if(isSessionExpired()){
+    Object.keys(localStorage).filter(k => k.startsWith('raku_')).forEach(k => localStorage.removeItem(k));
+    companyId = null;
+  }
+
+  // companyIdがない場合、DBに既存の会社があるか確認
   if(!companyId){
+    const allCompanies = await dbLoad('companies', {});
+    if(allCompanies.length === 1){
+      companyId = allCompanies[0].id;
+      saveSession('company_id', companyId);
+      setup = { companyName: allCompanies[0].name };
+      showScreen('login');
+      return;
+    } else if(allCompanies.length > 1){
+      showCompanySelect(allCompanies);
+      return;
+    }
     showScreen('setup');
     return;
   }
+
   const companies = await dbLoad('companies', { id: companyId });
-  if(!companies.length){ saveSession('company_id', null); showScreen('setup'); return; }
+  if(!companies.length){
+    const allCompanies = await dbLoad('companies', {});
+    if(allCompanies.length){
+      companyId = allCompanies[0].id;
+      saveSession('company_id', companyId);
+      setup = { companyName: allCompanies[0].name };
+      showScreen('login');
+      return;
+    }
+    saveSession('company_id', null);
+    showScreen('setup');
+    return;
+  }
   setup = { companyName: companies[0].name };
 
   const savedAccountId = loadSession('account_id', null);
