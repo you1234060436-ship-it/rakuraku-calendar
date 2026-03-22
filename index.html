@@ -845,15 +845,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     showScreen('login');
   }
 
-  const urlParams = new URLSearchParams(location.search);
-  const paramPw = urlParams.get('pw');
-  if(paramPw){
-    const pwField = document.getElementById('loginPassword');
-    if(pwField) pwField.value = paramPw;
-    if(window.history.replaceState){
-      history.replaceState(null, '', location.pathname);
-    }
-  }
+
 });
 
 // ===== Tabs =====
