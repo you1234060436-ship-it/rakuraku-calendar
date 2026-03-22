@@ -786,6 +786,16 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   } else {
     showScreen('login');
   }
+
+  const urlParams = new URLSearchParams(location.search);
+  const paramPw = urlParams.get('pw');
+  if(paramPw){
+    const pwField = document.getElementById('loginPassword');
+    if(pwField) pwField.value = paramPw;
+    if(window.history.replaceState){
+      history.replaceState(null, '', location.pathname);
+    }
+  }
 });
 
 // ===== Tabs =====
@@ -1534,13 +1544,17 @@ async function resetAccountPassword(accountId){
   acc.password = hashedPw;
 
   const companyName = setup?.companyName || '会社';
-  const appUrl = location.origin + location.pathname;
+  const baseUrl = location.origin + location.pathname;
+  const appUrl = baseUrl + '?name=' + encodeURIComponent(acc.name) + '&pw=' + encodeURIComponent(newPw);
   const roleName = acc.role === 'submaster' ? '職長' : acc.role === 'worker' ? '作業員' : 'マスター';
   document.getElementById('inviteResultName').textContent = acc.name;
   document.getElementById('inviteResultRole').textContent = roleName;
   document.getElementById('inviteResultPassword').textContent = newPw;
   document.getElementById('inviteResultLineBtn').onclick = function(){
-    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ アプリを開く\n${appUrl}\n\n▼ あなたの新しいパスワード\n${newPw}\n\n※上のリンクを開いてパスワードを入力してください`;
+    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップしてログイン
+${appUrl}
+
+※リンクを開くと自動でログインできます`;
     window.open('https://line.me/R/share?text=' + encodeURIComponent(msg), '_blank');
     closeM('inviteResultModal');
   };
@@ -1591,8 +1605,12 @@ async function createNewAccount(){
   document.getElementById('inviteResultPassword').textContent = password;
   document.getElementById('inviteResultLineBtn').onclick = function(){
     const companyName = setup?.companyName || '会社';
-    const appUrl = location.origin + location.pathname;
-    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ アプリを開く\n${appUrl}\n\n▼ あなたのパスワード\n${rawPassword}\n\n※上のリンクを開いてパスワードを入力してください`;
+    const baseUrl2 = location.origin + location.pathname;
+    const appUrl = baseUrl2 + '?name=' + encodeURIComponent(acc.name) + '&pw=' + encodeURIComponent(rawPassword);
+    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップしてログイン
+${appUrl}
+
+※リンクを開くと自動でログインできます`;
     window.open('https://line.me/R/share?text=' + encodeURIComponent(msg), '_blank');
     closeM('inviteResultModal');
   };
