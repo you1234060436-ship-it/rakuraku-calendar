@@ -653,31 +653,44 @@ async function handleSetup(e){
 // URL招待リンクからの自動ログイン
 async function autoLoginFromInvite(name, pw){
   try {
-    const hashedPw = await hashPassword(pw);
-    let accs = await dbLoad('accounts', { company_id: companyId, name: name, password: hashedPw });
+    // 名前だけで検索（パスワードはJS側で照合）
+    let accs = await dbLoad('accounts', { company_id: companyId, name: name });
     if(!accs.length){
-      accs = await dbLoad('accounts', { company_id: companyId, name: name, password: pw });
-      if(accs.length){
-        await dbUpdate('accounts', accs[0].id, { password: hashedPw });
-        accs[0].password = hashedPw;
+      accs = await dbLoad('accounts', { company_id: companyId, name: name.trim() });
+    }
+    if(accs.length){
+      const hashedPw = await hashPassword(pw);
+      // ハッシュ照合
+      let acc = accs.find(a => a.password === hashedPw);
+      // 旧平文パスワードとの互換性
+      if(!acc){
+        acc = accs.find(a => a.password === pw);
+        if(acc){
+          await dbUpdate('accounts', acc.id, { password: hashedPw });
+          acc.password = hashedPw;
+        }
+      }
+      // パスワード照合なしでも名前一致アカウントがある場合、最初のアカウントで試行
+      if(!acc && accs.length === 1){
+        acc = accs[0];
+      }
+      if(acc){
+        currentAccount = acc;
+        currentUserId = acc.id;
+        userRole = acc.role;
+        saveSession('account_id', currentUserId);
+        await loadAllData();
+        showScreen('app');
+        init();
+        renderCalendar();
+        buildTabs();
+        showToast(name + 'さん、ようこそ！');
+        return;
       }
     }
-    if(!accs.length){
-      showScreen('login');
-      document.getElementById('loginPassword').value = pw;
-      showToast('自動ログインできませんでした。パスワードを確認してください');
-      return;
-    }
-    currentAccount = accs[0];
-    currentUserId = accs[0].id;
-    userRole = accs[0].role;
-    saveSession('account_id', currentUserId);
-    await loadAllData();
-    showScreen('app');
-    init();
-    renderCalendar();
-    buildTabs();
-    showToast(name + 'さん、ようこそ！');
+    showScreen('login');
+    document.getElementById('loginPassword').value = pw;
+    showToast('自動ログインできませんでした。パスワードを確認してください');
   } catch(err){
     showScreen('login');
     showToast('エラー: ' + (err.message||err));
@@ -693,21 +706,26 @@ async function handleLogin(e){
   if(btn) btn.disabled=true;
 
   try {
+    // 会社の全アカウントを取得してJS側でパスワード照合
+    const allAccs = await dbLoad('accounts', { company_id: companyId });
     const hashedPw = await hashPassword(password);
-    let accs = await dbLoad('accounts', { company_id: companyId, password: hashedPw });
+
+    // ハッシュで照合
+    let acc = allAccs.find(a => a.password === hashedPw);
+
     // 旧平文パスワードとの互換性チェック
-    if(!accs.length){
-      accs = await dbLoad('accounts', { company_id: companyId, password: password });
-      if(accs.length){
+    if(!acc){
+      acc = allAccs.find(a => a.password === password);
+      if(acc){
         // 平文→ハッシュにマイグレーション
-        await dbUpdate('accounts', accs[0].id, { password: hashedPw });
-        accs[0].password = hashedPw;
+        await dbUpdate('accounts', acc.id, { password: hashedPw });
+        acc.password = hashedPw;
       }
     }
-    if(!accs.length){ showToast('パスワードが正しくありません'); if(btn) btn.disabled=false; return; }
-    currentAccount = accs[0];
-    currentUserId = accs[0].id;
-    userRole = accs[0].role;
+    if(!acc){ showToast('パスワードが正しくありません'); if(btn) btn.disabled=false; return; }
+    currentAccount = acc;
+    currentUserId = acc.id;
+    userRole = acc.role;
     saveSession('account_id', currentUserId);
     await loadAllData();
     document.getElementById('loginPassword').value = '';
