@@ -194,7 +194,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 .account-role.submaster{background:#2C3E90}
 .account-role.worker{background:#4CAF50}
 .account-name-team{font-size:13px;font-weight:600;margin-bottom:2px}
-.account-password-display{font-size:12px;color:var(--text-light);font-family:monospace;margin-top:4px}
+        <div style="font-size:10px;color:var(--text-light);margin-top:2px">パスワード: 発行時のみ確認可</div>
 .account-actions{display:flex;gap:6px}
 .account-btn{padding:6px 10px;border:none;border-radius:6px;font-size:11px;cursor:pointer}
 .account-btn.show{background:var(--primary-light);color:var(--primary)}
@@ -231,6 +231,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
       <label class="setup-input-label">マスターパスワード確認 <span style="color:var(--danger)">*</span></label>
       <input type="password" class="setup-input" id="setupPasswordConfirm" placeholder="もう一度入力" minlength="4" required>
       <button type="submit" class="setup-btn">セットアップ完了</button>
+      <div style="text-align:center;margin-top:12px"><a href="privacy.html" style="font-size:11px;color:#888;text-decoration:none">プライバシーポリシー</a></div>
     </form>
   </div>
 </div>
@@ -244,6 +245,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
     <form onsubmit="handleLogin(event)">
       <input type="password" class="login-input" id="loginPassword" placeholder="パスワードを入力" autocomplete="off">
       <button type="submit" class="login-btn">ログイン</button>
+      <div style="text-align:center;margin-top:12px"><a href="privacy.html" style="font-size:11px;color:#888;text-decoration:none">プライバシーポリシー</a></div>
     </form>
   </div>
 </div>
@@ -456,9 +458,24 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 let sb;
 try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { console.error('Supabase init failed:', e); }
 
+// ===== Password Hashing =====
+async function hashPassword(pw){
+  const enc = new TextEncoder().encode(pw);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
 // ===== Session Storage Functions =====
-function saveSession(key, val){ localStorage.setItem('raku_'+key, JSON.stringify(val)); }
+const SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7日間
+function saveSession(key, val){
+  localStorage.setItem('raku_'+key, JSON.stringify(val));
+  localStorage.setItem('raku_session_ts', Date.now().toString());
+}
 function loadSession(key, fb){ try{return JSON.parse(localStorage.getItem('raku_'+key))||fb}catch(e){return fb} }
+function isSessionExpired(){
+  const ts = parseInt(localStorage.getItem('raku_session_ts') || '0');
+  return Date.now() - ts > SESSION_MAX_AGE;
+}
 
 // ===== Supabase Database Helpers =====
 async function dbLoad(table, filter){
@@ -601,7 +618,8 @@ async function handleSetup(e){
     companyId = company.id;
     saveSession('company_id', companyId);
 
-    const acc = await dbInsert('accounts', { company_id: companyId, password, role: 'master', name: '管理者', team: '経営' });
+    const hashedPw = await hashPassword(password);
+    const acc = await dbInsert('accounts', { company_id: companyId, password: hashedPw, role: 'master', name: '管理者', team: '経営' });
     await dbInsert('team_members', { company_id: companyId, account_id: acc.id, name: '管理者', team: '経営', color: AVATARS[0] });
     await dbInsertMany('work_sites', [
       { company_id: companyId, name: 'サンプル現場A', price: 15000, rate_type: 'daily', color: '#4A90D9', memo: '' },
@@ -635,7 +653,17 @@ async function handleLogin(e){
   if(btn) btn.disabled=true;
 
   try {
-    const accs = await dbLoad('accounts', { company_id: companyId, password: password });
+    const hashedPw = await hashPassword(password);
+    let accs = await dbLoad('accounts', { company_id: companyId, password: hashedPw });
+    // 旧平文パスワードとの互換性チェック
+    if(!accs.length){
+      accs = await dbLoad('accounts', { company_id: companyId, password: password });
+      if(accs.length){
+        // 平文→ハッシュにマイグレーション
+        await dbUpdate('accounts', accs[0].id, { password: hashedPw });
+        accs[0].password = hashedPw;
+      }
+    }
     if(!accs.length){ showToast('パスワードが正しくありません'); if(btn) btn.disabled=false; return; }
     currentAccount = accs[0];
     currentUserId = accs[0].id;
@@ -1487,9 +1515,7 @@ function renderAccountsList(){
       <div class="account-actions" style="flex-wrap:wrap;justify-content:flex-end">
         ${acc.role === 'worker' ? `<button class="account-btn promote" onclick="changeRole(${acc.id},'submaster')">職長に昇格</button>` : ''}
         ${acc.role === 'submaster' ? `<button class="account-btn demote" onclick="changeRole(${acc.id},'worker')">作業員に変更</button>` : ''}
-        <button class="account-btn show" onclick="togglePasswordDisplay(${acc.id})">表示</button>
-        <button class="account-btn copy" onclick="copyPassword(${acc.id})">コピー</button>
-        <button class="account-btn line" onclick="inviteViaLine(${acc.id})">LINE招待</button>
+        <button class="account-btn show" onclick="resetAccountPassword(${acc.id})">PW再発行</button>
         <button class="account-btn delete" onclick="deleteAccount(${acc.id})">削除</button>
       </div>
     </div>`;
@@ -1498,44 +1524,28 @@ function renderAccountsList(){
   listEl.innerHTML = html;
 }
 
-function togglePasswordDisplay(accountId){
-  const display = document.getElementById(`pwdDisplay_${accountId}`);
-  const btn = event.target;
-  if(display.style.display === 'none'){
-    display.style.display = '';
-    btn.textContent = '隠す';
-  } else {
-    display.style.display = 'none';
-    btn.textContent = '表示';
-  }
-}
-
-function copyPassword(accountId){
-  const display = document.getElementById(`pwdDisplay_${accountId}`);
-  const pw = display.textContent;
-  navigator.clipboard.writeText(pw).then(() => {
-    showToast('コピーしました');
-  });
-}
-
-function inviteViaLine(accountId){
+async function resetAccountPassword(accountId){
   const acc = accounts.find(a => a.id === accountId);
   if(!acc) return;
+  if(!confirm(`${acc.name} のパスワードを再発行しますか？`)) return;
+  const newPw = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const hashedPw = await hashPassword(newPw);
+  await dbUpdate('accounts', accountId, { password: hashedPw });
+  acc.password = hashedPw;
+
   const companyName = setup?.companyName || '会社';
   const appUrl = location.origin + location.pathname;
-  const roleName = acc.role === 'submaster' ? '職長' : '作業員';
-  const msg = `【楽々カレンダー】
-${companyName}から${roleName}として招待されました
-
-▼ アプリを開く
-${appUrl}
-
-▼ あなたのパスワード
-${acc.password}
-
-※上のリンクを開いてパスワードを入力してください`;
-  const lineUrl = 'https://line.me/R/share?text=' + encodeURIComponent(msg);
-  window.open(lineUrl, '_blank');
+  const roleName = acc.role === 'submaster' ? '職長' : acc.role === 'worker' ? '作業員' : 'マスター';
+  document.getElementById('inviteResultName').textContent = acc.name;
+  document.getElementById('inviteResultRole').textContent = roleName;
+  document.getElementById('inviteResultPassword').textContent = newPw;
+  document.getElementById('inviteResultLineBtn').onclick = function(){
+    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ アプリを開く\n${appUrl}\n\n▼ あなたの新しいパスワード\n${newPw}\n\n※上のリンクを開いてパスワードを入力してください`;
+    window.open('https://line.me/R/share?text=' + encodeURIComponent(msg), '_blank');
+    closeM('inviteResultModal');
+  };
+  document.getElementById('inviteResultModal').classList.add('show');
+  showToast('パスワードを再発行しました');
 }
 
 async function createNewAccount(){
@@ -1556,7 +1566,9 @@ async function createNewAccount(){
     }
   }
 
-  const acc = await dbInsert('accounts', { company_id: companyId, password, role, name, team });
+  const rawPassword = password;
+  const hashedPw = await hashPassword(password);
+  const acc = await dbInsert('accounts', { company_id: companyId, password: hashedPw, role, name, team });
   if(acc) accounts.push(acc);
 
   const clr = AVATARS[members.length % AVATARS.length];
@@ -1577,7 +1589,13 @@ async function createNewAccount(){
   document.getElementById('inviteResultName').textContent = name;
   document.getElementById('inviteResultRole').textContent = roleName;
   document.getElementById('inviteResultPassword').textContent = password;
-  document.getElementById('inviteResultLineBtn').onclick = function(){ if(createdId) inviteViaLine(createdId); closeM('inviteResultModal'); };
+  document.getElementById('inviteResultLineBtn').onclick = function(){
+    const companyName = setup?.companyName || '会社';
+    const appUrl = location.origin + location.pathname;
+    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ アプリを開く\n${appUrl}\n\n▼ あなたのパスワード\n${rawPassword}\n\n※上のリンクを開いてパスワードを入力してください`;
+    window.open('https://line.me/R/share?text=' + encodeURIComponent(msg), '_blank');
+    closeM('inviteResultModal');
+  };
   document.getElementById('inviteResultModal').classList.add('show');
 }
 
