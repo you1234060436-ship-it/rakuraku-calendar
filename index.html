@@ -236,7 +236,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 .toast.show{opacity:1;pointer-events:auto}
 </style>
 </head>
-<body class="screen-setup">
+<body class="screen-login">
 
 <!-- ===== Setup Screen ===== -->
 <div class="setup-screen" id="setupScreen">
@@ -948,9 +948,9 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     companyId = null;
   }
 
-  // companyIdがない場合はセットアップ画面を表示（プライバシー保護のため会社一覧は表示しない）
+  // companyIdがない場合はログイン画面を表示（会社名+パスワードでログイン可能）
   if(!companyId){
-    showScreen('setup');
+    showScreen('login');
     return;
   }
 
