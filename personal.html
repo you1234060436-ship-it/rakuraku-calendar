@@ -230,8 +230,8 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
       <label class="setup-input-label">パスワード（確認） <span style="color:var(--danger)">*</span></label>
       <input type="password" class="setup-input" id="setupPasswordConfirm" placeholder="もう一度入力" minlength="4" required>
       <button type="submit" class="setup-btn">セットアップ完了</button>
-      <div style="text-align:center;margin-top:12px"><a href="privacy.html" style="font-size:11px;color:#888;text-decoration:none">プライバシーポリシー</a></div>
     </form>
+    <div style="text-align:center;margin-top:12px"><a href="privacy.html" style="font-size:11px;color:#888;text-decoration:none">プライバシーポリシー</a></div>
   </div>
 </div>
 
@@ -244,8 +244,8 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
     <form onsubmit="handleLogin(event)">
       <input type="password" class="login-input" id="loginPassword" placeholder="パスワードを入力" autocomplete="off">
       <button type="submit" class="login-btn">ログイン</button>
-      <div style="text-align:center;margin-top:12px"><a href="privacy.html" style="font-size:11px;color:#888;text-decoration:none">プライバシーポリシー</a></div>
     </form>
+    <div style="text-align:center;margin-top:12px"><a href="privacy.html" style="font-size:11px;color:#888;text-decoration:none">プライバシーポリシー</a></div>
   </div>
 </div>
 
@@ -390,7 +390,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
       <input type="number" class="form-input" id="sitePrice" placeholder="15000" min="0">
     </div>
     <div class="form-group">
-      <label class="form-label">料金タイブ</label>
+      <label class="form-label">料金タイプ</label>
       <select class="form-select" id="siteRateType">
         <option value="daily">日給</option>
         <option value="hourly">時給</option>
@@ -566,8 +566,8 @@ function sumDaysAndHours(arr){
 }
 function formatDaysHours(dh){
   let parts = [];
-  if(dh.days > 0) parts.push(dh.days + '<span class="summary-unit">日</span>');
-  if(dh.hours > 0) parts.push(dh.hours + '<span class="summary-unit">h</span>');
+  if(dh.days > 0) parts.push(`${dh.days}<span class="summary-unit">日</span>`);
+  if(dh.hours > 0) parts.push(`${dh.hours}<span class="summary-unit">h</span>`);
   return parts.length ? parts.join(' / ') : '0<span class="summary-unit">日</span>';
 }
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000)}
@@ -653,11 +653,9 @@ async function handleLogin(e){
   try {
     const hashedPw = await hashPassword(password);
     let accs = await dbLoad('accounts', { company_id: companyId, password: hashedPw });
-    // 旧平文パスワードとの互換性チェック
     if(!accs.length){
       accs = await dbLoad('accounts', { company_id: companyId, password: password });
       if(accs.length){
-        // 平文→ハッシュにマイグレーション
         await dbUpdate('accounts', accs[0].id, { password: hashedPw });
         accs[0].password = hashedPw;
       }
@@ -720,7 +718,8 @@ function init(){
 }
 
 function updateRoleBadge(){
-  const badge = document.getElementById('roleBadge');
+  const badge = document.getElementById("roleBadge");
+  if(!badge) return;
   const badges = {
     master: { text: 'マスター', cls: 'master' },
     submaster: { text: '職長', cls: 'submaster' },
@@ -745,11 +744,17 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   ['raku_setup','raku_accounts','raku_session','raku_sites','raku_entries','raku_members','raku_custom'].forEach(k => localStorage.removeItem(k));
 
   companyId = loadSession('company_id', null);
-  if(isSessionExpired()){ localStorage.clear(); companyId=null; }
   if(!companyId){
     showScreen('setup');
     return;
   }
+
+  if(isSessionExpired()){
+    Object.keys(localStorage).filter(k => k.startsWith('raku_')).forEach(k => localStorage.removeItem(k));
+    companyId = loadSession('company_id', null);
+    if(!companyId){ showScreen('setup'); return; }
+  }
+
   const companies = await dbLoad('companies', { id: companyId });
   if(!companies.length){ saveSession('company_id', null); showScreen('setup'); return; }
   setup = { companyName: companies[0].name };
@@ -1071,6 +1076,7 @@ async function saveEntry(){
 }
 
 async function delEntry(ds, sid, mid){
+  // 型を統一して検索（Supabaseの返り値が文字列/数値でズレる場合対応）
   const target = entries.find(e => e.date === ds && String(e.siteId) === String(sid) && String(e.memberId||0) === String(mid||0));
   if(target && target.id){
     await dbDelete('attendance_entries', target.id);
@@ -1433,13 +1439,17 @@ async function importAllData(){
       if(!payload.data || !payload.version){ showToast('無効なバックアップファイルです'); return; }
       if(!confirm('現在のデータを上書きして復元しますか？\nこの操作は取り消せません。')) return;
       const d = payload.data;
+      // 1. Restore company
       if(d.companies && d.companies.length > 0){
         const c = d.companies[0];
         const { data: existing } = await sb.from('companies').select('id').eq('id', c.id).single();
-        if(!existing) await sb.from('companies').insert(c);
+        if(!existing){
+          await sb.from('companies').insert(c);
+        }
         companyId = c.id;
         saveSession('company_id', companyId);
       }
+      // 2. Restore accounts (upsert)
       if(d.accounts && d.accounts.length > 0){
         for(const acc of d.accounts){
           const { data: ex } = await sb.from('accounts').select('id').eq('id', acc.id).maybeSingle();
@@ -1447,22 +1457,31 @@ async function importAllData(){
           else await sb.from('accounts').insert(acc);
         }
         const mainAcc = d.accounts.find(a => a.role === 'master') || d.accounts[0];
-        if(mainAcc){ saveSession('account_id', mainAcc.id); currentUserId = mainAcc.id; }
+        if(mainAcc){
+          saveSession('account_id', mainAcc.id);
+          currentUserId = mainAcc.id;
+        }
       }
+      // 3. Restore team_members
       if(d.team_members && d.team_members.length > 0){
         await sb.from('team_members').delete().eq('company_id', companyId);
         await sb.from('team_members').insert(d.team_members);
       }
+      // 4. Restore work_sites
       if(d.work_sites && d.work_sites.length > 0){
         await sb.from('work_sites').delete().eq('company_id', companyId);
         await sb.from('work_sites').insert(d.work_sites);
       }
+      // 5. Restore attendance_entries
       if(d.attendance_entries && d.attendance_entries.length > 0){
         await sb.from('attendance_entries').delete().eq('company_id', companyId);
         await sb.from('attendance_entries').insert(d.attendance_entries);
       }
+      // 6. Restore settings
       if(d.company_settings && d.company_settings.length > 0){
-        for(const cs of d.company_settings) await sb.from('company_settings').upsert(cs);
+        for(const cs of d.company_settings){
+          await sb.from('company_settings').upsert(cs);
+        }
       }
       showToast('データを復元しました。再読み込みします...');
       setTimeout(() => location.reload(), 1500);
@@ -1475,7 +1494,6 @@ async function importAllData(){
 function renderSettings(){
   const content = document.getElementById('settingsContent');
   let html = '';
-
 
   html += `<div class="settings-group" style="padding:14px">
     <div class="custom-section">
