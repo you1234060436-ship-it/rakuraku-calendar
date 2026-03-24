@@ -240,26 +240,33 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 .loading-spinner{width:36px;height:36px;border:3px solid #E0E0E0;border-top-color:#4A90D9;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{margin-top:12px;font-size:14px;color:#888}
-.line-warning{position:fixed;top:0;left:0;right:0;bottom:0;background:#F8F9FA;z-index:10000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
-.line-warning.show{display:flex}
-.line-warning-card{background:#fff;border-radius:16px;padding:28px;box-shadow:0 4px 16px rgba(0,0,0,0.1);max-width:360px;width:100%}
-.line-warning-title{font-size:18px;font-weight:700;margin-bottom:8px}
-.line-warning-text{font-size:14px;color:#666;line-height:1.6;margin-bottom:16px}
-.line-warning-btn{display:block;width:100%;padding:14px;background:#007AFF;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;margin-bottom:8px}
-.line-warning-btn.copy{background:#FF6B35}
-.line-warning-sub{font-size:12px;color:#aaa;margin-top:8px}
+.line-warning-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.line-warning-box{background:#fff;border-radius:16px;padding:32px 24px;max-width:340px;width:90%;text-align:center;}
+.line-warning-title{font-size:18px;font-weight:bold;color:#333;margin-bottom:16px;}
+.line-warning-steps{font-size:14px;color:#666;margin-bottom:16px;line-height:1.6;}
+.line-warning-steps p{margin:0;}
+.line-warning-url{font-size:12px;color:#888;background:#f5f5f5;border-radius:8px;padding:8px;margin-bottom:16px;word-break:break-all;user-select:all;-webkit-user-select:all;}
+.line-warning-btn{display:block;width:100%;padding:14px;border-radius:10px;font-size:16px;font-weight:bold;text-align:center;text-decoration:none;margin-bottom:10px;cursor:pointer;border:none;box-sizing:border-box;}
+.line-warning-btn.primary{background:#FF6B35;color:#fff;}
+.line-warning-btn.secondary{background:#eee;color:#333;}
+.line-warning-msg{font-size:13px;color:#4CAF50;margin-top:8px;min-height:20px;}
+
 </style>
 </head>
 <body class="screen-login">
 <div class="loading-screen" id="loadingScreen"><div class="loading-spinner"></div><div class="loading-text">読み込み中...</div></div>
-<div class="line-warning" id="lineWarning"><div class="line-warning-card">
-<div style="font-size:48px;margin-bottom:12px">🌐</div>
-<div class="line-warning-title">ブラウザで開いてください</div>
-<div class="line-warning-text">LINEアプリ内では正しく動作しません。<br>Safari または Chrome で開いてください。</div>
-<a class="line-warning-btn" id="lineOpenSafari" href="#">Safariで開く</a>
-<button class="line-warning-btn copy" id="lineCopyUrl">URLをコピーする</button>
-<div class="line-warning-sub">コピー後、SafariまたはChromeに貼り付けてください</div>
-</div></div>
+<div id="lineWarning" class="line-warning-overlay" style="display:none">
+<div class="line-warning-box">
+<div class="line-warning-title">⚠️ LINEアプリ内では正常に動作しません</div>
+<div class="line-warning-steps">
+<p>下の「コピー」ボタンを押して、SafariでURLを貼り付けてください</p>
+</div>
+<div class="line-warning-url" id="lineUrlDisplay"></div>
+<button class="line-warning-btn primary" id="lineCopyUrl">URLをコピー</button>
+<a class="line-warning-btn secondary" id="lineOpenSafari" href="#">Safariで開く</a>
+<div class="line-warning-msg" id="lineCopyMsg"></div>
+</div>
+</div>
 
 
 <!-- ===== Setup Screen ===== -->
@@ -579,21 +586,50 @@ function loadSession(key, fb){
 // LINE Browser Detection (D)
 function isLineBrowser(){ return /Line\//i.test(navigator.userAgent); }
 function showLineWarning(){
+  var el = document.getElementById("lineWarning");
+  if(el) el.style.display = "flex";
   var url = location.href;
-  document.getElementById("lineWarning").classList.add("show");
-  document.getElementById("lineOpenSafari").href = url;
-  if(/android/i.test(navigator.userAgent)){
-    document.getElementById("lineOpenSafari").textContent = "Chrome\u3067\u958b\u304f";
+  var urlEl = document.getElementById("lineUrlDisplay");
+  if(urlEl) urlEl.textContent = url;
+  var isAndroid = /android/i.test(navigator.userAgent);
+  var safariBtn = document.getElementById("lineOpenSafari");
+  var copyBtn = document.getElementById("lineCopyUrl");
+  var msgEl = document.getElementById("lineCopyMsg");
+  if(isAndroid && safariBtn){
+    safariBtn.textContent = "Chromeで開く";
+    safariBtn.href = "intent://" + url.replace(/^https?:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;end";
+  } else if(safariBtn){
+    safariBtn.href = url;
+    safariBtn.target = "_blank";
   }
-  document.getElementById("lineCopyUrl").onclick = function(){
-    navigator.clipboard.writeText(url).then(function(){
-      document.getElementById("lineCopyUrl").textContent = "\u30b3\u30d4\u30fc\u3057\u307e\u3057\u305f\uff01";
-    }).catch(function(){
-      var ta = document.createElement("textarea"); ta.value = url;
-      document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
-      document.getElementById("lineCopyUrl").textContent = "\u30b3\u30d4\u30fc\u3057\u307e\u3057\u305f\uff01";
-    });
-  };
+  if(copyBtn){
+    copyBtn.onclick = function(){
+      try {
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(url).then(function(){
+            if(msgEl) msgEl.textContent = "✅ コピーしました！Safariを開いて貼り付けてください";
+            copyBtn.textContent = "✅ コピー済み";
+          }).catch(function(){ fallbackCopy(); });
+        } else { fallbackCopy(); }
+      } catch(e){ fallbackCopy(); }
+      function fallbackCopy(){
+        var ta = document.createElement("textarea");
+        ta.value = url;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand("copy");
+          if(msgEl) msgEl.textContent = "✅ コピーしました！Safariを開いて貼り付けてください";
+          copyBtn.textContent = "✅ コピー済み";
+        } catch(e2){
+          if(msgEl) msgEl.textContent = "コピーできませんでした。上のURLを長押しでコピーしてください";
+        }
+        document.body.removeChild(ta);
+      }
+    };
+  }
 }
 // Loading Screen (B)
 function hideLoading(){ var el = document.getElementById("loadingScreen"); if(el) el.classList.add("hide"); }
