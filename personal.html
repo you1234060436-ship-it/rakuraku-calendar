@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>楽々カレンダー 個人版</title>
-<link rel="manifest" href="manifest-personal.json">
+<title>ニチログ 個人版</title>
+<link rel="manifest" href="manifest_personal.json">
 <meta name="theme-color" content="#4A90D9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="楽々カレンダー">
+<meta name="apple-mobile-web-app-title" content="ニチログ">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -213,14 +213,44 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 .toast.show{opacity:1;pointer-events:auto}
 .plan-personal{background:#2E7D52}
 .role-badge{display:none}
+
+#loadingScreen{position:fixed;top:0;left:0;width:100%;height:100%;background:#f0f2f5;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;transition:opacity 0.3s;}
+#loadingScreen.hide{opacity:0;pointer-events:none;}
+#loadingScreen .spinner{width:36px;height:36px;border:3px solid #ddd;border-top-color:#4A90D9;border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.line-warning-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.line-warning-box{background:#fff;border-radius:16px;padding:32px 24px;max-width:340px;width:90%;text-align:center;}
+.line-warning-title{font-size:18px;font-weight:bold;color:#333;margin-bottom:16px;}
+.line-warning-steps{font-size:14px;color:#666;margin-bottom:16px;line-height:1.6;}
+.line-warning-steps p{margin:0;}
+.line-warning-url{font-size:12px;color:#888;background:#f5f5f5;border-radius:8px;padding:8px;margin-bottom:16px;word-break:break-all;user-select:all;-webkit-user-select:all;}
+.line-warning-btn{display:block;width:100%;padding:14px;border-radius:10px;font-size:16px;font-weight:bold;text-align:center;text-decoration:none;margin-bottom:10px;cursor:pointer;border:none;box-sizing:border-box;}
+.line-warning-btn.primary{background:#FF6B35;color:#fff;}
+.line-warning-btn.secondary{background:#eee;color:#333;}
+.line-warning-msg{font-size:13px;color:#4CAF50;margin-top:8px;min-height:20px;}
 </style>
 </head>
 <body class="screen-setup">
+<div id="loadingScreen"><div class="spinner"></div><p>読み込み中...</p></div>
+<div id="lineWarning" class="line-warning-overlay" style="display:none">
+<div class="line-warning-box">
+<div class="line-warning-title">⚠️ LINEアプリ内では正常に動作しません</div>
+<div class="line-warning-steps">
+<p>下の「コピー」ボタンを押して、SafariでURLを貼り付けてください</p>
+</div>
+<div class="line-warning-url" id="lineUrlDisplay"></div>
+<button class="line-warning-btn primary" id="lineCopyUrl">URLをコピー</button>
+<a class="line-warning-btn secondary" id="lineOpenSafari" href="#">Safariで開く</a>
+<div class="line-warning-msg" id="lineCopyMsg"></div>
+</div>
+</div>
+
 
 <!-- ===== Setup Screen ===== -->
 <div class="setup-screen" id="setupScreen">
   <div class="setup-card">
-    <div class="setup-logo">楽々カレンダー</div>
+    <div class="setup-logo">ニチログ</div>
     <div class="setup-subtitle">個人版 初期設定</div>
     <form onsubmit="handleSetup(event)">
       <label class="setup-input-label">あなたの名前 <span style="color:var(--danger)">*</span></label>
@@ -239,7 +269,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <div class="login-company-name" id="loginCompanyName"></div>
-    <div class="login-logo">楽々カレンダー</div>
+    <div class="login-logo">ニチログ</div>
     <div class="login-sub">個人版へログイン</div>
     <form onsubmit="handleLogin(event)">
       <input type="password" class="login-input" id="loginPassword" placeholder="パスワードを入力" autocomplete="off">
@@ -252,7 +282,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <!-- ===== Main App ===== -->
 <div class="header" id="mainHeader">
   <div>
-    <h1><span class="role-badge" id="roleBadge"></span>楽々カレンダー</h1>
+    <h1><span class="role-badge" id="roleBadge"></span>ニチログ</h1>
     <div class="header-sub">出勤＆売上管理<span style="margin-left:8px" id="accountDisplayName"></span></div>
   </div>
   <div class="plan-badge plan-personal" id="planBadge">個人版</div>
@@ -330,7 +360,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
       <!-- Logout Button -->
           <div style="background:linear-gradient(135deg, #4A90D9 0%, #2E7D52 100%);border-radius:12px;padding:16px;margin-bottom:16px;color:#fff">
       <div style="font-weight:700;margin-bottom:8px">チームで使うなら</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:4px">楽々カレンダー ビジネス版</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">ニチログ ビジネス版</div>
       <div style="font-size:12px;opacity:0.9;margin-bottom:12px">メンバー管理・複数アカウント・レポート機能</div>
       <div style="font-size:12px;font-weight:600">14日間無料トライアル →</div>
     </div>
@@ -448,10 +478,69 @@ async function hashPassword(pw){
 // ===== Session Storage Functions =====
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 function saveSession(key, val){
-  localStorage.setItem('raku_'+key, JSON.stringify(val));
-  localStorage.setItem('raku_session_ts', Date.now().toString());
+  try { localStorage.setItem('raku_'+key, JSON.stringify(val)); localStorage.setItem('raku_session_ts', Date.now().toString()); } catch(e){}
+  if(key === 'company_id' && val) { try { location.hash = 'cid=' + val; } catch(e){} }
 }
-function loadSession(key, fb){ try{return JSON.parse(localStorage.getItem('raku_'+key))||fb}catch(e){return fb} }
+function loadSession(key, fb){
+  try {
+    var v = JSON.parse(localStorage.getItem('raku_'+key));
+    if(v !== null && v !== undefined) return v;
+  } catch(e){}
+  if(key === 'company_id'){
+    var m = location.hash.match(/cid=(\d+)/);
+    if(m) return parseInt(m[1]);
+  }
+  return fb;
+}
+function isLineBrowser(){ return /Line\//i.test(navigator.userAgent); }
+function showLineWarning(){
+  var el = document.getElementById("lineWarning");
+  if(el) el.style.display = "flex";
+  var url = location.href;
+  var urlEl = document.getElementById("lineUrlDisplay");
+  if(urlEl) urlEl.textContent = url;
+  var isAndroid = /android/i.test(navigator.userAgent);
+  var safariBtn = document.getElementById("lineOpenSafari");
+  var copyBtn = document.getElementById("lineCopyUrl");
+  var msgEl = document.getElementById("lineCopyMsg");
+  if(isAndroid && safariBtn){
+    safariBtn.textContent = "Chromeで開く";
+    safariBtn.href = "intent://" + url.replace(/^https?:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;end";
+  } else if(safariBtn){
+    safariBtn.href = url;
+    safariBtn.target = "_blank";
+  }
+  if(copyBtn){
+    copyBtn.onclick = function(){
+      try {
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(url).then(function(){
+            if(msgEl) msgEl.textContent = "✅ コピーしました！Safariを開いて貼り付けてください";
+            copyBtn.textContent = "✅ コピー済み";
+          }).catch(function(){ fallbackCopy(); });
+        } else { fallbackCopy(); }
+      } catch(e){ fallbackCopy(); }
+      function fallbackCopy(){
+        var ta = document.createElement("textarea");
+        ta.value = url;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand("copy");
+          if(msgEl) msgEl.textContent = "✅ コピーしました！Safariを開いて貼り付けてください";
+          copyBtn.textContent = "✅ コピー済み";
+        } catch(e2){
+          if(msgEl) msgEl.textContent = "コピーできませんでした。上のURLを長押しでコピーしてください";
+        }
+        document.body.removeChild(ta);
+      }
+    };
+  }
+}
+function hideLoading(){ var el = document.getElementById("loadingScreen"); if(el) el.classList.add("hide"); }
+
 function isSessionExpired(){
   const ts = parseInt(localStorage.getItem('raku_session_ts') || '0');
   return Date.now() - ts > SESSION_MAX_AGE;
@@ -581,18 +670,22 @@ document.querySelectorAll('.modal-overlay').forEach(o=>{o.addEventListener('clic
 // ===== Load All Data =====
 async function loadAllData(){
   if(!companyId) return;
-  const [sArr, eArr, mArr] = await Promise.all([
-    dbLoad('work_sites', { company_id: companyId }),
+  const [sArr, eArr, mArr, aArr, stResult] = await Promise.all([
+      dbLoad('work_sites', { company_id: companyId }),
     dbLoad('attendance_entries', { company_id: companyId }),
-    dbLoad('team_members', { company_id: companyId })
-  ]);
+    dbLoad('team_members', { company_id: companyId }),
+      dbLoad('accounts', { company_id: companyId }),
+      dbLoadSettings(companyId)
+    ]);;
   sites = sArr.map(s => ({ id: s.id, name: s.name, price: Number(s.price), rateType: s.rate_type, color: s.color, memo: s.memo||'' }));
   entries = eArr.map(e => ({ id: e.id, date: e.date, siteId: e.site_id, memberId: e.member_id, hours: Number(e.hours)||0, memo: e.memo||'' }));
   members = mArr.map(m => ({ id: m.id, accountId: m.account_id, name: m.name, team: m.team||'', color: m.color||'#FF9800' }));
-  accounts = await dbLoad('accounts', { company_id: companyId });
+
+    accounts = aArr;
   nxSite = sites.length > 0 ? Math.max(...sites.map(s=>s.id))+1 : 1;
   nxMem = members.length > 0 ? Math.max(...members.map(m=>m.id))+1 : 1;
-  const settings = await dbLoadSettings(companyId);
+
+    const settings = stResult;
   if(settings) custom = settings;
   else custom = Object.assign({}, DEFAULT_CUSTOM);
 }
@@ -742,7 +835,10 @@ function updateAccountDisplay(){
 
 // ===== Check Initialization =====
 window.addEventListener('DOMContentLoaded', async ()=>{
-  ['raku_setup','raku_accounts','raku_session','raku_sites','raku_entries','raku_members','raku_custom'].forEach(k => localStorage.removeItem(k));
+    // LINE browser check
+    if(isLineBrowser()){ showLineWarning(); hideLoading(); return; }
+    try {
+    ['raku_setup','raku_accounts','raku_session','raku_sites','raku_entries','raku_members','raku_custom'].forEach(k => localStorage.removeItem(k));
 
   companyId = loadSession('company_id', null);
   if(!companyId){
@@ -778,6 +874,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   } else {
     showScreen('login');
   }
+    } catch(e) { console.error('Init error:', e); } finally { hideLoading(); }
 });
 
 // ===== Tabs =====
@@ -1457,7 +1554,7 @@ function exportCSV(){
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `楽々カレンダー_${ms}.csv`;
+  a.download = `ニチログ_${ms}.csv`;
   a.click();
   showToast('CSVをダウンロードしました');
 }
@@ -1484,7 +1581,7 @@ async function exportAllData(){
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     const d = new Date();
-    a.download = `楽々カレンダー_バックアップ_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
+    a.download = `ニチログ_バックアップ_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
     a.click();
     showToast('バックアップを保存しました');
   } catch(e) { console.error(e); showToast('エクスポートに失敗しました'); }
@@ -1608,7 +1705,7 @@ function renderSettings(){
 
       <div style="background:linear-gradient(135deg, #4A90D9 0%, #2E7D52 100%);border-radius:12px;padding:16px;margin-bottom:16px;color:#fff">
       <div style="font-weight:700;margin-bottom:8px">チームで使うなら</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:4px">楽々カレンダー ビジネス版</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">ニチログ ビジネス版</div>
       <div style="font-size:12px;opacity:0.9;margin-bottom:12px">メンバー管理・複数アカウント・レポート機能</div>
       <div style="font-size:12px;font-weight:600">14日間無料トライアル →</div>
     </div>
