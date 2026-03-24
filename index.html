@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>æ¥½ãã«ã¬ã³ãã¼</title>
-<meta name="description" content="å»ºè¨­æ¥­åãåºå¤ã»å£²ä¸ç®¡çã¢ããªãç¾å ´ãã¨ã®å¤æ ç®¡çãã¹ããã§ç°¡åã«ã">
-<meta property="og:title" content="æ¥½ãã«ã¬ã³ãã¼">
-<meta property="og:description" content="å»ºè¨­æ¥­åãåºå¤ã»å£²ä¸ç®¡çã¢ããªãç¾å ´ãã¨ã®å¤æ ç®¡çãã¹ããã§ç°¡åã«ã">
+<title>楽々カレンダー</title>
+<meta name="description" content="建設業向け出勤・売上管理アプリ。現場ごとの勤怠管理がスマホで簡単に。">
+<meta property="og:title" content="楽々カレンダー">
+<meta property="og:description" content="建設業向け出勤・売上管理アプリ。現場ごとの勤怠管理がスマホで簡単に。">
 <meta property="og:image" content="https://rakuraku-calendar.vercel.app/icon-512.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://rakuraku-calendar.vercel.app/">
@@ -14,7 +14,7 @@
 <meta name="theme-color" content="#4A90D9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="æ¥½ãã«ã¬ã³ãã¼">
+<meta name="apple-mobile-web-app-title" content="楽々カレンダー">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -234,60 +234,25 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 /* ===== Toast ===== */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 20px;border-radius:8px;z-index:300;opacity:0;pointer-events:none}
 .toast.show{opacity:1;pointer-events:auto}
-
-/* ===== Loading Screen ===== */
-.loading-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:#F8F9FA;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.loading-screen.hide{display:none}
-.loading-spinner{width:36px;height:36px;border:3px solid #E0E0E0;border-top-color:#4A90D9;border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{margin-top:12px;font-size:14px;color:#888}
-/* ===== LINE Browser Warning ===== */
-.line-warning{position:fixed;top:0;left:0;right:0;bottom:0;background:#F8F9FA;z-index:10000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
-.line-warning.show{display:flex}
-.line-warning-card{background:#fff;border-radius:16px;padding:28px;box-shadow:0 4px 16px rgba(0,0,0,0.1);max-width:360px;width:100%}
-.line-warning-icon{font-size:48px;margin-bottom:12px}
-.line-warning-title{font-size:18px;font-weight:700;margin-bottom:8px;color:#333}
-.line-warning-text{font-size:14px;color:#666;line-height:1.6;margin-bottom:16px}
-.line-warning-btn{display:block;width:100%;padding:14px;background:#4A90D9;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;margin-bottom:8px}
-.line-warning-btn.safari{background:#007AFF}
-.line-warning-btn.copy{background:#FF6B35}
-.line-warning-sub{font-size:12px;color:#aaa;margin-top:8px}
 </style>
 </head>
 <body class="screen-login">
-<!-- Loading Screen -->
-<div class="loading-screen" id="loadingScreen">
-  <div class="loading-spinner"></div>
-  <div class="loading-text">読み込み中...</div>
-</div>
-<!-- LINE Browser Warning -->
-<div class="line-warning" id="lineWarning">
-  <div class="line-warning-card">
-    <div class="line-warning-icon">🌐</div>
-    <div class="line-warning-title">ブラウザで開いてください</div>
-    <div class="line-warning-text">LINEアプリ内では正しく動作しません。<br>Safari または Chrome で開いてください。</div>
-    <a class="line-warning-btn safari" id="lineOpenSafari" href="#">Safariで開く</a>
-    <button class="line-warning-btn copy" id="lineCopyUrl">URLをコピーする</button>
-    <div class="line-warning-sub">コピー後、SafariまたはChromeに貼り付けてください</div>
-  </div>
-</div>
-
 
 <!-- ===== Setup Screen ===== -->
 <div class="setup-screen" id="setupScreen">
   <div class="setup-card">
-    <div class="setup-logo">æ¥½ãã«ã¬ã³ãã¼</div>
-    <div class="setup-subtitle">ãã¸ãã¹ç åæè¨­å®</div>
+    <div class="setup-logo">楽々カレンダー</div>
+    <div class="setup-subtitle">ビジネス版 初期設定</div>
     <form onsubmit="handleSetup(event)">
-      <label class="setup-input-label">ä¼ç¤¾å <span style="color:var(--danger)">*</span></label>
-      <input type="text" class="setup-input" id="setupCompanyName" placeholder="ä¾ï¼æ ªå¼ä¼ç¤¾â¯â¯" required autocomplete="off">
-      <label class="setup-input-label">ãã¹ã¿ã¼ãã¹ã¯ã¼ã <span style="color:var(--danger)">*</span></label>
-      <input type="password" class="setup-input" id="setupPassword" placeholder="4æå­ä»¥ä¸" minlength="4" required autocomplete="off">
-      <label class="setup-input-label">ãã¹ã¿ã¼ãã¹ã¯ã¼ãç¢ºèª <span style="color:var(--danger)">*</span></label>
-      <input type="password" class="setup-input" id="setupPasswordConfirm" placeholder="ããä¸åº¦å¥å" minlength="4" required autocomplete="off">
-      <button type="submit" class="setup-btn">ã»ããã¢ããå®äº</button>
-      <div style="text-align:center;margin-top:16px"><button type="button" onclick="showScreen('login')" style="background:none;border:none;color:var(--primary);font-size:13px;cursor:pointer;text-decoration:underline">æ¢ã«ã¢ã«ã¦ã³ãããæã¡ã®æ¹ã¯ãã¡ã</button></div>
-      <div style="text-align:center;margin-top:8px"><a href="privacy.html" style="font-size:11px;color:#888;text-decoration:none">ãã©ã¤ãã·ã¼ããªã·ã¼</a></div>
+      <label class="setup-input-label">会社名 <span style="color:var(--danger)">*</span></label>
+      <input type="text" class="setup-input" id="setupCompanyName" placeholder="例：株式会社◯◯" required autocomplete="off">
+      <label class="setup-input-label">マスターパスワード <span style="color:var(--danger)">*</span></label>
+      <input type="password" class="setup-input" id="setupPassword" placeholder="4文字以上" minlength="4" required autocomplete="off">
+      <label class="setup-input-label">マスターパスワード確認 <span style="color:var(--danger)">*</span></label>
+      <input type="password" class="setup-input" id="setupPasswordConfirm" placeholder="もう一度入力" minlength="4" required autocomplete="off">
+      <button type="submit" class="setup-btn">セットアップ完了</button>
+      <div style="text-align:center;margin-top:16px"><button type="button" onclick="showScreen('login')" style="background:none;border:none;color:var(--primary);font-size:13px;cursor:pointer;text-decoration:underline">既にアカウントをお持ちの方はこちら</button></div>
+      <div style="text-align:center;margin-top:8px"><a href="privacy.html" style="font-size:11px;color:#888;text-decoration:none">プライバシーポリシー</a></div>
     </form>
   </div>
 </div>
@@ -296,14 +261,14 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <div class="login-company-name" id="loginCompanyName"></div>
-    <div class="login-logo">æ¥½ãã«ã¬ã³ãã¼</div>
-    <div class="login-sub">ãã¸ãã¹çã¸ã­ã°ã¤ã³</div>
+    <div class="login-logo">楽々カレンダー</div>
+    <div class="login-sub">ビジネス版へログイン</div>
     <form onsubmit="handleLogin(event)">
-      <input type="text" class="login-input" id="loginCompanyInput" placeholder="ä¼ç¤¾åãå¥å" autocomplete="off" style="margin-bottom:10px">
-      <input type="password" class="login-input" id="loginPassword" placeholder="ãã¹ã¯ã¼ããå¥å" autocomplete="off">
-      <button type="submit" class="login-btn">ã­ã°ã¤ã³</button>
-      <div style="text-align:center;margin-top:16px"><button type="button" onclick="showScreen('setup')" style="background:none;border:none;color:var(--primary);font-size:13px;cursor:pointer;text-decoration:underline">æ°è¦ã»ããã¢ããã¯ãã¡ã</button></div>
-      <div style="text-align:center;margin-top:8px"><a href="privacy.html" style="font-size:11px;color:#888;text-decoration:none">ãã©ã¤ãã·ã¼ããªã·ã¼</a></div>
+      <input type="text" class="login-input" id="loginCompanyInput" placeholder="会社名を入力" autocomplete="off" style="margin-bottom:10px">
+      <input type="password" class="login-input" id="loginPassword" placeholder="パスワードを入力" autocomplete="off">
+      <button type="submit" class="login-btn">ログイン</button>
+      <div style="text-align:center;margin-top:16px"><button type="button" onclick="showScreen('setup')" style="background:none;border:none;color:var(--primary);font-size:13px;cursor:pointer;text-decoration:underline">新規セットアップはこちら</button></div>
+      <div style="text-align:center;margin-top:8px"><a href="privacy.html" style="font-size:11px;color:#888;text-decoration:none">プライバシーポリシー</a></div>
     </form>
   </div>
 </div>
@@ -311,25 +276,25 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <!-- ===== Setup Confirm Screen ===== -->
 <div class="setup-screen" id="setupConfirmScreen" style="display:none">
   <div class="setup-card" style="text-align:center">
-    <div style="font-size:40px;margin-bottom:12px">ð</div>
-    <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">ã»ããã¢ããå®äºï¼</div>
-    <div style="font-size:13px;color:var(--text-light);margin-bottom:20px;line-height:1.6">ä»¥ä¸ã®æå ±ã¯ã­ã°ã¤ã³æã«å¿è¦ã§ãã<br>ã¹ã¯ãªã¼ã³ã·ã§ããã¾ãã¯ã¡ã¢ã«ä¿å­ãã¦ãã ããã</div>
+    <div style="font-size:40px;margin-bottom:12px">📋</div>
+    <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">セットアップ完了！</div>
+    <div style="font-size:13px;color:var(--text-light);margin-bottom:20px;line-height:1.6">以下の情報はログイン時に必要です。<br>スクリーンショットまたはメモに保存してください。</div>
     <div id="setupConfirmInfo" style="background:var(--bg);border:2px dashed var(--border);border-radius:12px;padding:20px;margin-bottom:20px;text-align:left">
     </div>
-    <div style="font-size:11px;color:var(--danger);margin-bottom:20px;line-height:1.5">â» ãã¹ã¯ã¼ãã¯å¾ããç¢ºèªã§ãã¾ããã<br>å¿ãè¨é²ãã¦ããé²ãã§ãã ããã</div>
-    <button type="button" onclick="confirmSetupDone()" style="width:100%;padding:14px;border:none;border-radius:10px;background:var(--primary);color:white;font-size:16px;font-weight:600;cursor:pointer">è¨é²ãã¾ãã â¶ ã¢ããªã¸</button>
+    <div style="font-size:11px;color:var(--danger);margin-bottom:20px;line-height:1.5">※ パスワードは後から確認できません。<br>必ず記録してから進んでください。</div>
+    <button type="button" onclick="confirmSetupDone()" style="width:100%;padding:14px;border:none;border-radius:10px;background:var(--primary);color:white;font-size:16px;font-weight:600;cursor:pointer">記録しました ▶ アプリへ</button>
   </div>
 </div>
 
 <!-- ===== Main App ===== -->
 <div class="header" id="mainHeader">
   <div>
-    <h1><span class="role-badge" id="roleBadge"></span>æ¥½ãã«ã¬ã³ãã¼</h1>
-    <div class="header-sub">åºå¤ï¼å£²ä¸ç®¡ç<span style="margin-left:8px" id="accountDisplayName"></span></div>
+    <h1><span class="role-badge" id="roleBadge"></span>楽々カレンダー</h1>
+    <div class="header-sub">出勤＆売上管理<span style="margin-left:8px" id="accountDisplayName"></span></div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
-    <button onclick="appRefresh()" style="padding:5px 12px;border:1.5px solid var(--border);border-radius:6px;background:var(--white);color:var(--text-light);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>æ´æ°</button>
-    <div class="plan-badge plan-biz" id="planBadge">ãã¸ãã¹ç</div>
+    <button onclick="appRefresh()" style="padding:5px 12px;border:1.5px solid var(--border);border-radius:6px;background:var(--white);color:var(--text-light);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>更新</button>
+    <div class="plan-badge plan-biz" id="planBadge">ビジネス版</div>
   </div>
 </div>
 
@@ -337,21 +302,21 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
   <!-- Calendar Page -->
   <div id="page-calendar" class="page active">
     <div class="month-nav">
-      <button onclick="changeMonth(-1)">â</button>
+      <button onclick="changeMonth(-1)">◀</button>
       <div class="month-title" id="monthTitle"></div>
-      <button onclick="changeMonth(1)">â¶</button>
+      <button onclick="changeMonth(1)">▶</button>
     </div>
     <div class="calendar-grid">
-      <div class="weekday-row"><span>æ¥</span><span>æ</span><span>ç«</span><span>æ°´</span><span>æ¨</span><span>é</span><span>å</span></div>
+      <div class="weekday-row"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
       <div class="days-grid" id="daysGrid"></div>
     </div>
     <div class="summary-cards">
-      <div class="summary-card" id="cardDays"><div class="summary-label">ä»æã®åºå¤</div><div class="summary-value days" id="totalDays">0<span class="summary-unit">æ¥</span></div></div>
-      <div class="summary-card" id="cardRevenue"><div class="summary-label">ä»æã®å£²ä¸</div><div class="summary-value money" id="totalRevenue">Â¥0</div></div>
+      <div class="summary-card" id="cardDays"><div class="summary-label">今月の出勤</div><div class="summary-value days" id="totalDays">0<span class="summary-unit">日</span></div></div>
+      <div class="summary-card" id="cardRevenue"><div class="summary-label">今月の売上</div><div class="summary-value money" id="totalRevenue">¥0</div></div>
     </div>
     <div class="summary-cards" style="padding-top:0">
-      <div class="summary-card" style="border-left:3px solid var(--primary)"><div class="summary-label">ç´¯è¨åºå¤</div><div class="summary-value days" id="grandTotalDays" style="font-size:18px">0<span class="summary-unit">æ¥</span></div></div>
-      <div class="summary-card" id="cardGrandRevenue" style="border-left:3px solid var(--accent)"><div class="summary-label">ç´¯è¨å£²ä¸</div><div class="summary-value money" id="grandTotalRevenue" style="font-size:18px">Â¥0</div></div>
+      <div class="summary-card" style="border-left:3px solid var(--primary)"><div class="summary-label">累計出勤</div><div class="summary-value days" id="grandTotalDays" style="font-size:18px">0<span class="summary-unit">日</span></div></div>
+      <div class="summary-card" id="cardGrandRevenue" style="border-left:3px solid var(--accent)"><div class="summary-label">累計売上</div><div class="summary-value money" id="grandTotalRevenue" style="font-size:18px">¥0</div></div>
     </div>
     <div class="section-pad" id="todayEntries"></div>
   </div>
@@ -359,24 +324,24 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
   <!-- Stats Page -->
   <div id="page-stats" class="page">
     <div class="month-nav">
-      <button onclick="changeStatMonth(-1)">â</button>
+      <button onclick="changeStatMonth(-1)">◀</button>
       <div class="month-title" id="statMonth"></div>
-      <button onclick="changeStatMonth(1)">â¶</button>
+      <button onclick="changeStatMonth(1)">▶</button>
     </div>
     <div class="stats-overview">
-      <div class="summary-card"><div class="summary-label">åºå¤æ¥æ°</div><div class="summary-value days" id="sDays">0<span class="summary-unit">æ¥</span></div></div>
-      <div class="summary-card" id="statsRevCard"><div class="summary-label">å£²ä¸åè¨</div><div class="summary-value money" id="sRev">Â¥0</div></div>
+      <div class="summary-card"><div class="summary-label">出勤日数</div><div class="summary-value days" id="sDays">0<span class="summary-unit">日</span></div></div>
+      <div class="summary-card" id="statsRevCard"><div class="summary-label">売上合計</div><div class="summary-value money" id="sRev">¥0</div></div>
     </div>
     <div class="stats-overview" style="padding-top:0">
-      <div class="summary-card" style="border-left:3px solid var(--primary)"><div class="summary-label">ç´¯è¨åºå¤ï¼å¨æéï¼</div><div class="summary-value days" id="sGrandDays" style="font-size:18px">0<span class="summary-unit">æ¥</span></div></div>
-      <div class="summary-card" id="statsGrandRevCard" style="border-left:3px solid var(--accent)"><div class="summary-label">ç´¯è¨å£²ä¸ï¼å¨æéï¼</div><div class="summary-value money" id="sGrandRev" style="font-size:18px">Â¥0</div></div>
+      <div class="summary-card" style="border-left:3px solid var(--primary)"><div class="summary-label">累計出勤（全期間）</div><div class="summary-value days" id="sGrandDays" style="font-size:18px">0<span class="summary-unit">日</span></div></div>
+      <div class="summary-card" id="statsGrandRevCard" style="border-left:3px solid var(--accent)"><div class="summary-label">累計売上（全期間）</div><div class="summary-value money" id="sGrandRev" style="font-size:18px">¥0</div></div>
     </div>
     <div class="section-pad">
-      <div class="section-title">æå¥æ¨ç§»</div>
+      <div class="section-title">月別推移</div>
       <div style="background:var(--white);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)">
         <div class="bar-chart" id="barChart"></div>
       </div>
-      <div class="section-title" style="margin-top:14px">ç¾å ´å¥ã®åè¨³</div>
+      <div class="section-title" style="margin-top:14px">現場別の内訳</div>
       <div class="site-stats" id="siteStats"></div>
       <div id="partnerStats" style="margin-top:14px"></div>
     </div>
@@ -384,25 +349,25 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 
   <!-- Sites Page -->
   <div id="page-sites" class="page">
-    <div style="padding:14px 14px 6px"><div class="section-title">ç»é²æ¸ã¿ã®ç¾å ´</div></div>
+    <div style="padding:14px 14px 6px"><div class="section-title">登録済みの現場</div></div>
     <div id="sitesContent" style="padding:0 14px 14px"></div>
   </div>
 
   <!-- Members Page -->
   <div id="page-members" class="page">
-    <div style="padding:14px 14px 6px"><div class="section-title">ã¡ã³ãã¼ç®¡ç</div></div>
+    <div style="padding:14px 14px 6px"><div class="section-title">メンバー管理</div></div>
     <div id="membersContent" style="padding:0 14px 14px"></div>
   </div>
 
   <!-- Report Page -->
   <div id="page-report" class="page">
-    <div style="padding:14px 14px 6px"><div class="section-title">ç¾å ´å¥ã¬ãã¼ã</div></div>
+    <div style="padding:14px 14px 6px"><div class="section-title">現場別レポート</div></div>
     <div id="reportContent" style="padding:0 14px 14px"></div>
   </div>
 
   <!-- Settings Page -->
   <div id="page-settings" class="page">
-    <div style="padding:14px 14px 6px"><div class="section-title">è¨­å®</div></div>
+    <div style="padding:14px 14px 6px"><div class="section-title">設定</div></div>
     <div id="settingsContent" style="padding:0 14px 14px">
       <!-- Account Management Section (Master only) -->
       <div id="accountManagementSection"></div>
@@ -410,7 +375,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
       <!-- Customization Settings rendered by JS in renderSettings() -->
 
       <!-- Logout Button -->
-      <button class="logout-btn" onclick="handleLogout()">ã­ã°ã¢ã¦ã</button>
+      <button class="logout-btn" onclick="handleLogout()">ログアウト</button>
     </div>
   </div>
 </div>
@@ -421,90 +386,90 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <div class="modal-overlay" id="entryModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="entryModalTitle">åºå¤ç»é²</div>
-      <button class="modal-close" onclick="closeM('entryModal')">â</button>
+      <div class="modal-title" id="entryModalTitle">出勤登録</div>
+      <button class="modal-close" onclick="closeM('entryModal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">ç¾å ´ãé¸æ</label>
+      <label class="form-label">現場を選択</label>
       <div class="site-chips" id="siteChips"></div>
       <div id="customSiteInputWrap" style="display:none;margin-top:8px">
         <div style="display:flex;gap:6px">
-          <input type="text" class="form-input" id="customSiteName" placeholder="ç¾å ´åãå¥å" style="flex:1">
-          <button type="button" onclick="confirmCustomSite()" style="padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer">è¿½å </button>
+          <input type="text" class="form-input" id="customSiteName" placeholder="現場名を入力" style="flex:1">
+          <button type="button" onclick="confirmCustomSite()" style="padding:8px 16px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer">追加</button>
         </div>
       </div>
     </div>
     <div class="form-group" id="memberSelectGroup" style="display:none">
-      <label class="form-label">ã¡ã³ãã¼ãé¸æ <button type="button" style="float:right;padding:2px 8px;font-size:11px;background:var(--primary-light);color:var(--primary);border:none;border-radius:4px;cursor:pointer" onclick="selectAllMembers()">å¨å¡é¸æ</button></label>
+      <label class="form-label">メンバーを選択 <button type="button" style="float:right;padding:2px 8px;font-size:11px;background:var(--primary-light);color:var(--primary);border:none;border-radius:4px;cursor:pointer" onclick="selectAllMembers()">全員選択</button></label>
       <div class="site-chips" id="memberChips"></div>
     </div>
     <div class="form-group" id="hoursGroup" style="display:none">
-      <label class="form-label">å¤åæé</label>
+      <label class="form-label">勤務時間</label>
       <input type="number" class="form-input" id="entryHours" placeholder="0.5" step="0.5" min="0">
     </div>
     <div class="form-group" id="dayTypeGroup" style="display:none">
-      <label class="form-label">å¤ååºå</label>
+      <label class="form-label">勤務区分</label>
       <div style="display:flex;gap:10px">
-        <button type="button" class="day-type-btn selected" id="dayType1" onclick="selectDayType(1)" style="flex:1;padding:12px;border:2px solid var(--primary);border-radius:8px;background:var(--primary);color:#fff;font-size:15px;font-weight:700;cursor:pointer">1æ¥</button>
-        <button type="button" class="day-type-btn" id="dayTypeHalf" onclick="selectDayType(0.5)" style="flex:1;padding:12px;border:2px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:15px;font-weight:700;cursor:pointer">åæ¥</button>
+        <button type="button" class="day-type-btn selected" id="dayType1" onclick="selectDayType(1)" style="flex:1;padding:12px;border:2px solid var(--primary);border-radius:8px;background:var(--primary);color:#fff;font-size:15px;font-weight:700;cursor:pointer">1日</button>
+        <button type="button" class="day-type-btn" id="dayTypeHalf" onclick="selectDayType(0.5)" style="flex:1;padding:12px;border:2px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:15px;font-weight:700;cursor:pointer">半日</button>
       </div>
     </div>
     <div class="form-group">
-      <label class="form-label">ã¡ã¢ï¼ãªãã·ã§ã³ï¼</label>
-      <input type="text" class="form-input" id="entryMemo" placeholder="ç¹è¨äºé ãªã©">
+      <label class="form-label">メモ（オプション）</label>
+      <input type="text" class="form-input" id="entryMemo" placeholder="特記事項など">
     </div>
-    <button class="add-btn" id="saveEntryBtn" onclick="saveEntry()" disabled>ç»é²ãã</button>
+    <button class="add-btn" id="saveEntryBtn" onclick="saveEntry()" disabled>登録する</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="siteModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title" id="siteModalTitle">ç¾å ´ãè¿½å </div>
-      <button class="modal-close" onclick="closeM('siteModal')">â</button>
+      <div class="modal-title" id="siteModalTitle">現場を追加</div>
+      <button class="modal-close" onclick="closeM('siteModal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">ç¾å ´å</label>
-      <input type="text" class="form-input" id="siteName" placeholder="ä¾ï¼â¯â¯ãã«ãã£ã³ã°">
+      <label class="form-label">現場名</label>
+      <input type="text" class="form-input" id="siteName" placeholder="例：◯◯ビルディング">
     </div>
     <div class="form-group">
-      <label class="form-label">åä¾¡</label>
+      <label class="form-label">単価</label>
       <input type="number" class="form-input" id="sitePrice" placeholder="15000" min="0">
     </div>
     <div class="form-group">
-      <label class="form-label">æéã¿ã¤ã</label>
+      <label class="form-label">料金タイプ</label>
       <select class="form-select" id="siteRateType">
-        <option value="daily">æ¥çµ¦</option>
-        <option value="hourly">æçµ¦</option>
+        <option value="daily">日給</option>
+        <option value="hourly">時給</option>
       </select>
     </div>
     <div class="form-group">
-      <label class="form-label">è²ãé¸æ</label>
+      <label class="form-label">色を選択</label>
       <div class="custom-colors" id="siteColorPicker"></div>
     </div>
     <div class="form-group">
-      <label class="form-label">ã¡ã¢ï¼ãªãã·ã§ã³ï¼</label>
-      <input type="text" class="form-input" id="siteMemo" placeholder="åèãªã©">
+      <label class="form-label">メモ（オプション）</label>
+      <input type="text" class="form-input" id="siteMemo" placeholder="備考など">
     </div>
-    <button class="add-btn" id="saveSiteBtn" onclick="saveSite()">ç¾å ´ãç»é²</button>
+    <button class="add-btn" id="saveSiteBtn" onclick="saveSite()">現場を登録</button>
   </div>
 </div>
 
 <div class="modal-overlay" id="memberModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">ã¡ã³ãã¼ãè¿½å </div>
-      <button class="modal-close" onclick="closeM('memberModal')">â</button>
+      <div class="modal-title">メンバーを追加</div>
+      <button class="modal-close" onclick="closeM('memberModal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">ã¡ã³ãã¼å</label>
-      <input type="text" class="form-input" id="mmName" placeholder="ä¾ï¼ç°ä¸­å¤ªé">
+      <label class="form-label">メンバー名</label>
+      <input type="text" class="form-input" id="mmName" placeholder="例：田中太郎">
     </div>
     <div class="form-group">
-      <label class="form-label">é¨ç½²ã»ãã¼ã </label>
-      <input type="text" class="form-input" id="mmTeam" placeholder="ä¾ï¼Aç­">
+      <label class="form-label">部署・チーム</label>
+      <input type="text" class="form-input" id="mmTeam" placeholder="例：A班">
     </div>
-    <button class="add-btn" onclick="saveMember()">ã¡ã³ãã¼ãè¿½å </button>
+    <button class="add-btn" onclick="saveMember()">メンバーを追加</button>
   </div>
 </div>
 
@@ -512,22 +477,22 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <div class="modal-overlay" id="partnerModal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">ååä¼ç¤¾ã¡ã³ãã¼ãè¿½å </div>
-      <button class="modal-close" onclick="closeM('partnerModal')">â</button>
+      <div class="modal-title">協力会社メンバーを追加</div>
+      <button class="modal-close" onclick="closeM('partnerModal')">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">ä¼ç¤¾å</label>
-      <input type="text" class="form-input" id="pmCompany" placeholder="ä¾ï¼ââå»ºè¨­" autocomplete="off">
+      <label class="form-label">会社名</label>
+      <input type="text" class="form-input" id="pmCompany" placeholder="例：○○建設" autocomplete="off">
     </div>
     <div class="form-group">
-      <label class="form-label">ã¡ã³ãã¼å</label>
-      <input type="text" class="form-input" id="pmName" placeholder="ä¾ï¼ä½è¤ä¸é" autocomplete="off">
+      <label class="form-label">メンバー名</label>
+      <input type="text" class="form-input" id="pmName" placeholder="例：佐藤一郎" autocomplete="off">
     </div>
     <div class="form-group" id="pmRateGroup" style="display:none">
-      <label class="form-label">æ¥å½ï¼åä¾¡ï¼</label>
-      <input type="number" class="form-input" id="pmRate" placeholder="ä¾ï¼20000" autocomplete="off">
+      <label class="form-label">日当（単価）</label>
+      <input type="number" class="form-input" id="pmRate" placeholder="例：20000" autocomplete="off">
     </div>
-    <button class="add-btn" onclick="savePartnerMember()">ååä¼ç¤¾ã¡ã³ãã¼ãè¿½å </button>
+    <button class="add-btn" onclick="savePartnerMember()">協力会社メンバーを追加</button>
   </div>
 </div>
 
@@ -535,18 +500,18 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <div class="modal-overlay" id="inviteResultModal">
   <div class="modal" style="text-align:center">
     <div class="modal-header">
-      <div class="modal-title">ã¢ã«ã¦ã³ãçºè¡å®äº</div>
-      <button class="modal-close" onclick="closeM('inviteResultModal')">â</button>
+      <div class="modal-title">アカウント発行完了</div>
+      <button class="modal-close" onclick="closeM('inviteResultModal')">✕</button>
     </div>
     <div style="padding:10px 0">
       <div style="font-size:14px;color:var(--text-light);margin-bottom:4px"><span id="inviteResultRole"></span></div>
       <div style="font-size:18px;font-weight:700;margin-bottom:12px" id="inviteResultName"></div>
       <div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:16px">
-        <div style="font-size:11px;color:var(--text-light);margin-bottom:4px">ãã¹ã¯ã¼ã</div>
+        <div style="font-size:11px;color:var(--text-light);margin-bottom:4px">パスワード</div>
         <div style="font-size:22px;font-weight:700;letter-spacing:2px" id="inviteResultPassword"></div>
       </div>
-      <button id="inviteResultLineBtn" style="width:100%;padding:14px;background:#06C755;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px">LINEã§æå¾ãã</button>
-      <button onclick="closeM('inviteResultModal')" style="width:100%;padding:12px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;font-size:14px;cursor:pointer;color:var(--text-light)">ãã¨ã§æå¾ãã</button>
+      <button id="inviteResultLineBtn" style="width:100%;padding:14px;background:#06C755;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px">LINEで招待する</button>
+      <button onclick="closeM('inviteResultModal')" style="width:100%;padding:12px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;font-size:14px;cursor:pointer;color:var(--text-light)">あとで招待する</button>
     </div>
   </div>
 </div>
@@ -554,7 +519,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <!-- Toast Notification -->
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ===== Supabase Configuration =====
 const SUPABASE_URL = 'https://hjmtsuxrwypimscyviey.supabase.co';
@@ -570,46 +535,12 @@ async function hashPassword(pw){
 }
 
 // ===== Session Storage Functions =====
-const SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7æ¥é
+const SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7日間
 function saveSession(key, val){
-  try { localStorage.setItem('raku_'+key, JSON.stringify(val)); } catch(e){}
-  if(key === 'company_id' && val) { location.hash = 'cid=' + val; }
+  localStorage.setItem('raku_'+key, JSON.stringify(val));
+  localStorage.setItem('raku_session_ts', Date.now().toString());
 }
-function loadSession(key, fb){
-  try {
-    const v = JSON.parse(localStorage.getItem('raku_'+key));
-    if(v !== null && v !== undefined) return v;
-  } catch(e){}
-  if(key === 'company_id'){
-    const m = location.hash.match(/cid=(\d+)/);
-    if(m) return parseInt(m[1]);
-  }
-  return fb;
-}
-
-// LINE Browser Detection
-function isLineBrowser(){ return /Line\//i.test(navigator.userAgent); }
-function showLineWarning(){
-  var url = location.href.replace(location.hash,'');
-  document.getElementById('lineWarning').classList.add('show');
-  var safariBtn = document.getElementById('lineOpenSafari');
-  safariBtn.href = url;
-  if(/android/i.test(navigator.userAgent)){
-    safariBtn.href = 'intent://'+url.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end';
-    safariBtn.textContent = 'Chromeで開く';
-  }
-  document.getElementById('lineCopyUrl').onclick = function(){
-    navigator.clipboard.writeText(url).then(function(){
-      document.getElementById('lineCopyUrl').textContent = 'コピーしました！';
-    }).catch(function(){
-      var ta = document.createElement('textarea');
-      ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-      document.getElementById('lineCopyUrl').textContent = 'コピーしました！';
-    });
-  };
-}
-function hideLoading(){ var el = document.getElementById('loadingScreen'); if(el) el.classList.add('hide'); }
-catch(e){return fb} }
+function loadSession(key, fb){ try{return JSON.parse(localStorage.getItem('raku_'+key))||fb}catch(e){return fb} }
 function isSessionExpired(){
   const ts = parseInt(localStorage.getItem('raku_session_ts') || '0');
   return Date.now() - ts > SESSION_MAX_AGE;
@@ -721,19 +652,18 @@ document.querySelectorAll('.modal-overlay').forEach(o=>{o.addEventListener('clic
 // ===== Load All Data =====
 async function loadAllData(){
   if(!companyId) return;
-  const [sArr, eArr, mArr, aArr, settings] = await Promise.all([
+  const [sArr, eArr, mArr] = await Promise.all([
     dbLoad('work_sites', { company_id: companyId }),
     dbLoad('attendance_entries', { company_id: companyId }),
-    dbLoad('team_members', { company_id: companyId }),
-    dbLoad('accounts', { company_id: companyId }),
-    dbLoadSettings(companyId)
+    dbLoad('team_members', { company_id: companyId })
   ]);
   sites = sArr.map(s => ({ id: s.id, name: s.name, price: Number(s.price), rateType: s.rate_type, color: s.color, memo: s.memo||'' }));
   entries = eArr.map(e => ({ id: e.id, date: e.date, siteId: e.site_id, memberId: e.member_id, hours: Number(e.hours)||0, memo: e.memo||'' }));
-  members = mArr.map(m => ({ id: m.id, accountId: m.account_id, name: m.name, team: m.team||'', color: m.color||'#FF9800' }));
-  accounts = aArr;
+  members = mArr.map(m => ({ id: m.id, accountId: m.account_id, name: m.name, team: m.team||'', color: m.color||'#FF9800', type: m.type||'internal', partnerCompany: m.partner_company||'', rate: Number(m.rate)||0 }));
+  accounts = await dbLoad('accounts', { company_id: companyId });
   nxSite = sites.length > 0 ? Math.max(...sites.map(s=>s.id))+1 : 1;
   nxMem = members.length > 0 ? Math.max(...members.map(m=>m.id))+1 : 1;
+  const settings = await dbLoadSettings(companyId);
   if(settings) custom = settings;
   else custom = Object.assign({}, DEFAULT_CUSTOM);
 }
@@ -745,25 +675,25 @@ async function handleSetup(e){
   const password = document.getElementById('setupPassword').value;
   const passwordConfirm = document.getElementById('setupPasswordConfirm').value;
 
-  if(!companyName){showToast('ä¼ç¤¾åãå¥åãã¦ãã ãã');return}
-  if(password.length < 4){showToast('ãã¹ã¯ã¼ãã¯4æå­ä»¥ä¸ã§å¥åãã¦ãã ãã');return}
-  if(password !== passwordConfirm){showToast('ãã¹ã¯ã¼ããä¸è´ãã¾ãã');return}
+  if(!companyName){showToast('会社名を入力してください');return}
+  if(password.length < 4){showToast('パスワードは4文字以上で入力してください');return}
+  if(password !== passwordConfirm){showToast('パスワードが一致しません');return}
 
   const btn = e.target.querySelector('button[type="submit"]');
-  if(btn){btn.disabled=true;btn.textContent='å¦çä¸­...';}
+  if(btn){btn.disabled=true;btn.textContent='処理中...';}
 
   try {
     const company = await dbInsert('companies', { name: companyName });
-    if(!company) throw new Error('ä¼ç¤¾ä½æå¤±æ');
+    if(!company) throw new Error('会社作成失敗');
     companyId = company.id;
     saveSession('company_id', companyId);
 
     const hashedPw = await hashPassword(password);
-    const acc = await dbInsert('accounts', { company_id: companyId, password: hashedPw, role: 'master', name: 'ç®¡çè', team: 'çµå¶' });
-    await dbInsert('team_members', { company_id: companyId, account_id: acc.id, name: 'ç®¡çè', team: 'çµå¶', color: AVATARS[0] });
+    const acc = await dbInsert('accounts', { company_id: companyId, password: hashedPw, role: 'master', name: '管理者', team: '経営' });
+    await dbInsert('team_members', { company_id: companyId, account_id: acc.id, name: '管理者', team: '経営', color: AVATARS[0] });
     await dbInsertMany('work_sites', [
-      { company_id: companyId, name: 'ãµã³ãã«ç¾å ´A', price: 15000, rate_type: 'daily', color: '#4A90D9', memo: '' },
-      { company_id: companyId, name: 'ãµã³ãã«ç¾å ´B', price: 1500, rate_type: 'hourly', color: '#FF6B35', memo: '' }
+      { company_id: companyId, name: 'サンプル現場A', price: 15000, rate_type: 'daily', color: '#4A90D9', memo: '' },
+      { company_id: companyId, name: 'サンプル現場B', price: 1500, rate_type: 'hourly', color: '#FF6B35', memo: '' }
     ]);
     custom = Object.assign({}, DEFAULT_CUSTOM);
     await dbUpsertSettings(companyId, custom);
@@ -773,19 +703,19 @@ async function handleSetup(e){
     currentUserId = acc.id;
     userRole = 'master';
     saveSession('account_id', currentUserId);
-    // ç¢ºèªç»é¢ãè¡¨ç¤ºï¼ãã¹ã¯ã¼ãã¡ã¢æ¨å¥¨ï¼
+    // 確認画面を表示（パスワードメモ推奨）
     showSetupConfirm(companyName, password);
   } catch(err) {
     console.error('Setup error:', err);
-    showToast('ã¨ã©ã¼: ' + (err.message||err));
-    if(btn){btn.disabled=false;btn.textContent='ã»ããã¢ããå®äº';}
+    showToast('エラー: ' + (err.message||err));
+    if(btn){btn.disabled=false;btn.textContent='セットアップ完了';}
   }
 }
 
 function showSetupConfirm(companyName, password){
   document.getElementById('setupConfirmInfo').innerHTML = `
-    <div style="margin-bottom:12px"><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">ä¼ç¤¾å</div><div style="font-size:18px;font-weight:700;color:var(--text)">${companyName}</div></div>
-    <div><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">ãã¹ã¿ã¼ãã¹ã¯ã¼ã</div><div style="font-size:18px;font-weight:700;color:var(--primary);letter-spacing:2px">${password}</div></div>
+    <div style="margin-bottom:12px"><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">会社名</div><div style="font-size:18px;font-weight:700;color:var(--text)">${companyName}</div></div>
+    <div><div style="font-size:11px;color:var(--text-light);margin-bottom:4px">マスターパスワード</div><div style="font-size:18px;font-weight:700;color:var(--primary);letter-spacing:2px">${password}</div></div>
   `;
   document.body.className = 'screen-setup-confirm';
 }
@@ -795,22 +725,22 @@ function confirmSetupDone(){
   init();
   renderCalendar();
   buildTabs();
-  showToast('æ¥½ãã«ã¬ã³ãã¼ã¸ããããï¼');
+  showToast('楽々カレンダーへようこそ！');
 }
 
-// URLæå¾ãªã³ã¯ããã®èªåã­ã°ã¤ã³
+// URL招待リンクからの自動ログイン
 async function autoLoginFromInvite(name, pw){
   try {
-    // ååã ãã§æ¤ç´¢ï¼ãã¹ã¯ã¼ãã¯JSå´ã§ç§åï¼
+    // 名前だけで検索（パスワードはJS側で照合）
     let accs = await dbLoad('accounts', { company_id: companyId, name: name });
     if(!accs.length){
       accs = await dbLoad('accounts', { company_id: companyId, name: name.trim() });
     }
     if(accs.length){
       const hashedPw = await hashPassword(pw);
-      // ããã·ã¥ç§å
+      // ハッシュ照合
       let acc = accs.find(a => a.password === hashedPw);
-      // æ§å¹³æãã¹ã¯ã¼ãã¨ã®äºææ§
+      // 旧平文パスワードとの互換性
       if(!acc){
         acc = accs.find(a => a.password === pw);
         if(acc){
@@ -818,7 +748,7 @@ async function autoLoginFromInvite(name, pw){
           acc.password = hashedPw;
         }
       }
-      // ãã¹ã¯ã¼ãç§åãªãã§ãååä¸è´ã¢ã«ã¦ã³ãã1ã¤ã ãã®å ´åããã®ã¢ã«ã¦ã³ãã§è©¦è¡
+      // パスワード照合なしでも名前一致アカウントが1つだけの場合、そのアカウントで試行
       if(!acc && accs.length === 1){
         acc = accs[0];
       }
@@ -832,16 +762,16 @@ async function autoLoginFromInvite(name, pw){
         init();
         renderCalendar();
         buildTabs();
-        showToast(`${name}ãããããããï¼`);
+        showToast(`${name}さん、ようこそ！`);
         return;
       }
     }
     showScreen('login');
     document.getElementById('loginPassword').value = pw;
-    showToast('èªåã­ã°ã¤ã³ã§ãã¾ããã§ããããã¹ã¯ã¼ããç¢ºèªãã¦ãã ãã');
+    showToast('自動ログインできませんでした。パスワードを確認してください');
   } catch(err){
     showScreen('login');
-    showToast('ã¨ã©ã¼: ' + (err.message||err));
+    showToast('エラー: ' + (err.message||err));
   }
 }
 
@@ -850,7 +780,7 @@ async function handleLogin(e){
   const password = document.getElementById('loginPassword').value;
   const companyInput = document.getElementById('loginCompanyInput');
   const companyNameInput = companyInput ? companyInput.value.trim() : '';
-  if(!password){showToast('ãã¹ã¯ã¼ããå¥åãã¦ãã ãã');return}
+  if(!password){showToast('パスワードを入力してください');return}
 
   const btn = e.target.querySelector('button[type="submit"]');
   if(btn) btn.disabled=true;
@@ -858,31 +788,31 @@ async function handleLogin(e){
   try {
     let targetCompanyId = companyId;
 
-    // companyIdããªãå ´åã¯ä¼ç¤¾åã§æ¤ç´¢
+    // companyIdがない場合は会社名で検索
     if(!targetCompanyId){
-      if(!companyNameInput){showToast('ä¼ç¤¾åãå¥åãã¦ãã ãã'); if(btn) btn.disabled=false; return;}
+      if(!companyNameInput){showToast('会社名を入力してください'); if(btn) btn.disabled=false; return;}
       const companies = await dbLoad('companies', {});
       const matched = companies.filter(c => c.name === companyNameInput);
-      if(!matched.length){ showToast('ä¼ç¤¾åãè¦ã¤ããã¾ãã'); if(btn) btn.disabled=false; return; }
+      if(!matched.length){ showToast('会社名が見つかりません'); if(btn) btn.disabled=false; return; }
       targetCompanyId = matched[0].id;
     }
 
     const allAccs = await dbLoad('accounts', { company_id: targetCompanyId });
     const hashedPw = await hashPassword(password);
 
-    // ããã·ã¥ã§ç§å
+    // ハッシュで照合
     let acc = allAccs.find(a => a.password === hashedPw);
 
-    // æ§å¹³æãã¹ã¯ã¼ãã¨ã®äºææ§ãã§ãã¯
+    // 旧平文パスワードとの互換性チェック
     if(!acc){
       acc = allAccs.find(a => a.password === password);
       if(acc){
-        // å¹³æâããã·ã¥ã«ãã¤ã°ã¬ã¼ã·ã§ã³
+        // 平文→ハッシュにマイグレーション
         await dbUpdate('accounts', acc.id, { password: hashedPw });
         acc.password = hashedPw;
       }
     }
-    if(!acc){ showToast('ä¼ç¤¾åã¾ãã¯ãã¹ã¯ã¼ããæ­£ããããã¾ãã'); if(btn) btn.disabled=false; return; }
+    if(!acc){ showToast('会社名またはパスワードが正しくありません'); if(btn) btn.disabled=false; return; }
     currentAccount = acc;
     currentUserId = acc.id;
     userRole = acc.role;
@@ -899,7 +829,7 @@ async function handleLogin(e){
     renderCalendar();
     buildTabs();
   } catch(err) {
-    showToast('ã¨ã©ã¼: ' + (err.message||err));
+    showToast('エラー: ' + (err.message||err));
     if(btn) btn.disabled=false;
   }
 }
@@ -910,13 +840,13 @@ function handleLogout(){
   currentUserId = null;
   userRole = null;
   showScreen('login');
-  showToast('ã­ã°ã¢ã¦ããã¾ãã');
+  showToast('ログアウトしました');
 }
 
 async function handleDeleteAllData(){
-  if(!confirm('æ¬å½ã«ä¼ç¤¾ãã¼ã¿ãå¨ã¦åé¤ãã¾ããï¼\nå¨ã¢ã«ã¦ã³ãã»åºå¤è¨é²ã»ç¾å ´ã»ã¡ã³ãã¼ãå®å¨ã«åé¤ãããå¾©åã§ãã¾ããã')) return;
-  if(!confirm('æçµç¢ºèªï¼ãã®æä½ã¯åãæ¶ãã¾ãããæ¬å½ã«åé¤ãã¾ããï¼')) return;
-  if(!sb || !companyId) { showToast('ã¨ã©ã¼ãçºçãã¾ãã'); return; }
+  if(!confirm('本当に会社データを全て削除しますか？\n全アカウント・出勤記録・現場・メンバーが完全に削除され、復元できません。')) return;
+  if(!confirm('最終確認：この操作は取り消せません。本当に削除しますか？')) return;
+  if(!sb || !companyId) { showToast('エラーが発生しました'); return; }
   try {
     await sb.from('attendance_entries').delete().eq('company_id', companyId);
     await sb.from('team_members').delete().eq('company_id', companyId);
@@ -925,22 +855,22 @@ async function handleDeleteAllData(){
     await sb.from('accounts').delete().eq('company_id', companyId);
     await sb.from('companies').delete().eq('id', companyId);
     Object.keys(localStorage).filter(k => k.startsWith('raku_')).forEach(k => localStorage.removeItem(k));
-    showToast('å¨ãã¼ã¿ãåé¤ãã¾ãã');
+    showToast('全データを削除しました');
     setTimeout(() => location.reload(), 1000);
-  } catch(e) { console.error(e); showToast('åé¤ã«å¤±æãã¾ãã: ' + e.message); }
+  } catch(e) { console.error(e); showToast('削除に失敗しました: ' + e.message); }
 }
 
 async function handleDeleteMyAccount(){
-  if(!confirm('èªåã®ã¢ã«ã¦ã³ããåé¤ãã¾ããï¼\nãã®æä½ã¯åãæ¶ãã¾ããã')) return;
-  if(!sb || !currentUserId) { showToast('ã¨ã©ã¼ãçºçãã¾ãã'); return; }
+  if(!confirm('自分のアカウントを削除しますか？\nこの操作は取り消せません。')) return;
+  if(!sb || !currentUserId) { showToast('エラーが発生しました'); return; }
   try {
     const linked = members.find(m => m.accountId === currentUserId);
     if(linked) await sb.from('team_members').delete().eq('id', linked.id);
     await sb.from('accounts').delete().eq('id', currentUserId);
     Object.keys(localStorage).filter(k => k.startsWith('raku_')).forEach(k => localStorage.removeItem(k));
-    showToast('ã¢ã«ã¦ã³ããåé¤ãã¾ãã');
+    showToast('アカウントを削除しました');
     setTimeout(() => location.reload(), 1000);
-  } catch(e) { console.error(e); showToast('åé¤ã«å¤±æãã¾ãã: ' + e.message); }
+  } catch(e) { console.error(e); showToast('削除に失敗しました: ' + e.message); }
 }
 
 function showScreen(screen){
@@ -949,18 +879,18 @@ function showScreen(screen){
     const companyNameEl = document.getElementById('loginCompanyName');
     const companyInputEl = document.getElementById('loginCompanyInput');
     if(setup && companyId){
-      // ä¼ç¤¾ãç¹å®æ¸ã¿ â ä¼ç¤¾åãè¡¨ç¤ºãå¥åæ¬ã¯éè¡¨ç¤º
+      // 会社が特定済み → 会社名を表示、入力欄は非表示
       companyNameEl.textContent = setup.companyName;
       if(companyInputEl) companyInputEl.style.display = 'none';
     } else {
-      // ä¼ç¤¾æªç¹å® â ä¼ç¤¾åå¥åæ¬ãè¡¨ç¤º
+      // 会社未特定 → 会社名入力欄を表示
       companyNameEl.textContent = '';
       if(companyInputEl) companyInputEl.style.display = '';
     }
   }
 }
 
-// showCompanySelect / selectCompany ã¯åé¤ï¼ãã©ã¤ãã·ã¼ä¿è­·ã®ããä¼ç¤¾ä¸è¦§ãéè¡¨ç¤ºåï¼
+// showCompanySelect / selectCompany は削除（プライバシー保護のため会社一覧を非表示化）
 
 // ===== Initialization =====
 function init(){
@@ -972,9 +902,9 @@ function init(){
 function updateRoleBadge(){
   const badge = document.getElementById('roleBadge');
   const badges = {
-    master: { text: 'ãã¹ã¿ã¼', cls: 'master' },
-    submaster: { text: 'è·é·', cls: 'submaster' },
-    worker: { text: 'ä½æ¥­å¡', cls: 'worker' }
+    master: { text: 'マスター', cls: 'master' },
+    submaster: { text: '職長', cls: 'submaster' },
+    worker: { text: '作業員', cls: 'worker' }
   };
   const b = badges[userRole];
   if(b){
@@ -992,63 +922,90 @@ function updateAccountDisplay(){
 
 // ===== Check Initialization =====
 window.addEventListener('DOMContentLoaded', async ()=>{
-  if(isLineBrowser()){ hideLoading(); showLineWarning(); return; }
   ['raku_setup','raku_accounts','raku_session','raku_sites','raku_entries','raku_members','raku_custom'].forEach(k => localStorage.removeItem(k));
-  companyId = loadSession('company_id', null);
-  if(!companyId){ hideLoading(); showScreen('setup'); return; }
+
+  // URL招待パラメータを最優先でチェック
   const urlParams = new URLSearchParams(location.search);
-  const paramPw = urlParams.get('pw');
-  const paramName = urlParams.get('name');
-  if(paramPw && window.history.replaceState){ history.replaceState(null, '', location.pathname + (location.hash || '')); }
+  const inviteName = urlParams.get('name');
+  const invitePw = urlParams.get('pw');
+  const inviteCompany = urlParams.get('cid');
+  if(inviteName && invitePw && inviteCompany){
+    history.replaceState(null, '', location.pathname);
+    companyId = inviteCompany;
+    saveSession('company_id', companyId);
+    const companies = await dbLoad('companies', { id: companyId });
+    if(companies.length){
+      setup = { companyName: companies[0].name };
+      await autoLoginFromInvite(inviteName, invitePw);
+      return;
+    }
+  }
+
+  companyId = loadSession('company_id', null);
+
+  // セッション有効期限チェック
+  if(isSessionExpired()){
+    Object.keys(localStorage).filter(k => k.startsWith('raku_')).forEach(k => localStorage.removeItem(k));
+    companyId = null;
+  }
+
+  // companyIdがない場合はログイン画面を表示（会社名+パスワードでログイン可能）
+  if(!companyId){
+    showScreen('login');
+    return;
+  }
+
   const companies = await dbLoad('companies', { id: companyId });
-  if(!companies.length){ saveSession('company_id', null); hideLoading(); showScreen('setup'); return; }
+  if(!companies.length){
+    saveSession('company_id', null);
+    companyId = null;
+    showScreen('setup');
+    return;
+  }
   setup = { companyName: companies[0].name };
+
   const savedAccountId = loadSession('account_id', null);
   if(savedAccountId){
     await loadAllData();
     const account = accounts.find(a => a.id === savedAccountId);
     if(account){
-      currentAccount = account; currentUserId = account.id; userRole = account.role;
-      if(companyId) location.hash = 'cid=' + companyId;
-      hideLoading(); showScreen('app'); init(); renderCalendar(); buildTabs(); return;
+      currentAccount = account;
+      currentUserId = account.id;
+      userRole = account.role;
+      showScreen('app');
+      init();
+      renderCalendar();
+      buildTabs();
+    } else {
+      showScreen('login');
     }
+  } else {
+    showScreen('login');
   }
-  if(paramPw){
-    await loadAllData();
-    const accs = accounts.filter(a => a.password === paramPw);
-    if(accs.length > 0){
-      const acc = paramName ? (accs.find(a => a.name === paramName) || accs[0]) : accs[0];
-      currentAccount = acc; currentUserId = acc.id; userRole = acc.role;
-      saveSession('account_id', currentUserId);
-      if(companyId) location.hash = 'cid=' + companyId;
-      hideLoading(); showScreen('app'); init(); renderCalendar(); buildTabs();
-      showToast('\u30ed\u30b0\u30a4\u30f3\u3057\u307e\u3057\u305f'); return;
-    }
-  }
-  hideLoading(); showScreen('login');
-  if(paramPw){ const pwField = document.getElementById('loginPassword'); if(pwField) pwField.value = paramPw; }
+  // URLパラメータをクリア（パスワードを履歴に残さない）
+  if(location.search) history.replaceState(null, '', location.pathname);
 });
 
 // ===== Tabs =====
 function buildTabs(){
   let tabDefs = [
-    { id: 'calendar', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', label: 'ã«ã¬ã³ãã¼' },
-    { id: 'stats', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="12" width="4" height="8"/><rect x="10" y="8" width="4" height="12"/><rect x="16" y="4" width="4" height="16"/></svg>', label: 'éè¨' },
+    { id: 'calendar', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', label: 'カレンダー' },
+    { id: 'stats', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="12" width="4" height="8"/><rect x="10" y="8" width="4" height="12"/><rect x="16" y="4" width="4" height="16"/></svg>', label: '集計' },
   ];
 
   if(userRole === 'master' || userRole === 'submaster'){
-    tabDefs.push({ id: 'sites', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>', label: 'ç¾å ´' });
+    tabDefs.push({ id: 'sites', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>', label: '現場' });
   }
 
   if(userRole === 'master' || userRole === 'submaster'){
-    tabDefs.push({ id: 'members', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>', label: 'ã¡ã³ãã¼' });
+    tabDefs.push({ id: 'members', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>', label: 'メンバー' });
   }
 
   if(userRole === 'master'){
-    tabDefs.push({ id: 'report', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>', label: 'ã¬ãã¼ã' });
+    tabDefs.push({ id: 'report', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>', label: 'レポート' });
   }
 
-  tabDefs.push({ id: 'settings', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>', label: 'è¨­å®' });
+  tabDefs.push({ id: 'settings', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>', label: '設定' });
 
   document.getElementById('tabBar').innerHTML = tabDefs.map((t, i) => `<button class="tab-item${i === 0 ? ' active' : ''}" onclick="switchTab('${t.id}',this)">${t.icon}${t.label}</button>`).join('');
 }
@@ -1068,7 +1025,7 @@ function switchTab(id, el){
 
 // ===== Calendar =====
 function renderCalendar(){
-  document.getElementById('monthTitle').textContent = `${cY}å¹´${cM+1}æ`;
+  document.getElementById('monthTitle').textContent = `${cY}年${cM+1}月`;
   const fd = new Date(cY, cM, 1).getDay();
   const dim = new Date(cY, cM+1, 0).getDate();
   const pDim = new Date(cY, cM, 0).getDate();
@@ -1155,15 +1112,15 @@ function updSummary(){
   let rev = 0;
   me.forEach(e => { rev += calcRev(e, sites.find(x => x.id === e.siteId)); });
   const meDays = sumDays(me);
-  document.getElementById('totalDays').innerHTML = `${meDays}<span class="summary-unit">æ¥</span>`;
+  document.getElementById('totalDays').innerHTML = `${meDays}<span class="summary-unit">日</span>`;
 
   if(userRole === 'worker'){
-    document.getElementById('cardDays').innerHTML = '<div class="summary-label">èªåã®åºå¤</div><div class="summary-value days">' + meDays + '<span class="summary-unit">æ¥</span></div>';
+    document.getElementById('cardDays').innerHTML = '<div class="summary-label">自分の出勤</div><div class="summary-value days">' + meDays + '<span class="summary-unit">日</span></div>';
   }
 
   const revCard = document.getElementById('cardRevenue');
   if(canSeeRevenue()){
-    document.getElementById('totalRevenue').textContent = `Â¥${rev.toLocaleString()}`;
+    document.getElementById('totalRevenue').textContent = `¥${rev.toLocaleString()}`;
     revCard.style.display = '';
   } else {
     revCard.style.display = 'none';
@@ -1173,11 +1130,11 @@ function updSummary(){
   if(userRole === 'worker'){ const mm = members.find(m => m.accountId === currentUserId); allE = allE.filter(e => e.memberId === (mm ? mm.id : currentUserId)); }
   let gRev = 0;
   allE.forEach(e => { gRev += calcRev(e, sites.find(x => x.id === e.siteId)); });
-  document.getElementById('grandTotalDays').innerHTML = `${sumDays(allE)}<span class="summary-unit">æ¥</span>`;
+  document.getElementById('grandTotalDays').innerHTML = `${sumDays(allE)}<span class="summary-unit">日</span>`;
 
   const gRevCard = document.getElementById('cardGrandRevenue');
   if(canSeeRevenue()){
-    document.getElementById('grandTotalRevenue').textContent = `Â¥${gRev.toLocaleString()}`;
+    document.getElementById('grandTotalRevenue').textContent = `¥${gRev.toLocaleString()}`;
     gRevCard.style.display = '';
   } else {
     gRevCard.style.display = 'none';
@@ -1193,11 +1150,11 @@ function renderToday(){
 
   const c = document.getElementById('todayEntries');
   if(!te.length){
-    c.innerHTML = `<div class="section-title">ä»æã®è¨é²</div><div class="empty"><div class="empty-icon">ð</div><div class="empty-text">ä»æã®åºå¤ã¯ã¾ã ç»é²ããã¦ãã¾ãã<br>æ¥ä»ãã¿ãããã¦ç»é²ãã¾ããã</div></div>`;
+    c.innerHTML = `<div class="section-title">今月の記録</div><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">今月の出勤はまだ登録されていません<br>日付をタップして登録しましょう</div></div>`;
     return;
   }
 
-  let h = '<div class="section-title">ä»æã®è¨é²</div>';
+  let h = '<div class="section-title">今月の記録</div>';
   let lastDate = '';
   te.forEach(e => {
     const s = sites.find(x => x.id === e.siteId);
@@ -1211,12 +1168,12 @@ function renderToday(){
     const m = members.find(x => x.id === e.memberId);
     let priceText = '';
     if(canSeeRevenue()){
-      priceText = s.price ? (s.rateType === 'hourly' ? 'Â¥' + s.price.toLocaleString() + '/h' + (e.hours ? ' Ã ' + e.hours + 'h = Â¥' + (s.price * e.hours).toLocaleString() : '') : 'Â¥' + s.price.toLocaleString()) : 'åä¾¡æªè¨­å®';
+      priceText = s.price ? (s.rateType === 'hourly' ? '¥' + s.price.toLocaleString() + '/h' + (e.hours ? ' × ' + e.hours + 'h = ¥' + (s.price * e.hours).toLocaleString() : '') : '¥' + s.price.toLocaleString()) : '単価未設定';
     }
     let metaText = priceText;
-    if(userRole !== 'worker' && m) metaText += (metaText ? ' Â· ' : '') + m.name;
-    if(e.memo) metaText += (metaText ? ' Â· ' : '') + e.memo;
-    h += `<div class="entry-card" onclick="editEntry(${e.id})" style="cursor:pointer"><div class="entry-color" style="background:${s.color}"></div><div class="entry-info"><div class="entry-name">${s.name}</div><div class="entry-meta">${metaText}</div></div><button class="entry-del" onclick="event.stopPropagation();delEntry('${e.date}',${s.id},${e.memberId||0})">â</button></div>`;
+    if(userRole !== 'worker' && m) metaText += (metaText ? ' · ' : '') + m.name;
+    if(e.memo) metaText += (metaText ? ' · ' : '') + e.memo;
+    h += `<div class="entry-card" onclick="editEntry(${e.id})" style="cursor:pointer"><div class="entry-color" style="background:${s.color}"></div><div class="entry-info"><div class="entry-name">${s.name}</div><div class="entry-meta">${metaText}</div></div><button class="entry-del" onclick="event.stopPropagation();delEntry('${e.date}',${s.id},${e.memberId||0})">✕</button></div>`;
   });
   c.innerHTML = h;
 }
@@ -1230,19 +1187,19 @@ function editEntry(entryId){
   selSiteId = e.siteId;
   selMemberIds = [e.memberId];
   const p = e.date.split('-');
-  document.getElementById('entryModalTitle').textContent = `${+p[1]}æ${+p[2]}æ¥ã®åºå¤ãç·¨é`;
+  document.getElementById('entryModalTitle').textContent = `${+p[1]}月${+p[2]}日の出勤を編集`;
   document.getElementById('entryMemo').value = e.memo || '';
-  document.getElementById('saveEntryBtn').textContent = 'æ´æ°ãã';
+  document.getElementById('saveEntryBtn').textContent = '更新する';
 
   let h = '';
   sites.forEach(s => {
     const sel = s.id === selSiteId ? ' selected' : '';
-    h += `<div class="site-chip${sel}" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (æçµ¦)' : ''}</div>`;
+    h += `<div class="site-chip${sel}" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (時給)' : ''}</div>`;
   });
   if(canManageSites()){
-    h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">ï¼ ç¾å ´ãç®¡ç</div>`;
+    h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">＋ 現場を管理</div>`;
   }
-  h += `<div class="site-chip" onclick="showCustomSiteInput()" style="border-style:dashed;color:var(--secondary)">âï¸ ç´æ¥å¥å</div>`;
+  h += `<div class="site-chip" onclick="showCustomSiteInput()" style="border-style:dashed;color:var(--secondary)">✏️ 直接入力</div>`;
   document.getElementById('siteChips').innerHTML = h;
   document.getElementById('customSiteInputWrap').style.display = 'none';
   document.getElementById('customSiteName').value = '';
@@ -1265,7 +1222,7 @@ function editEntry(entryId){
       mh += `<div class="site-chip${sel}" onclick="selChip(${m.id},this,'member')" data-id="${m.id}"><span class="chip-dot" style="background:${m.color}"></span>${m.name}</div>`;
     });
     if(partnerMembers.length > 0){
-      mh += `<div style="font-size:11px;color:#FF9800;font-weight:600;margin:8px 0 4px;width:100%">ð¢ ååä¼ç¤¾</div>`;
+      mh += `<div style="font-size:11px;color:#FF9800;font-weight:600;margin:8px 0 4px;width:100%">🏢 協力会社</div>`;
       partnerMembers.forEach(m => {
         const sel = selMemberIds.includes(m.id) ? ' selected' : '';
         mh += `<div class="site-chip${sel}" onclick="selChip(${m.id},this,'member')" data-id="${m.id}"><span class="chip-dot" style="background:#FF9800"></span>${m.name}<span style="font-size:10px;color:#888;margin-left:4px">(${m.partnerCompany})</span></div>`;
@@ -1287,7 +1244,7 @@ function openEntry(ds){
   selSiteId = null;
   selMemberIds = [];
   const p = ds.split('-');
-  document.getElementById('entryModalTitle').textContent = `${+p[1]}æ${+p[2]}æ¥ã®åºå¤ç»é²`;
+  document.getElementById('entryModalTitle').textContent = `${+p[1]}月${+p[2]}日の出勤登録`;
   document.getElementById('entryMemo').value = '';
   document.getElementById('saveEntryBtn').disabled = true;
   document.getElementById('hoursGroup').style.display = 'none';
@@ -1297,12 +1254,12 @@ function openEntry(ds){
 
   let h = '';
   sites.forEach(s => {
-    h += `<div class="site-chip" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (æçµ¦)' : ''}</div>`;
+    h += `<div class="site-chip" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (時給)' : ''}</div>`;
   });
   if(canManageSites()){
-    h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">ï¼ ç¾å ´ãç®¡ç</div>`;
+    h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">＋ 現場を管理</div>`;
   }
-  h += `<div class="site-chip" onclick="showCustomSiteInput()" style="border-style:dashed;color:var(--secondary)">âï¸ ç´æ¥å¥å</div>`;
+  h += `<div class="site-chip" onclick="showCustomSiteInput()" style="border-style:dashed;color:var(--secondary)">✏️ 直接入力</div>`;
   document.getElementById('siteChips').innerHTML = h;
   document.getElementById('customSiteInputWrap').style.display = 'none';
   document.getElementById('customSiteName').value = '';
@@ -1317,7 +1274,7 @@ function openEntry(ds){
       mh += `<div class="site-chip" onclick="selChip(${m.id},this,'member')" data-id="${m.id}"><span class="chip-dot" style="background:${m.color}"></span>${m.name}</div>`;
     });
     if(partnerMembers.length > 0){
-      mh += `<div style="font-size:11px;color:#FF9800;font-weight:600;margin:8px 0 4px;width:100%">ð¢ ååä¼ç¤¾</div>`;
+      mh += `<div style="font-size:11px;color:#FF9800;font-weight:600;margin:8px 0 4px;width:100%">🏢 協力会社</div>`;
       partnerMembers.forEach(m => {
         mh += `<div class="site-chip" onclick="selChip(${m.id},this,'member')" data-id="${m.id}"><span class="chip-dot" style="background:#FF9800"></span>${m.name}<span style="font-size:10px;color:#888;margin-left:4px">(${m.partnerCompany})</span></div>`;
       });
@@ -1358,7 +1315,7 @@ function selChip(id, el, type){
 function showCustomSiteInput(){
   document.getElementById('customSiteInputWrap').style.display = '';
   document.getElementById('customSiteName').focus();
-  // æ¢å­ã®ç¾å ´é¸æãè§£é¤
+  // 既存の現場選択を解除
   document.querySelectorAll('#siteChips .site-chip').forEach(c => c.classList.remove('selected'));
   selSiteId = null;
   updateEntryBtn();
@@ -1366,13 +1323,13 @@ function showCustomSiteInput(){
 
 async function confirmCustomSite(){
   const name = document.getElementById('customSiteName').value.trim();
-  if(!name){ showToast('ç¾å ´åãå¥åãã¦ãã ãã'); return; }
-  // æ¢å­ã®ååç¾å ´ãããã°ãããé¸æ
+  if(!name){ showToast('現場名を入力してください'); return; }
+  // 既存の同名現場があればそれを選択
   let existing = sites.find(s => s.name === name);
   if(existing){
     selSiteId = existing.id;
     document.getElementById('customSiteInputWrap').style.display = 'none';
-    // ãããããã¤ã©ã¤ã
+    // チップをハイライト
     document.querySelectorAll('#siteChips .site-chip').forEach(c => {
       if(+c.dataset.id === existing.id) c.classList.add('selected');
       else c.classList.remove('selected');
@@ -1381,32 +1338,32 @@ async function confirmCustomSite(){
     document.getElementById('dayTypeGroup').style.display = existing.rateType === 'daily' ? '' : 'none';
     if(existing.rateType === 'daily'){ selectedDayType = 1; updateDayTypeBtns(); }
     updateEntryBtn();
-    showToast(`ã${name}ããé¸æãã¾ãã`);
+    showToast(`「${name}」を選択しました`);
     return;
   }
-  // æ°è¦ç¾å ´ãèªåä½æï¼æ¥çµ¦ã»ããã©ã«ãè²ã»åä¾¡0ï¼
+  // 新規現場を自動作成（日給・デフォルト色・単価0）
   const clr = PALETTE[sites.length % PALETTE.length];
   const newSite = await dbInsert('work_sites', { company_id: companyId, name, price: 0, rate_type: 'daily', color: clr, memo: '' });
-  if(!newSite){ showToast('ç¾å ´ã®è¿½å ã«å¤±æãã¾ãã'); return; }
+  if(!newSite){ showToast('現場の追加に失敗しました'); return; }
   if(newSite){
     sites.push({ id: newSite.id, name: newSite.name, price: 0, rateType: 'daily', color: clr, memo: '' });
     selSiteId = newSite.id;
-    // ãããä¸è¦§ãåæ§ç¯
+    // チップ一覧を再構築
     let h = '';
     sites.forEach(s => {
       const sel = s.id === selSiteId ? ' selected' : '';
-      h += `<div class="site-chip${sel}" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (æçµ¦)' : ''}</div>`;
+      h += `<div class="site-chip${sel}" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (時給)' : ''}</div>`;
     });
     if(canManageSites()){
-      h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">ï¼ ç¾å ´ãç®¡ç</div>`;
+      h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">＋ 現場を管理</div>`;
     }
-    h += `<div class="site-chip" onclick="showCustomSiteInput()" style="border-style:dashed;color:var(--secondary)">âï¸ ç´æ¥å¥å</div>`;
+    h += `<div class="site-chip" onclick="showCustomSiteInput()" style="border-style:dashed;color:var(--secondary)">✏️ 直接入力</div>`;
     document.getElementById('siteChips').innerHTML = h;
     document.getElementById('customSiteInputWrap').style.display = 'none';
     document.getElementById('dayTypeGroup').style.display = '';
     selectedDayType = 1; updateDayTypeBtns();
     updateEntryBtn();
-    showToast(`ã${name}ããè¿½å ãã¾ãã`);
+    showToast(`「${name}」を追加しました`);
   }
 }
 
@@ -1418,7 +1375,7 @@ function selectAllMembers(){
     if(id) c.classList.add('selected');
   });
   updateEntryBtn();
-  showToast('å¨å¡é¸æãã¾ãã');
+  showToast('全員選択しました');
 }
 
 function updateEntryBtn(){
@@ -1429,9 +1386,9 @@ function updateEntryBtn(){
   document.getElementById('saveEntryBtn').disabled = !(selSiteId && needMember && hoursOk);
   const btn = document.getElementById('saveEntryBtn');
   if(selSiteId && needMember && !hoursOk){
-    btn.textContent = 'å¤åæéãå¥åãã¦ãã ãã';
+    btn.textContent = '勤務時間を入力してください';
   } else {
-    btn.textContent = editingEntryId ? 'æ´æ°ãã' : 'ç»é²ãã';
+    btn.textContent = editingEntryId ? '更新する' : '登録する';
   }
 }
 
@@ -1440,14 +1397,14 @@ async function saveEntry(){
 
   const site = sites.find(x => x.id === selSiteId);
   if(site && site.rateType === 'hourly' && !parseFloat(document.getElementById('entryHours').value)){
-    showToast('å¤åæéãå¥åãã¦ãã ãã');
+    showToast('勤務時間を入力してください');
     return;
   }
 
   const hours = site && site.rateType === 'hourly' ? parseFloat(document.getElementById('entryHours').value) : selectedDayType;
   const memo = document.getElementById('entryMemo').value;
 
-  // ç·¨éã¢ã¼ã
+  // 編集モード
   if(editingEntryId){
     const mid = selMemberIds[0];
     await dbUpdate('attendance_entries', editingEntryId, { date: selDate, site_id: selSiteId, member_id: mid, memo, hours });
@@ -1456,11 +1413,11 @@ async function saveEntry(){
     editingEntryId = null;
     closeM('entryModal');
     renderCalendar();
-    showToast('æ´æ°ãã¾ãã');
+    showToast('更新しました');
     return;
   }
 
-  // æ°è¦ç»é²ã¢ã¼ã
+  // 新規登録モード
   let mids = selMemberIds;
   if(userRole === 'worker'){
     const myMember = members.find(m => m.accountId === currentUserId);
@@ -1481,8 +1438,8 @@ async function saveEntry(){
   }
   closeM('entryModal');
   renderCalendar();
-  if(skipped > 0) showToast(`${added}ä»¶ç»é²ï¼${skipped}ä»¶ã¯ç»é²æ¸ã¿ï¼`);
-  else showToast(`${added}åã®åºå¤ãç»é²ãã¾ãã`);
+  if(skipped > 0) showToast(`${added}件登録（${skipped}件は登録済み）`);
+  else showToast(`${added}名の出勤を登録しました`);
 }
 
 async function delEntry(ds, sid, mid){
@@ -1490,22 +1447,22 @@ async function delEntry(ds, sid, mid){
   if(target && target.id) await dbDelete('attendance_entries', target.id);
   entries = entries.filter(e => !(e.date === ds && e.siteId === sid && e.memberId === mid));
   renderCalendar();
-  showToast('åé¤ãã¾ãã');
+  showToast('削除しました');
 }
 
 // ===== Stats Page =====
 function renderStats(){
-  document.getElementById('statMonth').textContent = `${statY}å¹´${statM+1}æ`;
+  document.getElementById('statMonth').textContent = `${statY}年${statM+1}月`;
   const ms = `${statY}-${String(statM+1).padStart(2,'0')}`;
   const me = entries.filter(e => e.date.startsWith(ms));
 
   let rev = 0;
   me.forEach(e => { rev += calcRev(e, sites.find(x => x.id === e.siteId)); });
-  document.getElementById('sDays').innerHTML = `${sumDays(me)}<span class="summary-unit">æ¥</span>`;
+  document.getElementById('sDays').innerHTML = `${sumDays(me)}<span class="summary-unit">日</span>`;
 
   const revCard = document.getElementById('statsRevCard');
   if(canSeeRevenue()){
-    document.getElementById('sRev').textContent = `Â¥${rev.toLocaleString()}`;
+    document.getElementById('sRev').textContent = `¥${rev.toLocaleString()}`;
     revCard.style.display = '';
   } else {
     revCard.style.display = 'none';
@@ -1514,11 +1471,11 @@ function renderStats(){
   let allE = entries;
   let gRev = 0;
   allE.forEach(e => { gRev += calcRev(e, sites.find(x => x.id === e.siteId)); });
-  document.getElementById('sGrandDays').innerHTML = `${sumDays(allE)}<span class="summary-unit">æ¥</span>`;
+  document.getElementById('sGrandDays').innerHTML = `${sumDays(allE)}<span class="summary-unit">日</span>`;
 
   const gRevCard = document.getElementById('statsGrandRevCard');
   if(canSeeRevenue()){
-    document.getElementById('sGrandRev').textContent = `Â¥${gRev.toLocaleString()}`;
+    document.getElementById('sGrandRev').textContent = `¥${gRev.toLocaleString()}`;
     gRevCard.style.display = '';
   } else {
     gRevCard.style.display = 'none';
@@ -1533,7 +1490,7 @@ function renderStats(){
     const me = entries.filter(e => e.date.startsWith(ms));
     let rev = 0;
     me.forEach(e => { rev += calcRev(e, sites.find(x => x.id === e.siteId)); });
-    barData.unshift({ month: `${m+1}æ`, days: sumDays(me), rev });
+    barData.unshift({ month: `${m+1}月`, days: sumDays(me), rev });
   }
 
   const maxDays = Math.max(...barData.map(d => d.days), 1);
@@ -1560,18 +1517,18 @@ function renderStats(){
   siteData.forEach(s => {
     let revText = '';
     if(canSeeRevenue()){
-      revText = `<div class="site-stat-amount">Â¥${s.rev.toLocaleString()}</div>`;
+      revText = `<div class="site-stat-amount">¥${s.rev.toLocaleString()}</div>`;
     }
-    siteHtml += `<div class="site-stat-card"><div class="site-stat-name">${s.name}</div><div class="site-stat-days">${s.days}æ¥</div>${revText}</div>`;
+    siteHtml += `<div class="site-stat-card"><div class="site-stat-name">${s.name}</div><div class="site-stat-days">${s.days}日</div>${revText}</div>`;
   });
-  document.getElementById('siteStats').innerHTML = siteHtml || '<div class="empty"><div class="empty-text">ãã®æã®è¨é²ãããã¾ãã</div></div>';
+  document.getElementById('siteStats').innerHTML = siteHtml || '<div class="empty"><div class="empty-text">この月の記録がありません</div></div>';
 
-  // ååä¼ç¤¾éè¨
+  // 協力会社集計
   const partnerMembers = members.filter(m => m.type === 'partner');
   const partnerContainer = document.getElementById('partnerStats');
   if(partnerMembers.length > 0 && canSeeRevenue()){
     const partnerCompanies = [...new Set(partnerMembers.map(m => m.partnerCompany))];
-    let ph = '<div class="section-title">ååä¼ç¤¾ æ¯æéè¨</div>';
+    let ph = '<div class="section-title">協力会社 支払集計</div>';
     let totalPartnerCost = 0;
     partnerCompanies.forEach(pc => {
       const pcMembers = partnerMembers.filter(m => m.partnerCompany === pc);
@@ -1588,21 +1545,21 @@ function renderStats(){
         ph += `<div class="partner-section">
           <div class="partner-company-title"><span class="company-icon">${pc[0]}</span>${pc}</div>
           <div class="partner-stat-row">
-            <div class="partner-stat-label">åºå¤éè¨</div>
-            <div class="partner-stat-value days">${companyDays}æ¥</div>
+            <div class="partner-stat-label">出勤集計</div>
+            <div class="partner-stat-value days">${companyDays}日</div>
           </div>
           <div class="partner-stat-row">
-            <div class="partner-stat-label">æ¯æåè¨</div>
-            <div class="partner-stat-value cost">âÂ¥${companyCost.toLocaleString()}â</div>
+            <div class="partner-stat-label">支払合計</div>
+            <div class="partner-stat-value cost">−¥${companyCost.toLocaleString()}−</div>
           </div>`;
-        // ã¡ã³ãã¼åè¨³
+        // メンバー内訳
         pcMembers.forEach(m => {
           const mEntries = me.filter(e => e.memberId === m.id);
           const days = sumDays(mEntries);
           if(days > 0){
             ph += `<div style="display:flex;justify-content:space-between;padding:4px 0 2px;font-size:12px;color:#666;border-top:1px dashed #eee">
               <span>${m.name}</span>
-              <span>${days}æ¥ ã» Â¥${(days * m.rate).toLocaleString()}</span>
+              <span>${days}日 ・ ¥${(days * m.rate).toLocaleString()}</span>
             </div>`;
           }
         });
@@ -1611,8 +1568,8 @@ function renderStats(){
     });
     if(totalPartnerCost > 0){
       ph += `<div style="background:var(--white);border-radius:12px;padding:14px;margin:10px 0;box-shadow:var(--shadow);text-align:center;border-left:3px solid #E53935">
-        <div style="font-size:12px;color:var(--text-light)">ååä¼ç¤¾ æ¯æç·é¡</div>
-        <div style="font-size:22px;font-weight:700;color:#E53935">âÂ¥${totalPartnerCost.toLocaleString()}â</div>
+        <div style="font-size:12px;color:var(--text-light)">協力会社 支払総額</div>
+        <div style="font-size:22px;font-weight:700;color:#E53935">−¥${totalPartnerCost.toLocaleString()}−</div>
       </div>`;
     }
     partnerContainer.innerHTML = ph;
@@ -1631,33 +1588,33 @@ function changeStatMonth(d){
 // ===== Sites Page =====
 function renderSites(){
   if(!canManageSites()){
-    document.getElementById('sitesContent').innerHTML = '<div class="empty"><div class="empty-text">ç¾å ´ç®¡çã¯è·é·ä»¥ä¸ã®ã¿ä½¿ç¨ã§ãã¾ã</div></div>';
+    document.getElementById('sitesContent').innerHTML = '<div class="empty"><div class="empty-text">現場管理は職長以上のみ使用できます</div></div>';
     return;
   }
 
   let h = '';
   sites.forEach(s => {
-    const siteStr = s.rateType === 'hourly' ? `Â¥${s.price}/æé` : `Â¥${s.price}`;
+    const siteStr = s.rateType === 'hourly' ? `¥${s.price}/時間` : `¥${s.price}`;
     h += `<div class="site-card">
       <div class="site-left">
         <div class="site-color" style="background:${s.color}"></div>
         <div class="site-info">
           <div class="site-name">${s.name}</div>
-          <div class="site-meta">${siteStr}${s.memo ? ' Â· ' + s.memo : ''}</div>
+          <div class="site-meta">${siteStr}${s.memo ? ' · ' + s.memo : ''}</div>
         </div>
       </div>
       <div class="site-actions">
-        <button onclick="editSite(${s.id})">ç·¨é</button>
-        <button onclick="deleteSite(${s.id})" style="color:var(--danger);background:var(--danger)'+'22'">åé¤</button>
+        <button onclick="editSite(${s.id})">編集</button>
+        <button onclick="deleteSite(${s.id})" style="color:var(--danger);background:var(--danger)'+'22'">削除</button>
       </div>
     </div>`;
   });
-  h += `<button class="add-btn" onclick="openNewSite()" style="margin-top:14px">ï¼ ç¾å ´ãè¿½å </button>`;
+  h += `<button class="add-btn" onclick="openNewSite()" style="margin-top:14px">＋ 現場を追加</button>`;
   document.getElementById('sitesContent').innerHTML = h;
 }
 
 function openNewSite(){
-  document.getElementById('siteModalTitle').textContent = 'ç¾å ´ãè¿½å ';
+  document.getElementById('siteModalTitle').textContent = '現場を追加';
   document.getElementById('siteName').value = '';
   document.getElementById('sitePrice').value = '';
   document.getElementById('siteRateType').value = 'daily';
@@ -1670,13 +1627,13 @@ function openNewSite(){
 function editSite(siteId){
   const site = sites.find(s => s.id === siteId);
   if(!site) return;
-  document.getElementById('siteModalTitle').textContent = 'ç¾å ´ãç·¨é';
+  document.getElementById('siteModalTitle').textContent = '現場を編集';
   document.getElementById('siteName').value = site.name;
   document.getElementById('sitePrice').value = site.price;
   document.getElementById('siteRateType').value = site.rateType;
   document.getElementById('siteMemo').value = site.memo;
   siteColorSelection = site.color;
-  document.getElementById('saveSiteBtn').textContent = 'ç¾å ´ãæ´æ°';
+  document.getElementById('saveSiteBtn').textContent = '現場を更新';
   document.getElementById('saveSiteBtn').onclick = () => updateSite(siteId);
   renderSiteColorPicker();
   document.getElementById('siteModal').classList.add('show');
@@ -1687,14 +1644,14 @@ function renderSiteColorPicker(){
   picker.innerHTML = PALETTE.map(c => {
     const isActive = c === siteColorSelection;
     return `<div class="cc${isActive ? ' active' : ''}" style="background:${c};${c === '#FFFFFF' || c === '#F8F9FA' ? 'border:2px solid #CCC;' : ''}" onclick="siteColorSelection='${c}';renderSiteColorPicker()">
-      ${isActive ? 'â' : ''}
+      ${isActive ? '✓' : ''}
     </div>`;
   }).join('');
 }
 
 async function saveSite(){
   const name = document.getElementById('siteName').value.trim();
-  if(!name){ showToast('ç¾å ´åãå¥åãã¦ãã ãã'); return; }
+  if(!name){ showToast('現場名を入力してください'); return; }
   const price = parseFloat(document.getElementById('sitePrice').value) || 0;
   const rateType = document.getElementById('siteRateType').value;
   const memo = document.getElementById('siteMemo').value;
@@ -1703,12 +1660,12 @@ async function saveSite(){
   if(row) sites.push({ id: row.id, name, price, rateType, color: siteColorSelection, memo });
   closeM('siteModal');
   renderSites();
-  showToast('ç¾å ´ãè¿½å ãã¾ãã');
+  showToast('現場を追加しました');
 }
 
 async function updateSite(siteId){
   const name = document.getElementById('siteName').value.trim();
-  if(!name){ showToast('ç¾å ´åãå¥åãã¦ãã ãã'); return; }
+  if(!name){ showToast('現場名を入力してください'); return; }
   const price = parseFloat(document.getElementById('sitePrice').value) || 0;
   const rateType = document.getElementById('siteRateType').value;
   const memo = document.getElementById('siteMemo').value;
@@ -1718,17 +1675,17 @@ async function updateSite(siteId){
   if(site){ site.name=name; site.price=price; site.rateType=rateType; site.color=siteColorSelection; site.memo=memo; }
   closeM('siteModal');
   renderSites();
-  document.getElementById('saveSiteBtn').textContent = 'ç¾å ´ãç»é²';
+  document.getElementById('saveSiteBtn').textContent = '現場を登録';
   document.getElementById('saveSiteBtn').onclick = saveSite;
-  showToast('ç¾å ´ãæ´æ°ãã¾ãã');
+  showToast('現場を更新しました');
 }
 
 async function deleteSite(siteId){
-  if(!confirm('ãã®ç¾å ´ãåé¤ãã¾ããï¼')) return;
+  if(!confirm('この現場を削除しますか？')) return;
   await dbDelete('work_sites', siteId);
   sites = sites.filter(s => s.id !== siteId);
   renderSites();
-  showToast('åé¤ãã¾ãã');
+  showToast('削除しました');
 }
 
 // ===== Members Page =====
@@ -1747,7 +1704,7 @@ function renderMembers(){
       const me = entries.filter(e => e.date.startsWith(ms) && e.memberId === m.id);
       let rev = 0;
       me.forEach(e => { rev += calcRev(e, sites.find(x => x.id === e.siteId)); });
-      const revDisplay = canSeeRevenue() ? `<div class="member-revenue">Â¥${rev.toLocaleString()}</div>` : '';
+      const revDisplay = canSeeRevenue() ? `<div class="member-revenue">¥${rev.toLocaleString()}</div>` : '';
       h += `<div class="member-card">
         <div class="member-avatar" style="background:${m.color}">${m.name[0]}</div>
         <div class="member-info">
@@ -1755,7 +1712,7 @@ function renderMembers(){
           <div class="member-detail">${m.team}</div>
         </div>
         <div class="member-stats">
-          <div class="member-days">${sumDays(me)}æ¥</div>
+          <div class="member-days">${sumDays(me)}日</div>
           ${revDisplay}
         </div>
       </div>`;
@@ -1764,30 +1721,30 @@ function renderMembers(){
   });
 
   if(canManageSites()){
-    h += `<button class="add-btn" onclick="document.getElementById('memberModal').classList.add('show')" style="margin-top:8px;margin-bottom:14px">ï¼ ã¡ã³ãã¼ãè¿½å </button>`;
-    h += `<button class="add-btn" onclick="openPartnerModal()" style="margin-top:0;margin-bottom:14px;background:#FF9800">ï¼ ååä¼ç¤¾ã¡ã³ãã¼ãè¿½å </button>`;
+    h += `<button class="add-btn" onclick="document.getElementById('memberModal').classList.add('show')" style="margin-top:8px;margin-bottom:14px">＋ メンバーを追加</button>`;
+    h += `<button class="add-btn" onclick="openPartnerModal()" style="margin-top:0;margin-bottom:14px;background:#FF9800">＋ 協力会社メンバーを追加</button>`;
   }
 
-  // ååä¼ç¤¾ã¡ã³ãã¼ã®è¡¨ç¤º
+  // 協力会社メンバーの表示
   const partners = members.filter(m => m.type === 'partner');
   if(partners.length > 0){
     const partnerCompanies = [...new Set(partners.map(m => m.partnerCompany))];
-    h += `<div class="section-title" style="margin-top:14px">ååä¼ç¤¾ã¡ã³ãã¼</div>`;
+    h += `<div class="section-title" style="margin-top:14px">協力会社メンバー</div>`;
     partnerCompanies.forEach(pc => {
       const pcMembers = partners.filter(m => m.partnerCompany === pc);
-      h += `<div class="team-group"><div class="team-title" style="color:#FF9800">ð¢ ${pc}</div>`;
+      h += `<div class="team-group"><div class="team-title" style="color:#FF9800">🏢 ${pc}</div>`;
       pcMembers.forEach(m => {
         const ms = `${cY}-${String(cM+1).padStart(2,'0')}`;
         const me = entries.filter(e => e.date.startsWith(ms) && e.memberId === m.id);
-        const rateDisplay = canSeeRevenue() && m.rate ? `<div class="member-revenue" style="color:#E53935">Â¥${(sumDays(me) * m.rate).toLocaleString()}</div>` : '';
+        const rateDisplay = canSeeRevenue() && m.rate ? `<div class="member-revenue" style="color:#E53935">¥${(sumDays(me) * m.rate).toLocaleString()}</div>` : '';
         h += `<div class="member-card">
           <div class="member-avatar" style="background:#FF9800">${m.name[0]}</div>
           <div class="member-info">
-            <div class="member-name">${m.name}<span class="partner-badge">åå</span></div>
-            <div class="member-detail">${pc}${canSeeRevenue() && m.rate ? ' ã» Â¥'+m.rate.toLocaleString()+'/æ¥' : ''}</div>
+            <div class="member-name">${m.name}<span class="partner-badge">協力</span></div>
+            <div class="member-detail">${pc}${canSeeRevenue() && m.rate ? ' ・ ¥'+m.rate.toLocaleString()+'/日' : ''}</div>
           </div>
           <div class="member-stats">
-            <div class="member-days">${sumDays(me)}æ¥</div>
+            <div class="member-days">${sumDays(me)}日</div>
             ${rateDisplay}
           </div>
         </div>`;
@@ -1801,14 +1758,14 @@ function renderMembers(){
 
 async function saveMember(){
   const nm = document.getElementById('mmName').value.trim();
-  if(!nm){ showToast('ååãå¥åãã¦ãã ãã'); return; }
-  const tm = document.getElementById('mmTeam').value.trim() || 'æªåé¡';
+  if(!nm){ showToast('名前を入力してください'); return; }
+  const tm = document.getElementById('mmTeam').value.trim() || '未分類';
   const clr = AVATARS[members.length % AVATARS.length];
   const row = await dbInsert('team_members', { company_id: companyId, name: nm, team: tm, color: clr, type: 'internal' });
   if(row) members.push({ id: row.id, name: nm, team: tm, color: clr, type: 'internal', partnerCompany: '', rate: 0 });
   closeM('memberModal');
   renderMembers();
-  showToast('ã¡ã³ãã¼ãè¿½å ãã¾ãã');
+  showToast('メンバーを追加しました');
   document.getElementById('mmName').value = '';
   document.getElementById('mmTeam').value = '';
 }
@@ -1818,7 +1775,7 @@ function openPartnerModal(){
   document.getElementById('pmCompany').value = '';
   document.getElementById('pmName').value = '';
   document.getElementById('pmRate').value = '';
-  // ç®¡çèã®ã¿åä¾¡å¥åãè¡¨ç¤º
+  // 管理者のみ単価入力を表示
   document.getElementById('pmRateGroup').style.display = canSeeRevenue() ? '' : 'none';
   document.getElementById('partnerModal').classList.add('show');
 }
@@ -1827,8 +1784,8 @@ async function savePartnerMember(){
   const company = document.getElementById('pmCompany').value.trim();
   const name = document.getElementById('pmName').value.trim();
   const rate = parseFloat(document.getElementById('pmRate').value) || 0;
-  if(!company){ showToast('ä¼ç¤¾åãå¥åãã¦ãã ãã'); return; }
-  if(!name){ showToast('ã¡ã³ãã¼åãå¥åãã¦ãã ãã'); return; }
+  if(!company){ showToast('会社名を入力してください'); return; }
+  if(!name){ showToast('メンバー名を入力してください'); return; }
   const clr = '#FF9800';
   const row = await dbInsert('team_members', {
     company_id: companyId, name, team: company, color: clr,
@@ -1837,7 +1794,7 @@ async function savePartnerMember(){
   if(row) members.push({ id: row.id, accountId: null, name, team: company, color: clr, type: 'partner', partnerCompany: company, rate });
   closeM('partnerModal');
   renderMembers();
-  showToast(`${company}ã®${name}ãããè¿½å ãã¾ãã`);
+  showToast(`${company}の${name}さんを追加しました`);
 }
 
 // ===== Report Page =====
@@ -1848,11 +1805,11 @@ function renderReport(){
 
   let h = `<div class="report-card">
     <div class="report-title">
-      <span>${cM+1}æ ç¾å ´å¥ãµããªã¼</span>
-      <button class="csv-btn" onclick="exportCSV()">ð¥ CSVåºå</button>
+      <span>${cM+1}月 現場別サマリー</span>
+      <button class="csv-btn" onclick="exportCSV()">📥 CSV出力</button>
     </div>
     <table class="report-table">
-      <tr><th>ç¾å ´å</th><th class="num">äººæ¥</th><th class="num">å£²ä¸</th></tr>`;
+      <tr><th>現場名</th><th class="num">人日</th><th class="num">売上</th></tr>`;
 
   let totalD = 0, totalR = 0;
   sites.forEach(s => {
@@ -1863,20 +1820,20 @@ function renderReport(){
     se.forEach(e => { r += calcRev(e, s); });
     totalD += d;
     totalR += r;
-    h += `<tr><td>${s.name}</td><td class="num">${d}æ¥</td><td class="num">Â¥${r.toLocaleString()}</td></tr>`;
+    h += `<tr><td>${s.name}</td><td class="num">${d}日</td><td class="num">¥${r.toLocaleString()}</td></tr>`;
   });
 
-  h += `<tr><td>åè¨</td><td class="num">${totalD}æ¥</td><td class="num">Â¥${totalR.toLocaleString()}</td></tr></table></div>`;
+  h += `<tr><td>合計</td><td class="num">${totalD}日</td><td class="num">¥${totalR.toLocaleString()}</td></tr></table></div>`;
 
   h += `<div class="report-card">
-    <div class="report-title">ã¡ã³ãã¼ Ã ç¾å ´ åºå¤è¡¨</div>
+    <div class="report-title">メンバー × 現場 出勤表</div>
     <div style="overflow-x:auto">
       <table class="report-table">
-        <tr><th>ã¡ã³ãã¼</th>`;
+        <tr><th>メンバー</th>`;
 
   const activeSites = sites.filter(s => me.some(e => e.siteId === s.id));
   activeSites.forEach(s => { h += `<th class="num">${s.name.slice(0,4)}</th>`; });
-  h += `<th class="num">åè¨</th></tr>`;
+  h += `<th class="num">合計</th></tr>`;
 
   members.forEach(m => {
     const mme = me.filter(e => e.memberId === m.id);
@@ -1888,19 +1845,19 @@ function renderReport(){
       mt += d;
       h += `<td class="num">${d || '-'}</td>`;
     });
-    h += `<td class="num">${mt}æ¥</td></tr>`;
+    h += `<td class="num">${mt}日</td></tr>`;
   });
 
   h += `</table></div></div>`;
 
-  // ååä¼ç¤¾æ¯æãµããªã¼ï¼ã¬ãã¼ãï¼
+  // 協力会社支払サマリー（レポート）
   const partnerMems = members.filter(m => m.type === 'partner');
   if(partnerMems.length > 0 && canSeeRevenue()){
     const pCompanies = [...new Set(partnerMems.map(m => m.partnerCompany))];
     h += `<div class="report-card">
-      <div class="report-title">ååä¼ç¤¾ æ¯æãµããªã¼</div>
+      <div class="report-title">協力会社 支払サマリー</div>
       <table class="report-table">
-        <tr><th>ä¼ç¤¾å</th><th class="num">äººæ¥</th><th class="num">æ¯æé¡</th></tr>`;
+        <tr><th>会社名</th><th class="num">人日</th><th class="num">支払額</th></tr>`;
     let pTotalD = 0, pTotalR = 0;
     pCompanies.forEach(pc => {
       const pcMems = partnerMems.filter(m => m.partnerCompany === pc);
@@ -1913,17 +1870,17 @@ function renderReport(){
       });
       if(d > 0){
         pTotalD += d; pTotalR += r;
-        h += `<tr><td>${pc}</td><td class="num">${d}æ¥</td><td class="num" style="color:#E53935">âÂ¥${r.toLocaleString()}</td></tr>`;
+        h += `<tr><td>${pc}</td><td class="num">${d}日</td><td class="num" style="color:#E53935">−¥${r.toLocaleString()}</td></tr>`;
       }
     });
-    h += `<tr><td>åè¨</td><td class="num">${pTotalD}æ¥</td><td class="num" style="color:#E53935;font-weight:700">âÂ¥${pTotalR.toLocaleString()}</td></tr></table></div>`;
+    h += `<tr><td>合計</td><td class="num">${pTotalD}日</td><td class="num" style="color:#E53935;font-weight:700">−¥${pTotalR.toLocaleString()}</td></tr></table></div>`;
 
-    // ç²å©è¨ç®
+    // 粗利計算
     h += `<div class="report-card" style="border-left:3px solid var(--success)">
-      <div class="report-title">ç²å©</div>
+      <div class="report-title">粗利</div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
-        <span style="font-size:13px">å£²ä¸ â ååä¼ç¤¾æ¯æ</span>
-        <span style="font-size:20px;font-weight:700;color:${totalR - pTotalR >= 0 ? 'var(--success)' : '#E53935'}">Â¥${(totalR - pTotalR).toLocaleString()}</span>
+        <span style="font-size:13px">売上 − 協力会社支払</span>
+        <span style="font-size:20px;font-weight:700;color:${totalR - pTotalR >= 0 ? 'var(--success)' : '#E53935'}">¥${(totalR - pTotalR).toLocaleString()}</span>
       </div>
     </div>`;
   }
@@ -1934,7 +1891,7 @@ function renderReport(){
 function exportCSV(){
   const ms = `${cY}-${String(cM+1).padStart(2,'0')}`;
   const me = entries.filter(e => e.date.startsWith(ms));
-  let csv = 'æ¥ä»,ã¡ã³ãã¼,ç¾å ´å,åä¾¡,ã¡ã¢\n';
+  let csv = '日付,メンバー,現場名,単価,メモ\n';
   me.sort((a, b) => a.date.localeCompare(b.date)).forEach(e => {
     const s = sites.find(x => x.id === e.siteId);
     const m = members.find(x => x.id === e.memberId);
@@ -1943,9 +1900,9 @@ function exportCSV(){
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `æ¥½ãã«ã¬ã³ãã¼_${ms}.csv`;
+  a.download = `楽々カレンダー_${ms}.csv`;
   a.click();
-  showToast('CSVããã¦ã³ã­ã¼ããã¾ãã');
+  showToast('CSVをダウンロードしました');
 }
 
 // ===== Settings Page =====
@@ -1955,80 +1912,80 @@ function renderSettings(){
 
   if(userRole === 'master'){
     html += `<div class="settings-group" style="padding:16px">
-      <div class="account-creation-title">ã¢ã«ã¦ã³ãç®¡ç</div>
+      <div class="account-creation-title">アカウント管理</div>
 
       <div style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:14px">
-        <label class="form-label">ã­ã¼ã«é¸æ</label>
+        <label class="form-label">ロール選択</label>
         <div class="role-selector">
-          <button class="role-btn selected" onclick="document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountCreateRole='submaster'">è·é·ï¼ãµããã¹ã¿ã¼ï¼</button>
-          <button class="role-btn" onclick="document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountCreateRole='worker'">ä½æ¥­å¡</button>
+          <button class="role-btn selected" onclick="document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountCreateRole='submaster'">職長（サブマスター）</button>
+          <button class="role-btn" onclick="document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountCreateRole='worker'">作業員</button>
         </div>
 
-        <label class="form-label">ã¢ã«ã¦ã³ãå</label>
-        <input type="text" class="form-input" id="accountCreateName" placeholder="ä¾ï¼ç°ä¸­å¤ªé">
+        <label class="form-label">アカウント名</label>
+        <input type="text" class="form-input" id="accountCreateName" placeholder="例：田中太郎">
 
-        <label class="form-label">é¨ç½²ã»ãã¼ã </label>
-        <input type="text" class="form-input" id="accountCreateTeam" placeholder="ä¾ï¼Aç­ï¼ãªãã·ã§ã³ï¼">
+        <label class="form-label">部署・チーム</label>
+        <input type="text" class="form-input" id="accountCreateTeam" placeholder="例：A班（オプション）">
 
-        <label class="form-label">ãã¹ã¯ã¼ãæ±ºå®æ¹æ³</label>
+        <label class="form-label">パスワード決定方法</label>
         <div class="password-mode-selector">
-          <button class="pwd-btn selected" onclick="document.querySelectorAll('.pwd-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountPasswordMode='manual';document.getElementById('accountCreatePasswordInput').style.display=''">èªåã§æ±ºãã</button>
-          <button class="pwd-btn" onclick="document.querySelectorAll('.pwd-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountPasswordMode='random';document.getElementById('accountCreatePasswordInput').style.display='none'">ã©ã³ãã çºè¡</button>
+          <button class="pwd-btn selected" onclick="document.querySelectorAll('.pwd-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountPasswordMode='manual';document.getElementById('accountCreatePasswordInput').style.display=''">自分で決める</button>
+          <button class="pwd-btn" onclick="document.querySelectorAll('.pwd-btn').forEach(b=>b.classList.remove('selected'));this.classList.add('selected');accountPasswordMode='random';document.getElementById('accountCreatePasswordInput').style.display='none'">ランダム発行</button>
         </div>
 
         <div id="accountCreatePasswordInput" style="margin-bottom:12px">
-          <label class="form-label">ãã¹ã¯ã¼ã</label>
-          <input type="password" class="form-input" id="accountCreatePassword" placeholder="4æå­ä»¥ä¸" minlength="4">
+          <label class="form-label">パスワード</label>
+          <input type="password" class="form-input" id="accountCreatePassword" placeholder="4文字以上" minlength="4">
         </div>
 
-        <button class="add-btn" onclick="createNewAccount()">ãã¹ã¯ã¼ããçºè¡</button>
+        <button class="add-btn" onclick="createNewAccount()">パスワードを発行</button>
       </div>
 
-      <div class="account-creation-title" style="margin-top:16px;margin-bottom:12px">çºè¡æ¸ã¿ã¢ã«ã¦ã³ã</div>
+      <div class="account-creation-title" style="margin-top:16px;margin-bottom:12px">発行済みアカウント</div>
       <div id="accountsList"></div>
     </div>`;
   }
 
   html += `<div class="settings-group" style="padding:14px">
     <div class="custom-section">
-      <div class="custom-section-title">ã«ã¬ã³ãã¼ã®èæ¯è²</div>
+      <div class="custom-section-title">カレンダーの背景色</div>
       <div class="custom-colors" id="pickCalBg"></div>
     </div>
     <div class="custom-section">
-      <div class="custom-section-title">å¹³æ¥ã®æå­è²</div>
+      <div class="custom-section-title">平日の文字色</div>
       <div class="custom-colors" id="pickWeekday"></div>
     </div>
     <div class="custom-section">
-      <div class="custom-section-title">åæã®æå­è²</div>
+      <div class="custom-section-title">土曜の文字色</div>
       <div class="custom-colors" id="pickSaturday"></div>
     </div>
     <div class="custom-section">
-      <div class="custom-section-title">æ¥ç¥ã®æå­è²</div>
+      <div class="custom-section-title">日祝の文字色</div>
       <div class="custom-colors" id="pickSunday"></div>
     </div>
     <div class="custom-section">
-      <div class="custom-section-title">ãããã¼è²</div>
+      <div class="custom-section-title">ヘッダー色</div>
       <div class="custom-colors" id="pickHeader"></div>
     </div>
     <div class="custom-section">
-      <div class="custom-section-title">åºå¤æ¥æ°ã®è²</div>
+      <div class="custom-section-title">出勤日数の色</div>
       <div class="custom-colors" id="pickStatDays"></div>
     </div>
     <div class="custom-section">
-      <div class="custom-section-title">å£²ä¸ã®è²</div>
+      <div class="custom-section-title">売上の色</div>
       <div class="custom-colors" id="pickStatMoney"></div>
     </div>
     <div class="custom-section">
-      <div class="custom-section-title">ãã¬ãã¥ã¼</div>
+      <div class="custom-section-title">プレビュー</div>
       <div class="live-preview" id="livePreview"></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:14px">
-      <button onclick="resetCustom()" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;font-size:13px;font-weight:600">ãªã»ãã</button>
+      <button onclick="resetCustom()" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);cursor:pointer;font-size:13px;font-weight:600">リセット</button>
     </div>
   </div>
 
-  <button class="logout-btn" onclick="handleLogout()">ã­ã°ã¢ã¦ã</button>
-  ${userRole === 'master' ? `<button onclick="handleDeleteAllData()" style="width:100%;padding:14px;background:none;color:var(--danger);border:1.5px solid var(--danger);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px">ä¼ç¤¾ãã¼ã¿ãå¨ã¦åé¤</button>` : `<button onclick="handleDeleteMyAccount()" style="width:100%;padding:14px;background:none;color:var(--danger);border:1.5px solid var(--danger);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px">èªåã®ã¢ã«ã¦ã³ããåé¤</button>`}`;
+  <button class="logout-btn" onclick="handleLogout()">ログアウト</button>
+  ${userRole === 'master' ? `<button onclick="handleDeleteAllData()" style="width:100%;padding:14px;background:none;color:var(--danger);border:1.5px solid var(--danger);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px">会社データを全て削除</button>` : `<button onclick="handleDeleteMyAccount()" style="width:100%;padding:14px;background:none;color:var(--danger);border:1.5px solid var(--danger);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px">自分のアカウントを削除</button>`}`;
 
   document.getElementById('settingsContent').innerHTML = html;
 
@@ -2046,20 +2003,20 @@ function renderAccountsList(){
 
   let html = '';
   accounts.filter(a => a.id !== 1).forEach(acc => {
-    const roleBadges = { master: 'ãã¹ã¿ã¼', submaster: 'è·é·', worker: 'ä½æ¥­å¡' };
-    let pwDisplay = 'ââââ';
+    const roleBadges = { master: 'マスター', submaster: '職長', worker: '作業員' };
+    let pwDisplay = '●●●●';
     html += `<div class="account-card">
       <div class="account-info">
         <span class="account-role ${acc.role}">${roleBadges[acc.role]}</span>
         <div class="account-name-team">${acc.name}</div>
         <div style="font-size:11px;color:var(--text-light)">${acc.team || ''}</div>
-        <div style="font-size:10px;color:var(--text-light);margin-top:2px">ãã¹ã¯ã¼ã: çºè¡æã®ã¿ç¢ºèªå¯</div>
+        <div style="font-size:10px;color:var(--text-light);margin-top:2px">パスワード: 発行時のみ確認可</div>
       </div>
       <div class="account-actions" style="flex-wrap:wrap;justify-content:flex-end">
-        ${acc.role === 'worker' ? `<button class="account-btn promote" onclick="changeRole(${acc.id},'submaster')">è·é·ã«ææ ¼</button>` : ''}
-        ${acc.role === 'submaster' ? `<button class="account-btn demote" onclick="changeRole(${acc.id},'worker')">ä½æ¥­å¡ã«å¤æ´</button>` : ''}
-        <button class="account-btn show" onclick="resetAccountPassword(${acc.id})">PWåçºè¡</button>
-        <button class="account-btn delete" onclick="deleteAccount(${acc.id})">åé¤</button>
+        ${acc.role === 'worker' ? `<button class="account-btn promote" onclick="changeRole(${acc.id},'submaster')">職長に昇格</button>` : ''}
+        ${acc.role === 'submaster' ? `<button class="account-btn demote" onclick="changeRole(${acc.id},'worker')">作業員に変更</button>` : ''}
+        <button class="account-btn show" onclick="resetAccountPassword(${acc.id})">PW再発行</button>
+        <button class="account-btn delete" onclick="deleteAccount(${acc.id})">削除</button>
       </div>
     </div>`;
   });
@@ -2070,34 +2027,34 @@ function renderAccountsList(){
 async function resetAccountPassword(accountId){
   const acc = accounts.find(a => a.id === accountId);
   if(!acc) return;
-  if(!confirm(`${acc.name} ã®ãã¹ã¯ã¼ããåçºè¡ãã¾ããï¼`)) return;
+  if(!confirm(`${acc.name} のパスワードを再発行しますか？`)) return;
   const newPw = Math.random().toString(36).substring(2, 8).toUpperCase();
   const hashedPw = await hashPassword(newPw);
   await dbUpdate('accounts', accountId, { password: hashedPw });
   acc.password = hashedPw;
 
-  const companyName = setup?.companyName || 'ä¼ç¤¾';
+  const companyName = setup?.companyName || '会社';
   const appUrl = location.origin + location.pathname;
-  const roleName = acc.role === 'submaster' ? 'è·é·' : acc.role === 'worker' ? 'ä½æ¥­å¡' : 'ãã¹ã¿ã¼';
+  const roleName = acc.role === 'submaster' ? '職長' : acc.role === 'worker' ? '作業員' : 'マスター';
   document.getElementById('inviteResultName').textContent = acc.name;
   document.getElementById('inviteResultRole').textContent = roleName;
   document.getElementById('inviteResultPassword').textContent = newPw;
   document.getElementById('inviteResultLineBtn').onclick = function(){
     const loginUrl = `${appUrl}?name=${encodeURIComponent(acc.name)}&pw=${encodeURIComponent(newPw)}&cid=${companyId}`;
-    const msg = `ãæ¥½ãã«ã¬ã³ãã¼ã\n${companyName}ãã${roleName}ã¨ãã¦æå¾ããã¾ãã\n\nâ¼ ä¸ã®ãªã³ã¯ãã¿ããã§ã­ã°ã¤ã³\n${loginUrl}\n\nâ»ãªã³ã¯ãéãã¨èªåã§ã­ã°ã¤ã³ã§ãã¾ã`;
+    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップでログイン\n${loginUrl}\n\n※リンクを開くと自動でログインできます`;
     window.open('https://line.me/R/share?text=' + encodeURIComponent(msg), '_blank');
     closeM('inviteResultModal');
   };
   document.getElementById('inviteResultModal').classList.add('show');
-  showToast('ãã¹ã¯ã¼ããåçºè¡ãã¾ãã');
+  showToast('パスワードを再発行しました');
 }
 
 async function createNewAccount(){
   const role = accountCreateRole || 'submaster';
   const name = document.getElementById('accountCreateName').value.trim();
-  if(!name){ showToast('ã¢ã«ã¦ã³ãåãå¥åãã¦ãã ãã'); return; }
+  if(!name){ showToast('アカウント名を入力してください'); return; }
 
-  const team = document.getElementById('accountCreateTeam').value.trim() || 'æªåé¡';
+  const team = document.getElementById('accountCreateTeam').value.trim() || '未分類';
   let password = '';
 
   if(accountPasswordMode === 'random'){
@@ -2105,7 +2062,7 @@ async function createNewAccount(){
   } else {
     password = document.getElementById('accountCreatePassword').value;
     if(password.length < 4){
-      showToast('ãã¹ã¯ã¼ãã¯4æå­ä»¥ä¸ã§å¥åãã¦ãã ãã');
+      showToast('パスワードは4文字以上で入力してください');
       return;
     }
   }
@@ -2127,17 +2084,17 @@ async function createNewAccount(){
 
   renderAccountsList();
 
-  // çºè¡å®äºã¡ãã»ã¼ã¸ï¼LINEæå¾ãä¿ã
-  const roleName = role === 'submaster' ? 'è·é·' : 'ä½æ¥­å¡';
+  // 発行完了メッセージ＋LINE招待を促す
+  const roleName = role === 'submaster' ? '職長' : '作業員';
   const createdId = acc ? acc.id : null;
   document.getElementById('inviteResultName').textContent = name;
   document.getElementById('inviteResultRole').textContent = roleName;
   document.getElementById('inviteResultPassword').textContent = rawPassword;
   document.getElementById('inviteResultLineBtn').onclick = function(){
-    const companyName = setup?.companyName || 'ä¼ç¤¾';
+    const companyName = setup?.companyName || '会社';
     const appUrl = location.origin + location.pathname;
     const loginUrl = `${appUrl}?name=${encodeURIComponent(name)}&pw=${encodeURIComponent(rawPassword)}&cid=${companyId}`;
-    const msg = `ãæ¥½ãã«ã¬ã³ãã¼ã\n${companyName}ãã${roleName}ã¨ãã¦æå¾ããã¾ãã\n\nâ¼ ä¸ã®ãªã³ã¯ãã¿ããã§ã­ã°ã¤ã³\n${loginUrl}\n\nâ»ãªã³ã¯ãéãã¨èªåã§ã­ã°ã¤ã³ã§ãã¾ã`;
+    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップでログイン\n${loginUrl}\n\n※リンクを開くと自動でログインできます`;
     window.open('https://line.me/R/share?text=' + encodeURIComponent(msg), '_blank');
     closeM('inviteResultModal');
   };
@@ -2146,25 +2103,25 @@ async function createNewAccount(){
 
 async function deleteAccount(accountId){
   const masterAcc = accounts.find(a => a.role === 'master');
-  if(masterAcc && accountId === masterAcc.id){ showToast('ãã¹ã¿ã¼ã¢ã«ã¦ã³ãã¯åé¤ã§ãã¾ãã'); return; }
-  if(!confirm('ãã®ã¢ã«ã¦ã³ããåé¤ãã¾ããï¼')) return;
+  if(masterAcc && accountId === masterAcc.id){ showToast('マスターアカウントは削除できません'); return; }
+  if(!confirm('このアカウントを削除しますか？')) return;
   await dbDelete('accounts', accountId);
   accounts = accounts.filter(a => a.id !== accountId);
   const linked = members.find(m => m.accountId === accountId);
   if(linked){ await dbDelete('team_members', linked.id); members = members.filter(m => m.id !== linked.id); }
   renderAccountsList();
-  showToast('åé¤ãã¾ãã');
+  showToast('削除しました');
 }
 
 async function changeRole(accountId, newRole){
   const acc = accounts.find(a => a.id === accountId);
   if(!acc) return;
-  const roleName = newRole === 'submaster' ? 'è·é·' : 'ä½æ¥­å¡';
-  if(!confirm(`${acc.name}ã${roleName}ã«å¤æ´ãã¾ããï¼`)) return;
+  const roleName = newRole === 'submaster' ? '職長' : '作業員';
+  if(!confirm(`${acc.name}を${roleName}に変更しますか？`)) return;
   await dbUpdate('accounts', accountId, { role: newRole });
   acc.role = newRole;
   renderAccountsList();
-  showToast(`${acc.name}ã${roleName}ã«å¤æ´ãã¾ãã`);
+  showToast(`${acc.name}を${roleName}に変更しました`);
 }
 
 // ===== Japanese Holiday Detection =====
@@ -2173,9 +2130,9 @@ function getJPHolidays(year){
   const fmt = (m, d) => `${year}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
   const add = (m, d, name) => h.set(fmt(m, d), name);
 
-  add(1, 1, 'åæ¥'); add(2, 11, 'å»ºå½è¨å¿µã®æ¥'); add(2, 23, 'å¤©çèªçæ¥');
-  add(4, 29, 'æ­åã®æ¥'); add(5, 3, 'æ²æ³è¨å¿µæ¥'); add(5, 4, 'ã¿ã©ãã®æ¥'); add(5, 5, 'ãã©ãã®æ¥');
-  add(8, 11, 'å±±ã®æ¥'); add(11, 3, 'æåã®æ¥'); add(11, 23, 'å¤å´æè¬ã®æ¥');
+  add(1, 1, '元日'); add(2, 11, '建国記念の日'); add(2, 23, '天皇誕生日');
+  add(4, 29, '昭和の日'); add(5, 3, '憲法記念日'); add(5, 4, 'みどりの日'); add(5, 5, 'こどもの日');
+  add(8, 11, '山の日'); add(11, 3, '文化の日'); add(11, 23, '勤労感謝の日');
 
   function nthMonday(y, m, n){
     let count = 0;
@@ -2190,15 +2147,15 @@ function getJPHolidays(year){
     return 1;
   }
 
-  add(1, nthMonday(year, 1, 2), 'æäººã®æ¥');
-  add(7, nthMonday(year, 7, 3), 'æµ·ã®æ¥');
-  add(9, nthMonday(year, 9, 3), 'æ¬èã®æ¥');
-  add(10, nthMonday(year, 10, 2), 'ã¹ãã¼ãã®æ¥');
+  add(1, nthMonday(year, 1, 2), '成人の日');
+  add(7, nthMonday(year, 7, 3), '海の日');
+  add(9, nthMonday(year, 9, 3), '敬老の日');
+  add(10, nthMonday(year, 10, 2), 'スポーツの日');
 
   const vernal = Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
   const autumnal = Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
-  add(3, vernal, 'æ¥åã®æ¥');
-  add(9, autumnal, 'ç§åã®æ¥');
+  add(3, vernal, '春分の日');
+  add(9, autumnal, '秋分の日');
 
   const keys = [...h.keys()];
   keys.forEach(ds => {
@@ -2207,11 +2164,11 @@ function getJPHolidays(year){
       const nx = new Date(dt);
       nx.setDate(nx.getDate() + 1);
       const nxStr = nx.toISOString().slice(0, 10);
-      if(!h.has(nxStr)) h.set(nxStr, 'æ¯æ¿ä¼æ¥');
+      if(!h.has(nxStr)) h.set(nxStr, '振替休日');
     }
   });
 
-  // å½æ°ã®ä¼æ¥ï¼ç¥æ¥ã¨ç¥æ¥ã«æã¾ããå¹³æ¥ï¼
+  // 国民の休日（祝日と祝日に挟まれた平日）
   keys.sort();
   for(let i = 0; i < keys.length - 1; i++){
     const d1 = new Date(keys[i]);
@@ -2221,7 +2178,7 @@ function getJPHolidays(year){
       const mid = new Date(d1);
       mid.setDate(mid.getDate() + 1);
       const midStr = mid.toISOString().slice(0, 10);
-      if(!h.has(midStr) && mid.getDay() !== 0) h.set(midStr, 'å½æ°ã®ä¼æ¥');
+      if(!h.has(midStr) && mid.getDay() !== 0) h.set(midStr, '国民の休日');
     }
   }
 
@@ -2260,8 +2217,8 @@ function renderCustomPickers(){
     el.innerHTML = PALETTE.map(c => {
       const isActive = custom[key] === c;
       const isDisabled = isTextPicker && c.toUpperCase() === custom.calBg.toUpperCase();
-      return `<div class="cc${isActive ? ' active' : ''}${isDisabled ? ' disabled' : ''}" style="background:${c};${c === '#FFFFFF' || c === '#F8F9FA' ? 'border:2px solid #CCC;' : ''}" onclick="${isDisabled ? '' : `pickCustom('${key}','${c}')`}" title="${isDisabled ? 'èæ¯è²ã¨åãè²ã¯é¸ã¹ã¾ãã' : ''}">
-        ${isActive ? 'â' : ''}
+      return `<div class="cc${isActive ? ' active' : ''}${isDisabled ? ' disabled' : ''}" style="background:${c};${c === '#FFFFFF' || c === '#F8F9FA' ? 'border:2px solid #CCC;' : ''}" onclick="${isDisabled ? '' : `pickCustom('${key}','${c}')`}" title="${isDisabled ? '背景色と同じ色は選べません' : ''}">
+        ${isActive ? '✓' : ''}
       </div>`;
     }).join('');
   });
@@ -2317,21 +2274,21 @@ function renderLivePreview(){
   if(!el) return;
 
   const revenueSample = canSeeRevenue() ? `<div style="flex:1;background:var(--white);border-radius:8px;padding:8px;text-align:center;box-shadow:var(--shadow)">
-    <div style="font-size:10px;color:var(--text-light)">å£²ä¸</div>
-    <div style="font-size:18px;font-weight:700;color:${custom.statMoney}">Â¥225,000</div>
+    <div style="font-size:10px;color:var(--text-light)">売上</div>
+    <div style="font-size:18px;font-weight:700;color:${custom.statMoney}">¥225,000</div>
   </div>` : '';
 
   el.innerHTML = `
     <div class="preview-cal" style="background:${custom.calBg};border:1px solid var(--border)">
-      <div style="font-weight:700;color:${custom.header};margin-bottom:4px">2026å¹´3æ</div>
+      <div style="font-weight:700;color:${custom.header};margin-bottom:4px">2026年3月</div>
       <div style="display:flex;justify-content:center;gap:6px;font-size:11px;margin-bottom:4px">
-        <span style="color:${custom.sunday}">æ¥</span>
-        <span style="color:${custom.weekday}">æ</span>
-        <span style="color:${custom.weekday}">ç«</span>
-        <span style="color:${custom.weekday}">æ°´</span>
-        <span style="color:${custom.weekday}">æ¨</span>
-        <span style="color:${custom.weekday}">é</span>
-        <span style="color:${custom.saturday}">å</span>
+        <span style="color:${custom.sunday}">日</span>
+        <span style="color:${custom.weekday}">月</span>
+        <span style="color:${custom.weekday}">火</span>
+        <span style="color:${custom.weekday}">水</span>
+        <span style="color:${custom.weekday}">木</span>
+        <span style="color:${custom.weekday}">金</span>
+        <span style="color:${custom.saturday}">土</span>
       </div>
       <div class="preview-row">
         <span class="preview-day" style="color:${custom.sunday}">15</span>
@@ -2339,14 +2296,14 @@ function renderLivePreview(){
         <span class="preview-day" style="color:${custom.weekday}">17</span>
         <span class="preview-day" style="color:${custom.weekday}">18</span>
         <span class="preview-day" style="color:${custom.weekday}">19</span>
-        <span class="preview-day" style="color:${custom.sunday}">20<span style="font-size:8px;display:block">ç¥</span></span>
+        <span class="preview-day" style="color:${custom.sunday}">20<span style="font-size:8px;display:block">祝</span></span>
         <span class="preview-day" style="color:${custom.saturday}">21</span>
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:4px">
       <div style="flex:1;background:var(--white);border-radius:8px;padding:8px;text-align:center;box-shadow:var(--shadow)">
-        <div style="font-size:10px;color:var(--text-light)">åºå¤æ¥æ°</div>
-        <div style="font-size:18px;font-weight:700;color:${custom.statDays}">15<span style="font-size:12px">æ¥</span></div>
+        <div style="font-size:10px;color:var(--text-light)">出勤日数</div>
+        <div style="font-size:18px;font-weight:700;color:${custom.statDays}">15<span style="font-size:12px">日</span></div>
       </div>
       ${revenueSample}
     </div>
@@ -2359,21 +2316,21 @@ async function resetCustom(){
   applyCustomColors();
   renderCustomPickers();
   renderCalendar();
-  showToast('ããã©ã«ãã«æ»ãã¾ãã');
+  showToast('デフォルトに戻しました');
 }
 
 document.getElementById('entryHours').addEventListener('input', updateEntryBtn);
 
 // ===== App Refresh =====
 async function appRefresh(){
-  showToast('æ´æ°ä¸­...');
+  showToast('更新中...');
   try {
     if('serviceWorker' in navigator && navigator.serviceWorker.controller){
       navigator.serviceWorker.controller.postMessage('clearCache');
       const reg = await navigator.serviceWorker.getRegistration();
       if(reg) await reg.update();
     }
-    // ã­ã£ãã·ã¥APIãç´æ¥ã¯ãªã¢
+    // キャッシュAPIも直接クリア
     if('caches' in window){
       const keys = await caches.keys();
       await Promise.all(keys.map(k => caches.delete(k)));
@@ -2384,34 +2341,6 @@ async function appRefresh(){
   }
 }
 </script>
-<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}
-
-// === PWA Support ===
-(function(){
-  var manifest = {
-    name: '\u30cb\u30c1\u30ed\u30b0',
-    short_name: '\u30cb\u30c1\u30ed\u30b0',
-    start_url: location.pathname + (location.hash || ''),
-    display: 'standalone',
-    background_color: '#F8F9FA',
-    theme_color: '#4A90D9',
-    icons: [{
-      src: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%234A90D9"/><text x="50" y="68" font-size="50" text-anchor="middle" fill="white" font-weight="bold">日</text></svg>',
-      sizes: '192x192',
-      type: 'image/svg+xml',
-      purpose: 'any maskable'
-    }]
-  };
-  var blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
-  var ml = document.getElementById('manifestLink') || document.querySelector('link[rel=manifest]');
-  if(ml) ml.href = URL.createObjectURL(blob);
-
-  if('serviceWorker' in navigator){
-    var swCode = "const CACHE='nichiroku-v1';self.addEventListener('install',e=>{self.skipWaiting()});self.addEventListener('activate',e=>{self.clients.claim()});self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{if(r.ok){var c=r.clone();caches.open(CACHE).then(cache=>cache.put(e.request,c))}return r}).catch(()=>caches.match(e.request)))});";
-    var swBlob = new Blob([swCode], {type:'application/javascript'});
-    navigator.serviceWorker.register(URL.createObjectURL(swBlob),{scope:'/'}).catch(function(){});
-  }
-})();
-</script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}</script>
 </body>
 </html>
