@@ -1,6 +1,6 @@
 {
-  "name": "楽々カレンダー（個人版）",
-  "short_name": "楽々カレンダー",
+  "name": "ニチログ（個人版）",
+  "short_name": "ニチログ",
   "description": "出勤＆売上管理アプリ（個人版）",
   "start_url": "/personal.html",
   "display": "standalone",
