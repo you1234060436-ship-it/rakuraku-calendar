@@ -1048,8 +1048,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
       // URLパラメータをクリア（パスワードを履歴に残さない）
       if(location.search) history.replaceState(null, '', location.pathname);
-    } catch(e) { console.error('Init error:', e); }
-    hideLoading();
+    } catch(e) { console.error('Init error:', e); } finally { hideLoading(); }
 });
 
 // ===== Tabs =====
