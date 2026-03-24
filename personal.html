@@ -519,6 +519,7 @@ let statY = new Date().getFullYear();
 let statM = new Date().getMonth();
 let selDate = null, selSiteId = null, selMemberIds = [];
 let selectedDayType = 1;
+let editingEntryId = null;
 
 function selectDayType(val){
   selectedDayType = val;
@@ -952,13 +953,60 @@ function renderToday(){
     let metaText = priceText;
     if(userRole !== 'worker' && m) metaText += (metaText ? ' · ' : '') + m.name;
     if(e.memo) metaText += (metaText ? ' · ' : '') + e.memo;
-    h += `<div class="entry-card"><div class="entry-color" style="background:${s.color}"></div><div class="entry-info"><div class="entry-name">${s.name}</div><div class="entry-meta">${metaText}</div></div><button class="entry-del" onclick="delEntry('${e.date}',${s.id},${e.memberId||0})">✕</button></div>`;
+    h += `<div class="entry-card" onclick="editEntry(${e.id})" style="cursor:pointer"><div class="entry-color" style="background:${s.color}"></div><div class="entry-info"><div class="entry-name">${s.name}</div><div class="entry-meta">${metaText}</div></div><button class="entry-del" onclick="event.stopPropagation();delEntry('${e.date}',${s.id},${e.memberId||0})">✕</button></div>`;
   });
   c.innerHTML = h;
 }
 
+function editEntry(entryId){
+  const e = entries.find(x => x.id === entryId);
+  if(!e) return;
+  editingEntryId = entryId;
+  selDate = e.date;
+  selSiteId = e.siteId;
+  selMemberIds = [e.memberId];
+  const p = e.date.split('-');
+  document.getElementById('entryModalTitle').textContent = `${+p[1]}月${+p[2]}日の出勤を編集`;
+  document.getElementById('entryMemo').value = e.memo || '';
+  document.getElementById('saveEntryBtn').textContent = '更新する';
+
+  let h = '';
+  sites.forEach(s => {
+    const sel = s.id === selSiteId ? ' selected' : '';
+    h += `<div class="site-chip${sel}" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (時給)' : ''}</div>`;
+  });
+  if(canManageSites()){
+    h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">＋ 新しい現場</div>`;
+  }
+  document.getElementById('siteChips').innerHTML = h;
+
+  const site = sites.find(x => x.id === selSiteId);
+  document.getElementById('hoursGroup').style.display = (site && site.rateType === 'hourly') ? '' : 'none';
+  document.getElementById('entryHours').value = e.hours || '';
+  document.getElementById('dayTypeGroup').style.display = (site && site.rateType === 'daily') ? '' : 'none';
+  selectedDayType = (site && site.rateType === 'daily') ? (e.hours || 1) : 1;
+  if(site && site.rateType === 'daily') updateDayTypeBtns();
+
+  const mg = document.getElementById('memberSelectGroup');
+  if(canSelectMembers()){
+    mg.style.display = '';
+    let mh = '';
+    members.forEach(m => {
+      const sel = selMemberIds.includes(m.id) ? ' selected' : '';
+      mh += `<div class="site-chip${sel}" onclick="selChip(${m.id},this,'member')" data-id="${m.id}"><span class="chip-dot" style="background:${m.color}"></span>${m.name}</div>`;
+    });
+    document.getElementById('memberChips').innerHTML = mh;
+  } else {
+    mg.style.display = 'none';
+  }
+
+  document.getElementById('saveEntryBtn').disabled = false;
+  document.getElementById('entryModal').classList.add('show');
+}
+
 // ===== Entry Modal =====
 function openEntry(ds){
+  editingEntryId = null;
   selDate = ds;
   selSiteId = null;
   selMemberIds = [];
@@ -1040,15 +1088,12 @@ function updateEntryBtn(){
   if(selSiteId && needMember && !hoursOk){
     btn.textContent = '勤務時間を入力してください';
   } else {
-    btn.textContent = '登録する';
+    btn.textContent = editingEntryId ? '更新する' : '登録する';
   }
 }
 
 async function saveEntry(){
   if(!selDate || !selSiteId) return;
-  let mids = selMemberIds;
-  if(userRole === 'worker') mids = [currentUserId];
-  if(!mids.length) return;
 
   const site = sites.find(x => x.id === selSiteId);
   if(site && site.rateType === 'hourly' && !parseFloat(document.getElementById('entryHours').value)){
@@ -1058,6 +1103,25 @@ async function saveEntry(){
 
   const hours = site && site.rateType === 'hourly' ? parseFloat(document.getElementById('entryHours').value) : selectedDayType;
   const memo = document.getElementById('entryMemo').value;
+
+  // 編集モード
+  if(editingEntryId){
+    const mid = selMemberIds[0];
+    await dbUpdate('attendance_entries', editingEntryId, { date: selDate, site_id: selSiteId, member_id: mid, memo, hours });
+    const idx = entries.findIndex(e => e.id === editingEntryId);
+    if(idx >= 0) entries[idx] = { id: editingEntryId, date: selDate, siteId: selSiteId, memberId: mid, hours: Number(hours)||0, memo: memo||'' };
+    editingEntryId = null;
+    closeM('entryModal');
+    renderCalendar();
+    showToast('更新しました');
+    return;
+  }
+
+  // 新規登録モード
+  let mids = selMemberIds;
+  if(userRole === 'worker') mids = [currentUserId];
+  if(!mids.length) return;
+
   let added = 0, skipped = 0;
   const toInsert = [];
   mids.forEach(mid => {
