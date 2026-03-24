@@ -608,6 +608,7 @@ let statY = new Date().getFullYear();
 let statM = new Date().getMonth();
 let selDate = null, selSiteId = null, selMemberIds = [];
 let selectedDayType = 1;
+let editingEntryId = null;
 
 function selectDayType(val){
   selectedDayType = val;
@@ -1142,20 +1143,28 @@ function updSummary(){
 
 function renderToday(){
   const td = new Date();
-  const ds = `${td.getFullYear()}-${String(td.getMonth()+1).padStart(2,'0')}-${String(td.getDate()).padStart(2,'0')}`;
-  let te = entries.filter(e => e.date === ds);
+  const curMonth = `${td.getFullYear()}-${String(td.getMonth()+1).padStart(2,'0')}`;
+  let te = entries.filter(e => e.date.startsWith(curMonth));
   if(userRole === 'worker'){ const mm = members.find(m => m.accountId === currentUserId); te = te.filter(e => e.memberId === (mm ? mm.id : currentUserId)); }
+  te.sort((a, b) => b.date.localeCompare(a.date));
 
   const c = document.getElementById('todayEntries');
   if(!te.length){
-    c.innerHTML = `<div class="section-title">今日の記録</div><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">今日の出勤はまだ登録されていません<br>日付をタップして登録しましょう</div></div>`;
+    c.innerHTML = `<div class="section-title">今月の記録</div><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">今月の出勤はまだ登録されていません<br>日付をタップして登録しましょう</div></div>`;
     return;
   }
 
-  let h = '<div class="section-title">今日の記録</div>';
+  let h = '<div class="section-title">今月の記録</div>';
+  let lastDate = '';
   te.forEach(e => {
     const s = sites.find(x => x.id === e.siteId);
     if(!s) return;
+    const dp = e.date.split('-');
+    const dateLabel = `${+dp[1]}/${+dp[2]}`;
+    if(e.date !== lastDate){
+      h += `<div style="font-size:12px;color:#888;margin:10px 0 4px;font-weight:600">${dateLabel}</div>`;
+      lastDate = e.date;
+    }
     const m = members.find(x => x.id === e.memberId);
     let priceText = '';
     if(canSeeRevenue()){
@@ -1164,13 +1173,73 @@ function renderToday(){
     let metaText = priceText;
     if(userRole !== 'worker' && m) metaText += (metaText ? ' · ' : '') + m.name;
     if(e.memo) metaText += (metaText ? ' · ' : '') + e.memo;
-    h += `<div class="entry-card"><div class="entry-color" style="background:${s.color}"></div><div class="entry-info"><div class="entry-name">${s.name}</div><div class="entry-meta">${metaText}</div></div><button class="entry-del" onclick="delEntry('${ds}',${s.id},${e.memberId||0})">✕</button></div>`;
+    h += `<div class="entry-card" onclick="editEntry(${e.id})" style="cursor:pointer"><div class="entry-color" style="background:${s.color}"></div><div class="entry-info"><div class="entry-name">${s.name}</div><div class="entry-meta">${metaText}</div></div><button class="entry-del" onclick="event.stopPropagation();delEntry('${e.date}',${s.id},${e.memberId||0})">✕</button></div>`;
   });
   c.innerHTML = h;
 }
 
+
+function editEntry(entryId){
+  const e = entries.find(x => x.id === entryId);
+  if(!e) return;
+  editingEntryId = entryId;
+  selDate = e.date;
+  selSiteId = e.siteId;
+  selMemberIds = [e.memberId];
+  const p = e.date.split('-');
+  document.getElementById('entryModalTitle').textContent = `${+p[1]}月${+p[2]}日の出勤を編集`;
+  document.getElementById('entryMemo').value = e.memo || '';
+  document.getElementById('saveEntryBtn').textContent = '更新する';
+
+  let h = '';
+  sites.forEach(s => {
+    const sel = s.id === selSiteId ? ' selected' : '';
+    h += `<div class="site-chip${sel}" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (時給)' : ''}</div>`;
+  });
+  if(canManageSites()){
+    h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">＋ 現場を管理</div>`;
+  }
+  h += `<div class="site-chip" onclick="showCustomSiteInput()" style="border-style:dashed;color:var(--secondary)">✏️ 直接入力</div>`;
+  document.getElementById('siteChips').innerHTML = h;
+  document.getElementById('customSiteInputWrap').style.display = 'none';
+  document.getElementById('customSiteName').value = '';
+
+  const site = sites.find(x => x.id === selSiteId);
+  document.getElementById('hoursGroup').style.display = (site && site.rateType === 'hourly') ? '' : 'none';
+  document.getElementById('entryHours').value = e.hours || '';
+  document.getElementById('dayTypeGroup').style.display = (site && site.rateType === 'daily') ? '' : 'none';
+  selectedDayType = (site && site.rateType === 'daily') ? (e.hours || 1) : 1;
+  if(site && site.rateType === 'daily') updateDayTypeBtns();
+
+  const mg = document.getElementById('memberSelectGroup');
+  if(canSelectMembers()){
+    mg.style.display = '';
+    let mh = '';
+    const internalMembers = members.filter(m => m.type !== 'partner');
+    const partnerMembers = members.filter(m => m.type === 'partner');
+    internalMembers.forEach(m => {
+      const sel = selMemberIds.includes(m.id) ? ' selected' : '';
+      mh += `<div class="site-chip${sel}" onclick="selChip(${m.id},this,'member')" data-id="${m.id}"><span class="chip-dot" style="background:${m.color}"></span>${m.name}</div>`;
+    });
+    if(partnerMembers.length > 0){
+      mh += `<div style="font-size:11px;color:#FF9800;font-weight:600;margin:8px 0 4px;width:100%">🏢 協力会社</div>`;
+      partnerMembers.forEach(m => {
+        const sel = selMemberIds.includes(m.id) ? ' selected' : '';
+        mh += `<div class="site-chip${sel}" onclick="selChip(${m.id},this,'member')" data-id="${m.id}"><span class="chip-dot" style="background:#FF9800"></span>${m.name}<span style="font-size:10px;color:#888;margin-left:4px">(${m.partnerCompany})</span></div>`;
+      });
+    }
+    document.getElementById('memberChips').innerHTML = mh;
+  } else {
+    mg.style.display = 'none';
+  }
+
+  document.getElementById('saveEntryBtn').disabled = false;
+  document.getElementById('entryModal').classList.add('show');
+}
+
 // ===== Entry Modal =====
 function openEntry(ds){
+  editingEntryId = null;
   selDate = ds;
   selSiteId = null;
   selMemberIds = [];
@@ -1319,18 +1388,12 @@ function updateEntryBtn(){
   if(selSiteId && needMember && !hoursOk){
     btn.textContent = '勤務時間を入力してください';
   } else {
-    btn.textContent = '登録する';
+    btn.textContent = editingEntryId ? '更新する' : '登録する';
   }
 }
 
 async function saveEntry(){
   if(!selDate || !selSiteId) return;
-  let mids = selMemberIds;
-  if(userRole === 'worker'){
-    const myMember = members.find(m => m.accountId === currentUserId);
-    mids = [myMember ? myMember.id : currentUserId];
-  }
-  if(!mids.length) return;
 
   const site = sites.find(x => x.id === selSiteId);
   if(site && site.rateType === 'hourly' && !parseFloat(document.getElementById('entryHours').value)){
@@ -1340,6 +1403,28 @@ async function saveEntry(){
 
   const hours = site && site.rateType === 'hourly' ? parseFloat(document.getElementById('entryHours').value) : selectedDayType;
   const memo = document.getElementById('entryMemo').value;
+
+  // 編集モード
+  if(editingEntryId){
+    const mid = selMemberIds[0];
+    await dbUpdate('attendance_entries', editingEntryId, { date: selDate, site_id: selSiteId, member_id: mid, memo, hours });
+    const idx = entries.findIndex(e => e.id === editingEntryId);
+    if(idx >= 0) entries[idx] = { id: editingEntryId, date: selDate, siteId: selSiteId, memberId: mid, hours: Number(hours)||0, memo: memo||'' };
+    editingEntryId = null;
+    closeM('entryModal');
+    renderCalendar();
+    showToast('更新しました');
+    return;
+  }
+
+  // 新規登録モード
+  let mids = selMemberIds;
+  if(userRole === 'worker'){
+    const myMember = members.find(m => m.accountId === currentUserId);
+    mids = [myMember ? myMember.id : currentUserId];
+  }
+  if(!mids.length) return;
+
   let added = 0, skipped = 0;
   const toInsert = [];
   mids.forEach(mid => {
