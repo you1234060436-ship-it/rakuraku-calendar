@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ニチログ</title>
+<title>楽々カレンダー</title>
 <meta name="description" content="建設業向け出勤・売上管理アプリ。現場ごとの勤怠管理がスマホで簡単に。">
-<meta property="og:title" content="ニチログ">
+<meta property="og:title" content="楽々カレンダー">
 <meta property="og:description" content="建設業向け出勤・売上管理アプリ。現場ごとの勤怠管理がスマホで簡単に。">
 <meta property="og:image" content="https://rakuraku-calendar.vercel.app/icon-512.png">
 <meta property="og:type" content="website">
@@ -14,7 +14,7 @@
 <meta name="theme-color" content="#4A90D9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ニチログ">
+<meta name="apple-mobile-web-app-title" content="楽々カレンダー">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -234,45 +234,14 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 /* ===== Toast ===== */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 20px;border-radius:8px;z-index:300;opacity:0;pointer-events:none}
 .toast.show{opacity:1;pointer-events:auto}
-
-.loading-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:#F8F9FA;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.loading-screen.hide{display:none}
-.loading-spinner{width:36px;height:36px;border:3px solid #E0E0E0;border-top-color:#4A90D9;border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{margin-top:12px;font-size:14px;color:#888}
-.line-warning-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;}
-.line-warning-box{background:#fff;border-radius:16px;padding:32px 24px;max-width:340px;width:90%;text-align:center;}
-.line-warning-title{font-size:18px;font-weight:bold;color:#333;margin-bottom:16px;}
-.line-warning-steps{font-size:14px;color:#666;margin-bottom:16px;line-height:1.6;}
-.line-warning-steps p{margin:0;}
-.line-warning-url{font-size:12px;color:#888;background:#f5f5f5;border-radius:8px;padding:8px;margin-bottom:16px;word-break:break-all;user-select:all;-webkit-user-select:all;}
-.line-warning-btn{display:block;width:100%;padding:14px;border-radius:10px;font-size:16px;font-weight:bold;text-align:center;text-decoration:none;margin-bottom:10px;cursor:pointer;border:none;box-sizing:border-box;}
-.line-warning-btn.primary{background:#FF6B35;color:#fff;}
-.line-warning-btn.secondary{background:#eee;color:#333;}
-.line-warning-msg{font-size:13px;color:#4CAF50;margin-top:8px;min-height:20px;}
-
 </style>
 </head>
 <body class="screen-login">
-<div class="loading-screen" id="loadingScreen"><div class="loading-spinner"></div><div class="loading-text">読み込み中...</div></div>
-<div id="lineWarning" class="line-warning-overlay" style="display:none">
-<div class="line-warning-box">
-<div class="line-warning-title">⚠️ LINEアプリ内では正常に動作しません</div>
-<div class="line-warning-steps">
-<p>下の「コピー」ボタンを押して、SafariでURLを貼り付けてください</p>
-</div>
-<div class="line-warning-url" id="lineUrlDisplay"></div>
-<button class="line-warning-btn primary" id="lineCopyUrl">URLをコピー</button>
-<a class="line-warning-btn secondary" id="lineOpenSafari" href="#">Safariで開く</a>
-<div class="line-warning-msg" id="lineCopyMsg"></div>
-</div>
-</div>
-
 
 <!-- ===== Setup Screen ===== -->
 <div class="setup-screen" id="setupScreen">
   <div class="setup-card">
-    <div class="setup-logo">ニチログ</div>
+    <div class="setup-logo">楽々カレンダー</div>
     <div class="setup-subtitle">ビジネス版 初期設定</div>
     <form onsubmit="handleSetup(event)">
       <label class="setup-input-label">会社名 <span style="color:var(--danger)">*</span></label>
@@ -292,7 +261,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <div class="login-company-name" id="loginCompanyName"></div>
-    <div class="login-logo">ニチログ</div>
+    <div class="login-logo">楽々カレンダー</div>
     <div class="login-sub">ビジネス版へログイン</div>
     <form onsubmit="handleLogin(event)">
       <input type="text" class="login-input" id="loginCompanyInput" placeholder="会社名を入力" autocomplete="off" style="margin-bottom:10px">
@@ -320,7 +289,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <!-- ===== Main App ===== -->
 <div class="header" id="mainHeader">
   <div>
-    <h1><span class="role-badge" id="roleBadge"></span>ニチログ</h1>
+    <h1><span class="role-badge" id="roleBadge"></span>楽々カレンダー</h1>
     <div class="header-sub">出勤＆売上管理<span style="margin-left:8px" id="accountDisplayName"></span></div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
@@ -459,6 +428,12 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
       <div class="modal-title" id="siteModalTitle">現場を追加</div>
       <button class="modal-close" onclick="closeM('siteModal')">✕</button>
     </div>
+    <div class="form-group" id="siteCompanyGroupForm" style="display:none">
+      <label class="form-label">会社名</label>
+      <select class="form-select" id="siteClientCompany">
+        <option value="">未分類</option>
+      </select>
+    </div>
     <div class="form-group">
       <label class="form-label">現場名</label>
       <input type="text" class="form-input" id="siteName" placeholder="例：◯◯ビルディング">
@@ -483,6 +458,20 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
       <input type="text" class="form-input" id="siteMemo" placeholder="備考など">
     </div>
     <button class="add-btn" id="saveSiteBtn" onclick="saveSite()">現場を登録</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="companyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="companyModalTitle">会社を追加</div>
+      <button class="modal-close" onclick="closeM('companyModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">会社名</label>
+      <input type="text" class="form-input" id="companyName" placeholder="例：〇〇建設">
+    </div>
+    <button class="add-btn" id="saveCompanyBtn" onclick="saveCompany()">会社を登録</button>
   </div>
 </div>
 
@@ -550,7 +539,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <!-- Toast Notification -->
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ===== Supabase Configuration =====
 const SUPABASE_URL = 'https://hjmtsuxrwypimscyviey.supabase.co';
@@ -568,72 +557,10 @@ async function hashPassword(pw){
 // ===== Session Storage Functions =====
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7日間
 function saveSession(key, val){
-  try { localStorage.setItem('raku_'+key, JSON.stringify(val)); localStorage.setItem('raku_session_ts', Date.now().toString()); } catch(e){}
-  if(key === 'company_id' && val) { try { location.hash = 'cid=' + val; } catch(e){} }
+  localStorage.setItem('raku_'+key, JSON.stringify(val));
+  localStorage.setItem('raku_session_ts', Date.now().toString());
 }
-function loadSession(key, fb){
-  try {
-    var v = JSON.parse(localStorage.getItem('raku_'+key));
-    if(v !== null && v !== undefined) return v;
-  } catch(e){}
-  if(key === 'company_id'){
-    var m = location.hash.match(/cid=(\d+)/);
-    if(m) return parseInt(m[1]);
-  }
-  return fb;
-}
-
-// LINE Browser Detection (D)
-function isLineBrowser(){ return /Line\//i.test(navigator.userAgent); }
-function showLineWarning(){
-  var el = document.getElementById("lineWarning");
-  if(el) el.style.display = "flex";
-  var url = location.href;
-  var urlEl = document.getElementById("lineUrlDisplay");
-  if(urlEl) urlEl.textContent = url;
-  var isAndroid = /android/i.test(navigator.userAgent);
-  var safariBtn = document.getElementById("lineOpenSafari");
-  var copyBtn = document.getElementById("lineCopyUrl");
-  var msgEl = document.getElementById("lineCopyMsg");
-  if(isAndroid && safariBtn){
-    safariBtn.textContent = "Chromeで開く";
-    safariBtn.href = "intent://" + url.replace(/^https?:\/\//, "") + "#Intent;scheme=https;package=com.android.chrome;end";
-  } else if(safariBtn){
-    safariBtn.href = url;
-    safariBtn.target = "_blank";
-  }
-  if(copyBtn){
-    copyBtn.onclick = function(){
-      try {
-        if(navigator.clipboard && navigator.clipboard.writeText){
-          navigator.clipboard.writeText(url).then(function(){
-            if(msgEl) msgEl.textContent = "✅ コピーしました！Safariを開いて貼り付けてください";
-            copyBtn.textContent = "✅ コピー済み";
-          }).catch(function(){ fallbackCopy(); });
-        } else { fallbackCopy(); }
-      } catch(e){ fallbackCopy(); }
-      function fallbackCopy(){
-        var ta = document.createElement("textarea");
-        ta.value = url;
-        ta.style.position = "fixed";
-        ta.style.left = "-9999px";
-        document.body.appendChild(ta);
-        ta.select();
-        try {
-          document.execCommand("copy");
-          if(msgEl) msgEl.textContent = "✅ コピーしました！Safariを開いて貼り付けてください";
-          copyBtn.textContent = "✅ コピー済み";
-        } catch(e2){
-          if(msgEl) msgEl.textContent = "コピーできませんでした。上のURLを長押しでコピーしてください";
-        }
-        document.body.removeChild(ta);
-      }
-    };
-  }
-}
-// Loading Screen (B)
-function hideLoading(){ var el = document.getElementById("loadingScreen"); if(el) el.classList.add("hide"); }
-
+function loadSession(key, fb){ try{return JSON.parse(localStorage.getItem('raku_'+key))||fb}catch(e){return fb} }
 function isSessionExpired(){
   const ts = parseInt(localStorage.getItem('raku_session_ts') || '0');
   return Date.now() - ts > SESSION_MAX_AGE;
@@ -691,6 +618,7 @@ let accounts = [];
 let currentAccount = null;
 let currentUserId = null;
 let userRole = null;
+let clientCompanies = [];
 let sites = [];
 let entries = [];
 let members = [];
@@ -722,6 +650,9 @@ function updateDayTypeBtns(){
 let nxSite = 1;
 let nxMem = 1;
 let siteColorSelection = '#4A90D9';
+let selectedClientCompanyId = null;
+let inCompanySelectionMode = true;
+let siteEditClientCompanyId = null;
 
 const AVATARS = ['#FF9800','#E91E63','#9C27B0','#2C3E6B','#4CAF50','#00BCD4','#FF6B35','#E53935'];
 const PALETTE = [
@@ -740,27 +671,36 @@ function canSeeRevenue(){return userRole==='master'}
 function canSelectMembers(){return userRole==='master'||userRole==='submaster'}
 function canManageSites(){return userRole==='master'||userRole==='submaster'}
 
+// ===== Client Company & Site Helper Functions =====
+function getSitesByClientCompany(ccId){
+  if(ccId === null) return sites.filter(s => s.clientCompanyId === null);
+  return sites.filter(s => s.clientCompanyId === ccId);
+}
+function getClientCompanyName(ccId){
+  if(ccId === null || ccId === undefined) return '未分類';
+  const cc = clientCompanies.find(c => c.id === ccId);
+  return cc ? cc.name : '未分類';
+}
+
 document.querySelectorAll('.modal-overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show')})});
 
 // ===== Load All Data =====
 async function loadAllData(){
   if(!companyId) return;
-  const [sArr, eArr, mArr, aArr, stResult] = await Promise.all([
-      dbLoad('work_sites', { company_id: companyId }),
+  const [ccArr, sArr, eArr, mArr] = await Promise.all([
+    dbLoad('client_companies', { company_id: companyId }),
+    dbLoad('work_sites', { company_id: companyId }),
     dbLoad('attendance_entries', { company_id: companyId }),
-    dbLoad('team_members', { company_id: companyId }),
-      dbLoad('accounts', { company_id: companyId }),
-      dbLoadSettings(companyId)
-    ]);;
-  sites = sArr.map(s => ({ id: s.id, name: s.name, price: Number(s.price), rateType: s.rate_type, color: s.color, memo: s.memo||'' }));
-  entries = eArr.map(e => ({ id: e.id, date: e.date, siteId: e.site_id, memberId: e.member_id, hours: Number(e.hours)||0, memo: e.memo||'' }));
+    dbLoad('team_members', { company_id: companyId })
+  ]);
+  clientCompanies = ccArr.map(cc => ({ id: cc.id, name: cc.name, companyId: cc.company_id }));
+  sites = sArr.map(s => ({ id: s.id, name: s.name, price: Number(s.price), rateType: s.rate_type, color: s.color, memo: s.memo||'', clientCompanyId: s.client_company_id||null }));
+  entries = eArr.map(e => ({ id: e.id, date: e.date, siteId: e.site_id, memberId: e.member_id, hours: Number(e.hours)||0, memo: e.memo||'', clientCompanyId: e.client_company_id||null }));
   members = mArr.map(m => ({ id: m.id, accountId: m.account_id, name: m.name, team: m.team||'', color: m.color||'#FF9800', type: m.type||'internal', partnerCompany: m.partner_company||'', rate: Number(m.rate)||0 }));
-
-    accounts = aArr;
+  accounts = await dbLoad('accounts', { company_id: companyId });
   nxSite = sites.length > 0 ? Math.max(...sites.map(s=>s.id))+1 : 1;
   nxMem = members.length > 0 ? Math.max(...members.map(m=>m.id))+1 : 1;
-
-    const settings = stResult;
+  const settings = await dbLoadSettings(companyId);
   if(settings) custom = settings;
   else custom = Object.assign({}, DEFAULT_CUSTOM);
 }
@@ -822,7 +762,7 @@ function confirmSetupDone(){
   init();
   renderCalendar();
   buildTabs();
-  showToast('ニチログへようこそ！');
+  showToast('楽々カレンダーへようこそ！');
 }
 
 // URL招待リンクからの自動ログイン
@@ -1018,73 +958,69 @@ function updateAccountDisplay(){
 }
 
 // ===== Check Initialization =====
-window.addEventListener('DOMContentLoaded', async () => {
-    // LINE browser check
-    if(isLineBrowser()){ showLineWarning(); hideLoading(); return; }
-    try {
-    ['raku_setup','raku_accounts','raku_session','raku_sites','raku_entries','raku_members','raku_custom'].forEach(k => localStorage.removeItem(k));
-    
-      // URL招待パラメータを最優先でチェック
-      const urlParams = new URLSearchParams(location.search);
-      const inviteName = urlParams.get('name');
-      const invitePw = urlParams.get('pw');
-      const inviteCompany = urlParams.get('cid');
-      if(inviteName && invitePw && inviteCompany){
-        history.replaceState(null, '', location.pathname);
-        companyId = inviteCompany;
-        saveSession('company_id', companyId);
-        const companies = await dbLoad('companies', { id: companyId });
-        if(companies.length){
-          setup = { companyName: companies[0].name };
-          await autoLoginFromInvite(inviteName, invitePw);
-          return;
-        }
-      }
-    
-      companyId = loadSession('company_id', null);
-    
-      // セッション有効期限チェック
-      if(isSessionExpired()){
-        Object.keys(localStorage).filter(k => k.startsWith('raku_')).forEach(k => localStorage.removeItem(k));
-        companyId = null;
-      }
-    
-      // companyIdがない場合はログイン画面を表示（会社名+パスワードでログイン可能）
-      if(!companyId){
-        showScreen('login');
-        return;
-      }
-    
-      const companies = await dbLoad('companies', { id: companyId });
-      if(!companies.length){
-        saveSession('company_id', null);
-        companyId = null;
-        showScreen('setup');
-        return;
-      }
+window.addEventListener('DOMContentLoaded', async ()=>{
+  ['raku_setup','raku_accounts','raku_session','raku_sites','raku_entries','raku_members','raku_custom'].forEach(k => localStorage.removeItem(k));
+
+  // URL招待パラメータを最優先でチェック
+  const urlParams = new URLSearchParams(location.search);
+  const inviteName = urlParams.get('name');
+  const invitePw = urlParams.get('pw');
+  const inviteCompany = urlParams.get('cid');
+  if(inviteName && invitePw && inviteCompany){
+    history.replaceState(null, '', location.pathname);
+    companyId = inviteCompany;
+    saveSession('company_id', companyId);
+    const companies = await dbLoad('companies', { id: companyId });
+    if(companies.length){
       setup = { companyName: companies[0].name };
-    
-      const savedAccountId = loadSession('account_id', null);
-      if(savedAccountId){
-        await loadAllData();
-        const account = accounts.find(a => a.id === savedAccountId);
-        if(account){
-          currentAccount = account;
-          currentUserId = account.id;
-          userRole = account.role;
-          showScreen('app');
-          init();
-          renderCalendar();
-          buildTabs();
-        } else {
-          showScreen('login');
-        }
-      } else {
-        showScreen('login');
-      }
-      // URLパラメータをクリア（パスワードを履歴に残さない）
-      if(location.search) history.replaceState(null, '', location.pathname);
-    } catch(e) { console.error('Init error:', e); } finally { hideLoading(); }
+      await autoLoginFromInvite(inviteName, invitePw);
+      return;
+    }
+  }
+
+  companyId = loadSession('company_id', null);
+
+  // セッション有効期限チェック
+  if(isSessionExpired()){
+    Object.keys(localStorage).filter(k => k.startsWith('raku_')).forEach(k => localStorage.removeItem(k));
+    companyId = null;
+  }
+
+  // companyIdがない場合はログイン画面を表示（会社名+パスワードでログイン可能）
+  if(!companyId){
+    showScreen('login');
+    return;
+  }
+
+  const companies = await dbLoad('companies', { id: companyId });
+  if(!companies.length){
+    saveSession('company_id', null);
+    companyId = null;
+    showScreen('setup');
+    return;
+  }
+  setup = { companyName: companies[0].name };
+
+  const savedAccountId = loadSession('account_id', null);
+  if(savedAccountId){
+    await loadAllData();
+    const account = accounts.find(a => a.id === savedAccountId);
+    if(account){
+      currentAccount = account;
+      currentUserId = account.id;
+      userRole = account.role;
+      showScreen('app');
+      init();
+      renderCalendar();
+      buildTabs();
+    } else {
+      showScreen('login');
+    }
+  } else {
+    showScreen('login');
+  }
+  // URLパラメータをクリア（パスワードを履歴に残さない）
+  if(location.search) history.replaceState(null, '', location.pathname);
 });
 
 // ===== Tabs =====
@@ -1287,25 +1223,24 @@ function editEntry(entryId){
   selDate = e.date;
   selSiteId = e.siteId;
   selMemberIds = [e.memberId];
+  const site = sites.find(x => x.id === selSiteId);
+  selectedClientCompanyId = site ? site.clientCompanyId : null;
+  inCompanySelectionMode = !site; // If site found, don't show company selection
   const p = e.date.split('-');
   document.getElementById('entryModalTitle').textContent = `${+p[1]}月${+p[2]}日の出勤を編集`;
   document.getElementById('entryMemo').value = e.memo || '';
   document.getElementById('saveEntryBtn').textContent = '更新する';
 
-  let h = '';
-  sites.forEach(s => {
-    const sel = s.id === selSiteId ? ' selected' : '';
-    h += `<div class="site-chip${sel}" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (時給)' : ''}</div>`;
-  });
-  if(canManageSites()){
-    h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">＋ 現場を管理</div>`;
-  }
-  h += `<div class="site-chip" onclick="showCustomSiteInput()" style="border-style:dashed;color:var(--secondary)">✏️ 直接入力</div>`;
-  document.getElementById('siteChips').innerHTML = h;
-  document.getElementById('customSiteInputWrap').style.display = 'none';
-  document.getElementById('customSiteName').value = '';
+  renderEntrySiteSelection();
 
-  const site = sites.find(x => x.id === selSiteId);
+  // Update site UI to show selected site as selected
+  if(selSiteId){
+    setTimeout(() => {
+      const siteChip = document.querySelector(`#siteChips [data-id="${selSiteId}"]`);
+      if(siteChip) siteChip.classList.add('selected');
+    }, 0);
+  }
+
   document.getElementById('hoursGroup').style.display = (site && site.rateType === 'hourly') ? '' : 'none';
   document.getElementById('entryHours').value = e.hours || '';
   document.getElementById('dayTypeGroup').style.display = (site && site.rateType === 'daily') ? '' : 'none';
@@ -1344,6 +1279,8 @@ function openEntry(ds){
   selDate = ds;
   selSiteId = null;
   selMemberIds = [];
+  selectedClientCompanyId = null;
+  inCompanySelectionMode = true;
   const p = ds.split('-');
   document.getElementById('entryModalTitle').textContent = `${+p[1]}月${+p[2]}日の出勤登録`;
   document.getElementById('entryMemo').value = '';
@@ -1353,17 +1290,7 @@ function openEntry(ds){
   document.getElementById('dayTypeGroup').style.display = 'none';
   selectedDayType = 1;
 
-  let h = '';
-  sites.forEach(s => {
-    h += `<div class="site-chip" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (時給)' : ''}</div>`;
-  });
-  if(canManageSites()){
-    h += `<div class="site-chip" onclick="closeM('entryModal');openNewSite()" style="border-style:dashed;color:var(--primary)">＋ 現場を管理</div>`;
-  }
-  h += `<div class="site-chip" onclick="showCustomSiteInput()" style="border-style:dashed;color:var(--secondary)">✏️ 直接入力</div>`;
-  document.getElementById('siteChips').innerHTML = h;
-  document.getElementById('customSiteInputWrap').style.display = 'none';
-  document.getElementById('customSiteName').value = '';
+  renderEntrySiteSelection();
 
   const mg = document.getElementById('memberSelectGroup');
   if(canSelectMembers()){
@@ -1388,6 +1315,64 @@ function openEntry(ds){
   }
 
   document.getElementById('entryModal').classList.add('show');
+}
+
+function renderEntrySiteSelection(){
+  let h = '';
+
+  if(inCompanySelectionMode){
+    // Show company list
+    h = '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+
+    // 未分類 category
+    const unclassifiedSites = sites.filter(s => s.clientCompanyId === null);
+    if(unclassifiedSites.length > 0){
+      h += `<div class="site-chip" onclick="selectClientCompanyInEntry(null)" style="border:2px solid var(--border)"><span style="font-size:11px">未分類</span><span style="font-size:10px;color:var(--text-light)">${unclassifiedSites.length}</span></div>`;
+    }
+
+    // Other companies
+    clientCompanies.forEach(cc => {
+      const companySites = sites.filter(s => s.clientCompanyId === cc.id);
+      if(companySites.length > 0){
+        h += `<div class="site-chip" onclick="selectClientCompanyInEntry(${cc.id})" style="border:2px solid var(--border)"><span style="font-size:11px">${cc.name}</span><span style="font-size:10px;color:var(--text-light)">${companySites.length}</span></div>`;
+      }
+    });
+
+    h += '</div>';
+  } else {
+    // Show sites for selected company
+    const companySites = getSitesByClientCompany(selectedClientCompanyId);
+    h = `<div style="margin-bottom:12px"><button class="site-chip" onclick="backToClientCompanySelection()" style="border-style:dashed;color:var(--primary);width:100%;text-align:center">← 戻る</button></div>`;
+    h += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+
+    companySites.forEach(s => {
+      h += `<div class="site-chip" onclick="selChip(${s.id},this,'site')" data-id="${s.id}"><span class="chip-dot" style="background:${s.color}"></span>${s.name}${s.rateType === 'hourly' ? ' (時給)' : ''}</div>`;
+    });
+
+    if(canManageSites()){
+      h += `<div class="site-chip" onclick="closeM('entryModal');openNewSiteForCompany(${selectedClientCompanyId})" style="border-style:dashed;color:var(--primary)">＋ 現場を追加</div>`;
+    }
+    h += '</div>';
+  }
+
+  h += `<div class="site-chip" onclick="showCustomSiteInput()" style="border-style:dashed;color:var(--secondary);width:100%;text-align:center;margin-top:8px">✏️ 直接入力</div>`;
+  document.getElementById('siteChips').innerHTML = h;
+  document.getElementById('customSiteInputWrap').style.display = 'none';
+  document.getElementById('customSiteName').value = '';
+}
+
+function selectClientCompanyInEntry(ccId){
+  selectedClientCompanyId = ccId;
+  inCompanySelectionMode = false;
+  renderEntrySiteSelection();
+}
+
+function backToClientCompanySelection(){
+  selectedClientCompanyId = null;
+  inCompanySelectionMode = true;
+  selSiteId = null;
+  renderEntrySiteSelection();
+  updateEntryBtn();
 }
 
 function selChip(id, el, type){
@@ -1508,9 +1493,11 @@ async function saveEntry(){
   // 編集モード
   if(editingEntryId){
     const mid = selMemberIds[0];
-    await dbUpdate('attendance_entries', editingEntryId, { date: selDate, site_id: selSiteId, member_id: mid, memo, hours });
+    const site = sites.find(s => s.id === selSiteId);
+    const ccId = site ? site.clientCompanyId : null;
+    await dbUpdate('attendance_entries', editingEntryId, { date: selDate, site_id: selSiteId, member_id: mid, memo, hours, client_company_id: ccId });
     const idx = entries.findIndex(e => e.id === editingEntryId);
-    if(idx >= 0) entries[idx] = { id: editingEntryId, date: selDate, siteId: selSiteId, memberId: mid, hours: Number(hours)||0, memo: memo||'' };
+    if(idx >= 0) entries[idx] = { id: editingEntryId, date: selDate, siteId: selSiteId, memberId: mid, hours: Number(hours)||0, memo: memo||'', clientCompanyId: ccId };
     editingEntryId = null;
     closeM('entryModal');
     renderCalendar();
@@ -1528,14 +1515,16 @@ async function saveEntry(){
 
   let added = 0, skipped = 0;
   const toInsert = [];
+  const site = sites.find(s => s.id === selSiteId);
+  const ccId = site ? site.clientCompanyId : null;
   mids.forEach(mid => {
     if(entries.some(e => e.date === selDate && e.siteId === selSiteId && e.memberId === mid)){ skipped++; return; }
-    toInsert.push({ company_id: companyId, date: selDate, site_id: selSiteId, member_id: mid, memo, hours });
+    toInsert.push({ company_id: companyId, date: selDate, site_id: selSiteId, member_id: mid, memo, hours, client_company_id: ccId });
     added++;
   });
   if(toInsert.length > 0){
     const inserted = await dbInsertMany('attendance_entries', toInsert);
-    inserted.forEach(e => entries.push({ id: e.id, date: e.date, siteId: e.site_id, memberId: e.member_id, hours: Number(e.hours)||0, memo: e.memo||'' }));
+    inserted.forEach(e => entries.push({ id: e.id, date: e.date, siteId: e.site_id, memberId: e.member_id, hours: Number(e.hours)||0, memo: e.memo||'', clientCompanyId: e.client_company_id||null }));
   }
   closeM('entryModal');
   renderCalendar();
@@ -1694,22 +1683,55 @@ function renderSites(){
   }
 
   let h = '';
-  sites.forEach(s => {
-    const siteStr = s.rateType === 'hourly' ? `¥${s.price}/時間` : `¥${s.price}`;
-    h += `<div class="site-card">
-      <div class="site-left">
-        <div class="site-color" style="background:${s.color}"></div>
-        <div class="site-info">
-          <div class="site-name">${s.name}</div>
-          <div class="site-meta">${siteStr}${s.memo ? ' · ' + s.memo : ''}</div>
+
+  // Group sites by client company
+  const unclassifiedSites = sites.filter(s => s.clientCompanyId === null);
+
+  // Render unclassified sites
+  if(unclassifiedSites.length > 0){
+    h += `<div style="font-size:13px;font-weight:700;color:var(--text-light);margin:14px 14px 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">未分類</div>`;
+    unclassifiedSites.forEach(s => {
+      const siteStr = s.rateType === 'hourly' ? `¥${s.price}/時間` : `¥${s.price}`;
+      h += `<div class="site-card">
+        <div class="site-left">
+          <div class="site-color" style="background:${s.color}"></div>
+          <div class="site-info">
+            <div class="site-name">${s.name}</div>
+            <div class="site-meta">${siteStr}${s.memo ? ' · ' + s.memo : ''}</div>
+          </div>
         </div>
-      </div>
-      <div class="site-actions">
-        <button onclick="editSite(${s.id})">編集</button>
-        <button onclick="deleteSite(${s.id})" style="color:var(--danger);background:var(--danger)'+'22'">削除</button>
-      </div>
-    </div>`;
+        <div class="site-actions">
+          <button onclick="editSite(${s.id})">編集</button>
+          <button onclick="deleteSite(${s.id})" style="color:var(--danger);background:var(--danger)'+'22'">削除</button>
+        </div>
+      </div>`;
+    });
+  }
+
+  // Render sites by client company
+  clientCompanies.forEach(cc => {
+    const companySites = sites.filter(s => s.clientCompanyId === cc.id);
+    if(companySites.length > 0){
+      h += `<div style="font-size:13px;font-weight:700;color:var(--text);margin:14px 14px 8px;padding-bottom:6px;border-bottom:1px solid var(--border)">🏢 ${cc.name}</div>`;
+      companySites.forEach(s => {
+        const siteStr = s.rateType === 'hourly' ? `¥${s.price}/時間` : `¥${s.price}`;
+        h += `<div class="site-card">
+          <div class="site-left">
+            <div class="site-color" style="background:${s.color}"></div>
+            <div class="site-info">
+              <div class="site-name">${s.name}</div>
+              <div class="site-meta">${siteStr}${s.memo ? ' · ' + s.memo : ''}</div>
+            </div>
+          </div>
+          <div class="site-actions">
+            <button onclick="editSite(${s.id})">編集</button>
+            <button onclick="deleteSite(${s.id})" style="color:var(--danger);background:var(--danger)'+'22'">削除</button>
+          </div>
+        </div>`;
+      });
+    }
   });
+
   h += `<button class="add-btn" onclick="openNewSite()" style="margin-top:14px">＋ 現場を追加</button>`;
   document.getElementById('sitesContent').innerHTML = h;
 }
@@ -1721,7 +1743,25 @@ function openNewSite(){
   document.getElementById('siteRateType').value = 'daily';
   document.getElementById('siteMemo').value = '';
   siteColorSelection = '#4A90D9';
+  siteEditClientCompanyId = null;
   renderSiteColorPicker();
+  renderSiteClientCompanyDropdown();
+  document.getElementById('siteModal').classList.add('show');
+}
+
+function openNewSiteForCompany(ccId){
+  document.getElementById('siteModalTitle').textContent = '現場を追加';
+  document.getElementById('siteName').value = '';
+  document.getElementById('sitePrice').value = '';
+  document.getElementById('siteRateType').value = 'daily';
+  document.getElementById('siteMemo').value = '';
+  siteColorSelection = '#4A90D9';
+  siteEditClientCompanyId = ccId;
+  renderSiteColorPicker();
+  renderSiteClientCompanyDropdown();
+  if(ccId !== null && ccId !== undefined){
+    document.getElementById('siteClientCompany').value = ccId;
+  }
   document.getElementById('siteModal').classList.add('show');
 }
 
@@ -1734,9 +1774,13 @@ function editSite(siteId){
   document.getElementById('siteRateType').value = site.rateType;
   document.getElementById('siteMemo').value = site.memo;
   siteColorSelection = site.color;
+  siteEditClientCompanyId = site.clientCompanyId;
   document.getElementById('saveSiteBtn').textContent = '現場を更新';
   document.getElementById('saveSiteBtn').onclick = () => updateSite(siteId);
   renderSiteColorPicker();
+  renderSiteClientCompanyDropdown();
+  const ccValue = site.clientCompanyId === null ? '' : site.clientCompanyId;
+  document.getElementById('siteClientCompany').value = ccValue;
   document.getElementById('siteModal').classList.add('show');
 }
 
@@ -1750,15 +1794,31 @@ function renderSiteColorPicker(){
   }).join('');
 }
 
+function renderSiteClientCompanyDropdown(){
+  const sel = document.getElementById('siteClientCompany');
+  if(!sel) return;
+
+  // Always show the company selector (regardless of role, as it's just grouping)
+  document.getElementById('siteCompanyGroupForm').style.display = '';
+
+  let html = '<option value="">未分類</option>';
+  clientCompanies.forEach(cc => {
+    html += `<option value="${cc.id}">${cc.name}</option>`;
+  });
+  sel.innerHTML = html;
+}
+
 async function saveSite(){
   const name = document.getElementById('siteName').value.trim();
   if(!name){ showToast('現場名を入力してください'); return; }
   const price = parseFloat(document.getElementById('sitePrice').value) || 0;
   const rateType = document.getElementById('siteRateType').value;
   const memo = document.getElementById('siteMemo').value;
+  const clientCompanyIdVal = document.getElementById('siteClientCompany').value;
+  const ccId = clientCompanyIdVal === '' ? null : parseInt(clientCompanyIdVal);
 
-  const row = await dbInsert('work_sites', { company_id: companyId, name, price, rate_type: rateType, color: siteColorSelection, memo });
-  if(row) sites.push({ id: row.id, name, price, rateType, color: siteColorSelection, memo });
+  const row = await dbInsert('work_sites', { company_id: companyId, name, price, rate_type: rateType, color: siteColorSelection, memo, client_company_id: ccId });
+  if(row) sites.push({ id: row.id, name, price, rateType, color: siteColorSelection, memo, clientCompanyId: ccId });
   closeM('siteModal');
   renderSites();
   showToast('現場を追加しました');
@@ -1770,10 +1830,12 @@ async function updateSite(siteId){
   const price = parseFloat(document.getElementById('sitePrice').value) || 0;
   const rateType = document.getElementById('siteRateType').value;
   const memo = document.getElementById('siteMemo').value;
+  const clientCompanyIdVal = document.getElementById('siteClientCompany').value;
+  const ccId = clientCompanyIdVal === '' ? null : parseInt(clientCompanyIdVal);
 
-  await dbUpdate('work_sites', siteId, { name, price, rate_type: rateType, color: siteColorSelection, memo });
+  await dbUpdate('work_sites', siteId, { name, price, rate_type: rateType, color: siteColorSelection, memo, client_company_id: ccId });
   const site = sites.find(s => s.id === siteId);
-  if(site){ site.name=name; site.price=price; site.rateType=rateType; site.color=siteColorSelection; site.memo=memo; }
+  if(site){ site.name=name; site.price=price; site.rateType=rateType; site.color=siteColorSelection; site.memo=memo; site.clientCompanyId=ccId; }
   closeM('siteModal');
   renderSites();
   document.getElementById('saveSiteBtn').textContent = '現場を登録';
@@ -1786,6 +1848,70 @@ async function deleteSite(siteId){
   await dbDelete('work_sites', siteId);
   sites = sites.filter(s => s.id !== siteId);
   renderSites();
+  showToast('削除しました');
+}
+
+// ===== Company Management =====
+let editingCompanyId = null;
+
+function openAddCompanyModal(){
+  editingCompanyId = null;
+  document.getElementById('companyModalTitle').textContent = '会社を追加';
+  document.getElementById('companyName').value = '';
+  document.getElementById('saveCompanyBtn').textContent = '会社を登録';
+  document.getElementById('saveCompanyBtn').onclick = saveCompany;
+  document.getElementById('companyModal').classList.add('show');
+}
+
+function editCompany(ccId){
+  const cc = clientCompanies.find(c => c.id === ccId);
+  if(!cc) return;
+  editingCompanyId = ccId;
+  document.getElementById('companyModalTitle').textContent = '会社を編集';
+  document.getElementById('companyName').value = cc.name;
+  document.getElementById('saveCompanyBtn').textContent = '会社を更新';
+  document.getElementById('saveCompanyBtn').onclick = () => updateCompany(ccId);
+  document.getElementById('companyModal').classList.add('show');
+}
+
+async function saveCompany(){
+  const name = document.getElementById('companyName').value.trim();
+  if(!name){ showToast('会社名を入力してください'); return; }
+
+  const row = await dbInsert('client_companies', { company_id: companyId, name });
+  if(row) {
+    clientCompanies.push({ id: row.id, name, companyId });
+    closeM('companyModal');
+    renderSettings();
+    showToast('会社を追加しました');
+  }
+}
+
+async function updateCompany(ccId){
+  const name = document.getElementById('companyName').value.trim();
+  if(!name){ showToast('会社名を入力してください'); return; }
+
+  await dbUpdate('client_companies', ccId, { name });
+  const cc = clientCompanies.find(c => c.id === ccId);
+  if(cc) cc.name = name;
+  closeM('companyModal');
+  renderSettings();
+  showToast('会社を更新しました');
+}
+
+async function deleteCompany(ccId){
+  const cc = clientCompanies.find(c => c.id === ccId);
+  if(!cc) return;
+  const sitesCount = sites.filter(s => s.clientCompanyId === ccId).length;
+  if(sitesCount > 0){
+    showToast('この会社に属する現場があるため削除できません');
+    return;
+  }
+  if(!confirm(`「${cc.name}」を削除しますか？`)) return;
+
+  await dbDelete('client_companies', ccId);
+  clientCompanies = clientCompanies.filter(c => c.id !== ccId);
+  renderSettings();
   showToast('削除しました');
 }
 
@@ -2001,7 +2127,7 @@ function exportCSV(){
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `ニチログ_${ms}.csv`;
+  a.download = `楽々カレンダー_${ms}.csv`;
   a.click();
   showToast('CSVをダウンロードしました');
 }
@@ -2044,6 +2170,13 @@ function renderSettings(){
 
       <div class="account-creation-title" style="margin-top:16px;margin-bottom:12px">発行済みアカウント</div>
       <div id="accountsList"></div>
+    </div>`;
+
+    // Company Management Section (Master Only)
+    html += `<div class="settings-group" style="padding:16px">
+      <div class="account-creation-title">🏢 会社管理</div>
+      <div id="companiesListContainer" style="margin-bottom:14px"></div>
+      <button class="add-btn" onclick="openAddCompanyModal()">＋ 会社を追加</button>
     </div>`;
   }
 
@@ -2092,7 +2225,33 @@ function renderSettings(){
 
   if(userRole === 'master'){
     renderAccountsList();
+    renderCompaniesList();
   }
+}
+
+function renderCompaniesList(){
+  const container = document.getElementById('companiesListContainer');
+  if(!container) return;
+
+  let html = '';
+  if(clientCompanies.length === 0){
+    html = '<div style="padding:12px;color:var(--text-light);text-align:center;font-size:13px">会社がまだ登録されていません</div>';
+  } else {
+    clientCompanies.forEach(cc => {
+      const sitesCount = sites.filter(s => s.clientCompanyId === cc.id).length;
+      html += `<div style="background:var(--white);border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-weight:600;color:var(--text)">${cc.name}</div>
+          <div style="display:flex;gap:6px">
+            <button onclick="editCompany(${cc.id})" style="padding:4px 10px;background:var(--primary-light);color:var(--primary);border:none;border-radius:6px;font-size:12px;cursor:pointer">編集</button>
+            <button onclick="deleteCompany(${cc.id})" style="padding:4px 10px;background:#FFE5E5;color:var(--danger);border:none;border-radius:6px;font-size:12px;cursor:pointer">削除</button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-light)">${sitesCount}件の現場</div>
+      </div>`;
+    });
+  }
+  container.innerHTML = html;
 }
 
 let accountCreateRole = 'submaster';
@@ -2141,8 +2300,8 @@ async function resetAccountPassword(accountId){
   document.getElementById('inviteResultRole').textContent = roleName;
   document.getElementById('inviteResultPassword').textContent = newPw;
   document.getElementById('inviteResultLineBtn').onclick = function(){
-    const loginUrl = `${appUrl}#cid=${companyId}`;
-    const msg = `【ニチログ】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップでログイン\n${loginUrl}\n\n※リンクを開くと自動でログインできます`;
+    const loginUrl = `${appUrl}?name=${encodeURIComponent(acc.name)}&pw=${encodeURIComponent(newPw)}&cid=${companyId}`;
+    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップでログイン\n${loginUrl}\n\n※リンクを開くと自動でログインできます`;
     window.open('https://line.me/R/share?text=' + encodeURIComponent(msg), '_blank');
     closeM('inviteResultModal');
   };
@@ -2195,7 +2354,7 @@ async function createNewAccount(){
     const companyName = setup?.companyName || '会社';
     const appUrl = location.origin + location.pathname;
     const loginUrl = `${appUrl}?name=${encodeURIComponent(name)}&pw=${encodeURIComponent(rawPassword)}&cid=${companyId}`;
-    const msg = `【ニチログ】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップでログイン\n${loginUrl}\n\n※リンクを開くと自動でログインできます`;
+    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップでログイン\n${loginUrl}\n\n※リンクを開くと自動でログインできます`;
     window.open('https://line.me/R/share?text=' + encodeURIComponent(msg), '_blank');
     closeM('inviteResultModal');
   };
