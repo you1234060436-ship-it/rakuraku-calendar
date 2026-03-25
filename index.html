@@ -1515,7 +1515,7 @@ async function saveEntry(){
 
   let added = 0, skipped = 0;
   const toInsert = [];
-  const site = sites.find(s => s.id === selSiteId);
+  // site は関数冒頭(1484行)で既に宣言済みのため再利用
   const ccId = site ? site.clientCompanyId : null;
   mids.forEach(mid => {
     if(entries.some(e => e.date === selDate && e.siteId === selSiteId && e.memberId === mid)){ skipped++; return; }
