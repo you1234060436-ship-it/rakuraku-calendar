@@ -2752,7 +2752,7 @@ switchTab = function(t, btn) {
 })();
 </script>
 <script>
-// Tab button fix - patches onclick handlers using label-to-id mapping
+// Tab fix - event delegation on tabBar (survives tab rebuilds)
 (function(){
   var map={
     "\u30ab\u30ec\u30f3\u30c0\u30fc":"calendar",
@@ -2763,31 +2763,29 @@ switchTab = function(t, btn) {
     "\u8acb\u6c42\u66f8":"invoice",
     "\u8a2d\u5b9a":"settings"
   };
-  function fixTabs(){
+  function install(){
     var tb=document.getElementById("tabBar");
     if(!tb)return;
-    var btns=tb.querySelectorAll("button");
-    btns.forEach(function(btn){
+    tb.addEventListener("click",function(e){
+      var btn=e.target.closest("button");
+      if(!btn)return;
       var label=btn.textContent.trim();
       for(var k in map){
         if(label.indexOf(k)>=0){
-          var tid=map[k];
-          btn.removeAttribute("onclick");
-          btn.onclick=null;
-          (function(id,b){
-            b.addEventListener("click",function(){
-              if(window._appBridge&&window._appBridge.switchTab)window._appBridge.switchTab(id,b);
-            });
-          })(tid,btn);
-          break;
+          e.stopPropagation();
+          e.preventDefault();
+          if(window._appBridge&&window._appBridge.switchTab){
+            window._appBridge.switchTab(map[k],btn);
+          }
+          return;
         }
       }
-    });
+    },true);
   }
   if(document.readyState==="loading"){
-    document.addEventListener("DOMContentLoaded",function(){setTimeout(fixTabs,500);});
+    document.addEventListener("DOMContentLoaded",install);
   }else{
-    setTimeout(fixTabs,500);
+    install();
   }
 })();
 </script>
