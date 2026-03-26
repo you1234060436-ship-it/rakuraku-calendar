@@ -234,7 +234,74 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 /* ===== Toast ===== */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 20px;border-radius:8px;z-index:300;opacity:0;pointer-events:none}
 .toast.show{opacity:1;pointer-events:auto}
+
+/* ===== Invoice / Receipt Styles ===== */
+.invoice-controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:flex-end}
+.invoice-controls select,.invoice-controls input{background:#23262b;color:#e8e8e8;border:1px solid #3a3d42;border-radius:8px;padding:8px 12px;font-size:14px}
+.invoice-controls label{font-size:12px;color:#aaa;display:block;margin-bottom:4px}
+.invoice-controls .ctrl-group{display:flex;flex-direction:column}
+.invoice-btn{background:linear-gradient(135deg,#4a90d9,#357abd);color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s}
+.invoice-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(74,144,217,.4)}
+.invoice-btn.secondary{background:linear-gradient(135deg,#5a6370,#48505c)}
+.invoice-btn.receipt-btn{background:linear-gradient(135deg,#4CAF50,#388E3C)}
+.invoice-summary-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.inv-card{background:#23262b;border-radius:12px;padding:16px;border:1px solid #3a3d42}
+.inv-card .inv-card-label{font-size:12px;color:#888;margin-bottom:4px}
+.inv-card .inv-card-value{font-size:22px;font-weight:700;color:#4a90d9}
+.inv-card .inv-card-value.green{color:#4CAF50}
+.invoice-table{width:100%;border-collapse:collapse;background:#23262b;border-radius:12px;overflow:hidden;margin-bottom:16px}
+.invoice-table th{background:#2a2d33;color:#888;font-size:12px;font-weight:600;padding:10px 12px;text-align:left;border-bottom:1px solid #3a3d42}
+.invoice-table td{padding:10px 12px;font-size:14px;color:#e0e0e0;border-bottom:1px solid #2a2d33}
+.invoice-table tr:last-child td{border-bottom:none}
+.invoice-table tr:hover{background:#2a2d33}
+.inv-total-row td{font-weight:700;color:#4a90d9;border-top:2px solid #4a90d9}
+.invoice-preview-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);z-index:9999;display:none;justify-content:center;align-items:flex-start;padding:20px;overflow-y:auto}
+.invoice-preview-overlay.active{display:flex}
+.invoice-preview{background:#fff;color:#1a1a1a;max-width:800px;width:100%;border-radius:12px;padding:40px;position:relative;margin:20px auto}
+.invoice-preview .inv-close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;color:#666;cursor:pointer}
+.invoice-preview h2{font-size:28px;font-weight:800;color:#1a1a1a;margin:0 0 4px}
+.invoice-preview .inv-subtitle{color:#666;font-size:14px;margin-bottom:24px}
+.inv-header-row{display:flex;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:16px}
+.inv-header-row .inv-from,.inv-header-row .inv-to{flex:1;min-width:200px}
+.inv-header-row h4{font-size:12px;color:#888;text-transform:uppercase;margin:0 0 8px;letter-spacing:1px}
+.inv-header-row p{margin:2px 0;font-size:13px;color:#333;line-height:1.5}
+.inv-meta{display:flex;gap:24px;margin-bottom:20px;flex-wrap:wrap}
+.inv-meta .meta-item{background:#f5f5f5;padding:8px 14px;border-radius:6px}
+.inv-meta .meta-label{font-size:11px;color:#888;display:block}
+.inv-meta .meta-value{font-size:14px;font-weight:600;color:#1a1a1a}
+.inv-detail-table{width:100%;border-collapse:collapse;margin-bottom:20px}
+.inv-detail-table th{background:#f5f5f5;padding:8px 12px;font-size:12px;color:#666;text-align:left;border-bottom:2px solid #ddd}
+.inv-detail-table td{padding:8px 12px;font-size:13px;border-bottom:1px solid #eee}
+.inv-detail-table .text-right{text-align:right}
+.inv-totals{margin-left:auto;width:280px;margin-bottom:20px}
+.inv-totals .tot-row{display:flex;justify-content:space-between;padding:6px 0;font-size:14px}
+.inv-totals .tot-row.grand{border-top:2px solid #1a1a1a;font-size:18px;font-weight:700;padding-top:10px;margin-top:6px}
+.inv-notes{background:#f9f9f9;padding:14px;border-radius:8px;margin-bottom:20px}
+.inv-notes h4{margin:0 0 6px;font-size:13px;color:#666}
+.inv-notes p{margin:0;font-size:13px;color:#333}
+.inv-bank{background:#f0f7ff;padding:14px;border-radius:8px;margin-bottom:20px;border:1px solid #d0e4f7}
+.inv-bank h4{margin:0 0 6px;font-size:13px;color:#4a90d9}
+.inv-bank p{margin:2px 0;font-size:13px;color:#333}
+.inv-actions{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+.inv-actions button{padding:10px 24px;border-radius:8px;border:none;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+.inv-actions .btn-pdf{background:#4a90d9;color:#fff}
+.inv-actions .btn-receipt{background:#4CAF50;color:#fff}
+.inv-actions .btn-close-preview{background:#666;color:#fff}
+.receipt-stamp{text-align:center;margin:20px 0;padding:16px;border:3px solid #c00;border-radius:50%;display:inline-block;color:#c00;font-size:20px;font-weight:700;transform:rotate(-15deg)}
+.inv-settings-form{background:#23262b;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #3a3d42}
+.inv-settings-form h3{color:#e8e8e8;margin:0 0 16px;font-size:16px}
+.inv-settings-form .form-row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.inv-settings-form .form-field{flex:1;min-width:200px}
+.inv-settings-form .form-field label{display:block;font-size:12px;color:#888;margin-bottom:4px}
+.inv-settings-form .form-field input,.inv-settings-form .form-field textarea{width:100%;background:#1a1c20;color:#e8e8e8;border:1px solid #3a3d42;border-radius:6px;padding:8px 10px;font-size:14px;box-sizing:border-box}
+.inv-settings-form textarea{resize:vertical;min-height:60px}
+.inv-tab-switcher{display:flex;gap:0;margin-bottom:16px;background:#1a1c20;border-radius:10px;padding:3px;overflow-x:auto}
+.inv-tab-switcher button{flex:1;min-width:80px;padding:8px 12px;border:none;background:transparent;color:#888;font-size:13px;font-weight:600;border-radius:8px;cursor:pointer;white-space:nowrap;transition:all .2s}
+.inv-tab-switcher button.active{background:#4a90d9;color:#fff}
+
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="screen-login">
 
@@ -379,6 +446,13 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
     </div>
   </div>
 </div>
+
+
+  <!-- Invoice Page -->
+  <div id="page-invoice" class="page">
+    <div style="padding:14px 14px 6px"><div class="section-title">請求書・領収書</div></div>
+    <div id="invoiceContent" style="padding:0 14px 14px"></div>
+  </div>
 
 <div class="tab-bar" id="tabBar"></div>
 
@@ -960,7 +1034,8 @@ function buildTabs(){
     tabDefs.push({ id: '\x6d\x65\x6d\x62\x65\x72\x73', icon: '\x3c\x73\x76\x67\x20\x77\x69\x64\x74\x68\x3d\x22\x32\x30\x22\x20\x68\x65\x69\x67\x68\x74\x3d\x22\x32\x30\x22\x20\x76\x69\x65\x77\x42\x6f\x78\x3d\x22\x30\x20\x30\x20\x32\x34\x20\x32\x34\x22\x20\x66\x69\x6c\x6c\x3d\x22\x6e\x6f\x6e\x65\x22\x20\x73\x74\x72\x6f\x6b\x65\x3d\x22\x63\x75\x72\x72\x65\x6e\x74\x43\x6f\x6c\x6f\x72\x22\x20\x73\x74\x72\x6f\x6b\x65\x2d\x77\x69\x64\x74\x68\x3d\x22\x32\x22\x3e\x3c\x70\x61\x74\x68\x20\x64\x3d\x22\x4d\x31\x37\x20\x32\x31\x76\x2d\x32\x61\x34\x20\x34\x20\x30\x20\x30\x30\x2d\x34\x2d\x34\x48\x35\x61\x34\x20\x34\x20\x30\x20\x30\x30\x2d\x34\x20\x34\x76\x32\x22\x2f\x3e\x3c\x63\x69\x72\x63\x6c\x65\x20\x63\x78\x3d\x22\x39\x22\x20\x63\x79\x3d\x22\x37\x22\x20\x72\x3d\x22\x34\x22\x2f\x3e\x3c\x70\x61\x74\x68\x20\x64\x3d\x22\x4d\x32\x33\x20\x32\x31\x76\x2d\x32\x61\x34\x20\x34\x20\x30\x20\x30\x30\x2d\x33\x2d\x33\x2e\x38\x37\x22\x2f\x3e\x3c\x70\x61\x74\x68\x20\x64\x3d\x22\x4d\x31\x36\x20\x33\x2e\x31\x33\x61\x34\x20\x34\x20\x30\x20\x30\x31\x30\x20\x37\x2e\x37\x35\x22\x2f\x3e\x3c\x2f\x73\x76\x67\x3e', label: '\u30e1\u30f3\u30d0\u30fc' });
   }
   if(userRole === '\x6d\x61\x73\x74\x65\x72'){
-    tabDefs.push({ id: '\x72\x65\x70\x6f\x72\x74', icon: '\x3c\x73\x76\x67\x20\x77\x69\x64\x74\x68\x3d\x22\x32\x30\x22\x20\x68\x65\x69\x67\x68\x74\x3d\x22\x32\x30\x22\x20\x76\x69\x65\x77\x42\x6f\x78\x3d\x22\x30\x20\x30\x20\x32\x34\x20\x32\x34\x22\x20\x66\x69\x6c\x6c\x3d\x22\x6e\x6f\x6e\x65\x22\x20\x73\x74\x72\x6f\x6b\x65\x3d\x22\x63\x75\x72\x72\x65\x6e\x74\x43\x6f\x6c\x6f\x72\x22\x20\x73\x74\x72\x6f\x6b\x65\x2d\x77\x69\x64\x74\x68\x3d\x22\x32\x22\x3e\x3c\x70\x61\x74\x68\x20\x64\x3d\x22\x4d\x31\x34\x20\x32\x48\x36\x61\x32\x20\x32\x20\x30\x20\x30\x30\x2d\x32\x20\x32\x76\x31\x36\x61\x32\x20\x32\x20\x30\x20\x30\x30\x32\x20\x32\x68\x31\x32\x61\x32\x20\x32\x20\x30\x20\x30\x30\x32\x2d\x32\x56\x38\x7a\x22\x2f\x3e\x3c\x70\x6f\x6c\x79\x6c\x69\x6e\x65\x20\x70\x6f\x69\x6e\x74\x73\x3d\x22\x31\x34\x2c\x32\x20\x31\x34\x2c\x38\x20\x32\x30\x2c\x38\x22\x2f\x3e\x3c\x6c\x69\x6e\x65\x20\x78\x31\x3d\x22\x31\x36\x22\x20\x79\x31\x3d\x22\x31\x33\x22\x20\x78\x32\x3d\x22\x38\x22\x20\x79\x32\x3d\x22\x31\x33\x22\x2f\x3e\x3c\x6c\x69\x6e\x65\x20\x78\x31\x3d\x22\x31\x36\x22\x20\x79\x31\x3d\x22\x31\x37\x22\x20\x78\x32\x3d\x22\x38\x22\x20\x79\x32\x3d\x22\x31\x37\x22\x2f\x3e\x3c\x2f\x73\x76\x67\x3e', label: '\u30ec\u30dd\u30fc\u30c8' });
+    tabDefs.push({ id: '\x72\x65\x70\x6f\x72\x74', icon: '\x3c\x73\x76\x67\x20\x77\x69\x64\x74\x68\x3d\x22\x32\x30\x22\x20\x68\x65\x69\x67\x68\x74\x3d\x22\x32\x30\x22\x20\x76\x69\x65\x77\x42\x6f\x78\x3d\x22\x30\x20\x30\x20\x32\x34\x20\x32\x34\x22\x20\x66\x69\x6c\x6c\x3d\x22\x6e\x6f\x6e\x65\x22\x20\x73\x74\x72\x6f\x6b\x65\x3d\x22\x63\x75\x72\x72\x65\x6e\x74\x43\x6f\x6c\x6f\x72\x22\x20\x73\x74\x72\x6f\x6b\x65\x2d\x77\x69\x64\x74\x68\x3d\x22\x32\x22\x3e\x3c\x70\x61\x74\x68\x20\x64\x3d\x22\x4d\x31\x34\x20\x32\x48\x36\x61\x32\x20\x32\x20\x30\x20\x30\x30\x2d\x32\x20\x32\x76\x31\x36\x61\x32\x20\x32\x20\x30\x20\x30\x30\x32\x20\x32\x68\x31\x32\x61\x32\x20\x32\x20\x30\x20\x30\x30\x32\x2d\x32\x56\x38\x7a\x22\x2f\x3e\x3c\x70\x6f\x6c\x79\x6c\x69\x6e\x65\x20\x70\x6f\x69\x6e\x74\x73\x3d\x22\x31\x34\x2c\x32\x20\x31\x34\x2c\x38\x20\x32\x30\x2c\x38\x22\x2f\x3e\x3c\x6c\x69\x6e\x65\x20\x78\x31\x3d\x22\x31\x36\x22\x20\x79\x31\x3d\x22\x31\x33\x22\x20\x78\x32\x3d\x22\x38\x22\x20\x79\x32\x3d\x22\x31\x33\x22\x2f\x3e\x3c\x6c\x69\x6e\x65\x20\x78\x31\x3d\x22\x31\x36\x22\x20\x79\x31\x3d\x22\x31\x37\x22\x20\x78\x32\x3d\x22\x38\x22\x20\x79\x32\x3d\x22\x31\x37\x22\x2f\x3e\x3c\x2f\x73\x76\x67\x3e', label: '\u30ec\u30dd\u30fc\u30c8' },
+    { id: 'invoice', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>', label: '\u8acb\u6c42\u66f8', master: true });
   }
   tabDefs.push({ id: '\x73\x65\x74\x74\x69\x6e\x67\x73', icon: '\x3c\x73\x76\x67\x20\x77\x69\x64\x74\x68\x3d\x22\x32\x30\x22\x20\x68\x65\x69\x67\x68\x74\x3d\x22\x32\x30\x22\x20\x76\x69\x65\x77\x42\x6f\x78\x3d\x22\x30\x20\x30\x20\x32\x34\x20\x32\x34\x22\x20\x66\x69\x6c\x6c\x3d\x22\x6e\x6f\x6e\x65\x22\x20\x73\x74\x72\x6f\x6b\x65\x3d\x22\x63\x75\x72\x72\x65\x6e\x74\x43\x6f\x6c\x6f\x72\x22\x20\x73\x74\x72\x6f\x6b\x65\x2d\x77\x69\x64\x74\x68\x3d\x22\x32\x22\x3e\x3c\x63\x69\x72\x63\x6c\x65\x20\x63\x78\x3d\x22\x31\x32\x22\x20\x63\x79\x3d\x22\x31\x32\x22\x20\x72\x3d\x22\x33\x22\x2f\x3e\x3c\x70\x61\x74\x68\x20\x64\x3d\x22\x4d\x31\x32\x20\x31\x76\x32\x4d\x31\x32\x20\x32\x31\x76\x32\x4d\x34\x2e\x32\x32\x20\x34\x2e\x32\x32\x6c\x31\x2e\x34\x32\x20\x31\x2e\x34\x32\x4d\x31\x38\x2e\x33\x36\x20\x31\x38\x2e\x33\x36\x6c\x31\x2e\x34\x32\x20\x31\x2e\x34\x32\x4d\x31\x20\x31\x32\x68\x32\x4d\x32\x31\x20\x31\x32\x68\x32\x4d\x34\x2e\x32\x32\x20\x31\x39\x2e\x37\x38\x6c\x31\x2e\x34\x32\x2d\x31\x2e\x34\x32\x4d\x31\x38\x2e\x33\x36\x20\x35\x2e\x36\x34\x6c\x31\x2e\x34\x32\x2d\x31\x2e\x34\x32\x22\x2f\x3e\x3c\x2f\x73\x76\x67\x3e', label: '\u8a2d\u5b9a' });
   document.getElementById('\x74\x61\x62\x42\x61\x72').innerHTML = tabDefs.map((t, i) => `<button class="\x74\x61\x62\x2d\x69\x74\x65\x6d\x24\x7b\x69\x20\x3d\x3d\x3d\x20\x30\x20\x3f\x20\x27\x20\x61\x63\x74\x69\x76\x65\x27\x20\x3a\x20\x27\x27\x7d" onclick="\x73\x77\x69\x74\x63\x68\x54\x61\x62\x28\x27\x24\x7b\x74\x2e\x69\x64\x7d\x27\x2c\x74\x68\x69\x73\x29">${t.icon}${t.label}</button>`).join('');
@@ -2136,6 +2211,7 @@ function getJPHolidays(year){
     for(let d = 1; d <= 31; d++){
       const dt = new Date(y, m - 1, d);
       if(dt.getMonth() !== m - 1) break;
+      case '\x69\x6e\x76\x6f\x69\x63\x65': renderInvoice(); break;
       if(dt.getDay() === 1){
         count++;
         if(count === n) return d;
@@ -2311,6 +2387,621 @@ async function appRefresh(){
   }
 }
 })();</script>
-<script>(function(){if('\x73\x65\x72\x76\x69\x63\x65\x57\x6f\x72\x6b\x65\x72' in navigator){navigator.serviceWorker.register('\x2f\x73\x77\x2e\x6a\x73').catch(()=>{})}})();</script>
+<script>(function(){if('\x73\x65\x72\x76\x69\x63\x65\x57\x6f\x72\x6b\x65\x72' in navigator){navigator.serviceWorker.register('\x2f\x73\x77\x2e\x6a\x73').catch(()=>{})}})();
+
+// ===== Invoice / Receipt Module =====
+let invoiceSettings = null;
+let invoiceSubTab = 'list';
+let generatedInvoices = [];
+let invoiceCounter = 0;
+
+function loadInvoiceSettings() {
+  const stored = localStorage.getItem('invoiceSettings_' + companyId);
+  if (stored) {
+    invoiceSettings = JSON.parse(stored);
+  } else {
+    invoiceSettings = {
+      companyName: '',
+      companyAddress: '',
+      companyPhone: '',
+      companyEmail: '',
+      bankInfo: '',
+      invoicePrefix: 'INV',
+      paymentTermDays: 30,
+      taxRate: 10,
+      notes: ''
+    };
+  }
+  // Load saved invoices
+  const savedInv = localStorage.getItem('generatedInvoices_' + companyId);
+  if (savedInv) {
+    generatedInvoices = JSON.parse(savedInv);
+    invoiceCounter = generatedInvoices.length;
+  }
+}
+
+function saveInvoiceSettings() {
+  localStorage.setItem('invoiceSettings_' + companyId, JSON.stringify(invoiceSettings));
+}
+
+function saveGeneratedInvoices() {
+  localStorage.setItem('generatedInvoices_' + companyId, JSON.stringify(generatedInvoices));
+}
+
+function renderInvoice() {
+  if (!invoiceSettings) loadInvoiceSettings();
+  const el = document.getElementById('invoiceContent');
+  if (!el) return;
+
+  el.innerHTML = '<div class="inv-tab-switcher">' +
+    '<button class="' + (invoiceSubTab === 'list' ? 'active' : '') + '" onclick="invoiceSubTab=\'list\';renderInvoice()">請求書一覧</button>' +
+    '<button class="' + (invoiceSubTab === 'create' ? 'active' : '') + '" onclick="invoiceSubTab=\'create\';renderInvoice()">新規作成</button>' +
+    '<button class="' + (invoiceSubTab === 'settings' ? 'active' : '') + '" onclick="invoiceSubTab=\'settings\';renderInvoice()">発行元設定</button>' +
+    '</div>' +
+    '<div id="invoiceSubContent"></div>';
+
+  const sub = document.getElementById('invoiceSubContent');
+  if (invoiceSubTab === 'list') renderInvoiceList(sub);
+  else if (invoiceSubTab === 'create') renderInvoiceCreate(sub);
+  else if (invoiceSubTab === 'settings') renderInvoiceSettings(sub);
+}
+
+
+
+function renderInvoiceSettings(el) {
+  const s = invoiceSettings;
+  el.innerHTML = '<div class="inv-settings-form">' +
+    '<h3>発行元情報（請求書に表示されます）</h3>' +
+    '<div class="form-row">' +
+      '<div class="form-field"><label>会社名</label><input id="invCompName" value="' + (s.companyName||'').replace(/"/g,'&quot;') + '" placeholder="株式会社〇〇"></div>' +
+      '<div class="form-field"><label>電話番号</label><input id="invCompPhone" value="' + (s.companyPhone||'').replace(/"/g,'&quot;') + '" placeholder="03-1234-5678"></div>' +
+    '</div>' +
+    '<div class="form-row">' +
+      '<div class="form-field"><label>住所</label><input id="invCompAddr" value="' + (s.companyAddress||'').replace(/"/g,'&quot;') + '" placeholder="東京都〇〇区〇〇"></div>' +
+      '<div class="form-field"><label>メールアドレス</label><input id="invCompEmail" value="' + (s.companyEmail||'').replace(/"/g,'&quot;') + '" placeholder="info@example.com"></div>' +
+    '</div>' +
+    '<div class="form-row">' +
+      '<div class="form-field"><label>振込先情報</label><textarea id="invBankInfo" placeholder="〇〇銀行 〇〇支店 普通 1234567 カ）〇〇">' + (s.bankInfo||'') + '</textarea></div>' +
+    '</div>' +
+    '<div class="form-row">' +
+      '<div class="form-field"><label>請求書番号プレフィックス</label><input id="invPrefix" value="' + (s.invoicePrefix||'INV') + '"></div>' +
+      '<div class="form-field"><label>支払い期限（日数）</label><input id="invPayDays" type="number" value="' + (s.paymentTermDays||30) + '"></div>' +
+      '<div class="form-field"><label>消費税率（%）</label><input id="invTaxRate" type="number" value="' + (s.taxRate||10) + '"></div>' +
+    '</div>' +
+    '<div class="form-row">' +
+      '<div class="form-field"><label>備考（デフォルト）</label><textarea id="invNotes" placeholder="お支払いは期日までにお振込みください。">' + (s.notes||'') + '</textarea></div>' +
+    '</div>' +
+    '<div style="margin-top:12px"><button class="invoice-btn" onclick="saveInvSettings()">保存する</button></div>' +
+  '</div>';
+}
+
+function saveInvSettings() {
+  invoiceSettings.companyName = document.getElementById('invCompName').value;
+  invoiceSettings.companyAddress = document.getElementById('invCompAddr').value;
+  invoiceSettings.companyPhone = document.getElementById('invCompPhone').value;
+  invoiceSettings.companyEmail = document.getElementById('invCompEmail').value;
+  invoiceSettings.bankInfo = document.getElementById('invBankInfo').value;
+  invoiceSettings.invoicePrefix = document.getElementById('invPrefix').value || 'INV';
+  invoiceSettings.paymentTermDays = parseInt(document.getElementById('invPayDays').value) || 30;
+  invoiceSettings.taxRate = parseFloat(document.getElementById('invTaxRate').value) || 10;
+  invoiceSettings.notes = document.getElementById('invNotes').value;
+  saveInvoiceSettings();
+  showToast('発行元情報を保存しました');
+}
+
+
+
+function renderInvoiceCreate(el) {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const defaultMonth = yyyy + '-' + mm;
+
+  // Get unique client companies from sites
+  const clientCompanies = [...new Set(sites.filter(s => s.client_company).map(s => s.client_company))];
+  const siteNames = sites.map(s => s.name);
+
+  let companyOptions = '<option value="">-- 全て --</option>';
+  clientCompanies.forEach(c => { companyOptions += '<option value="' + c + '">' + c + '</option>'; });
+
+  let siteOptions = '<option value="">-- 全て --</option>';
+  sites.forEach(s => { siteOptions += '<option value="' + s.id + '">' + s.name + (s.client_company ? ' (' + s.client_company + ')' : '') + '</option>'; });
+
+  el.innerHTML = '<div class="invoice-controls">' +
+    '<div class="ctrl-group"><label>対象月</label><input type="month" id="invMonth" value="' + defaultMonth + '"></div>' +
+    '<div class="ctrl-group"><label>取引先</label><select id="invClient">' + companyOptions + '</select></div>' +
+    '<div class="ctrl-group"><label>現場</label><select id="invSite">' + siteOptions + '</select></div>' +
+    '<div class="ctrl-group"><label>宛先（会社名）</label><input id="invToCompany" placeholder="株式会社〇〇"></div>' +
+    '<div class="ctrl-group"><label>宛先（担当者名）</label><input id="invToPerson" placeholder="〇〇 様"></div>' +
+    '</div>' +
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">' +
+      '<button class="invoice-btn" onclick="generateInvoice()">請求書を作成</button>' +
+      '<button class="invoice-btn receipt-btn" onclick="generateReceipt()">領収書を作成</button>' +
+    '</div>' +
+    '<div id="invoicePreviewArea"></div>';
+}
+
+function getInvoiceData() {
+  const month = document.getElementById('invMonth').value;
+  const clientFilter = document.getElementById('invClient').value;
+  const siteFilter = document.getElementById('invSite').value;
+
+  if (!month) { showToast('対象月を選択してください'); return null; }
+
+  // Filter entries by month
+  let filtered = entries.filter(e => e.date && e.date.startsWith(month));
+
+  // Filter by client company (via site)
+  if (clientFilter) {
+    const clientSiteIds = sites.filter(s => s.client_company === clientFilter).map(s => s.id);
+    filtered = filtered.filter(e => clientSiteIds.includes(e.site_id));
+  }
+
+  // Filter by specific site
+  if (siteFilter) {
+    filtered = filtered.filter(e => String(e.site_id) === String(siteFilter));
+  }
+
+  if (filtered.length === 0) { showToast('該当するデータがありません'); return null; }
+
+  // Build line items grouped by site and member
+  const lineItems = [];
+  const siteGroups = {};
+
+  filtered.forEach(e => {
+    const site = sites.find(s => String(s.id) === String(e.site_id));
+    const member = members.find(m => String(m.id) === String(e.member_id));
+    const siteName = site ? site.name : '不明';
+    const memberName = member ? member.name : '不明';
+    const rate = e.rate || (site ? site.rate : 0) || 0;
+    const key = e.site_id + '_' + e.member_id;
+
+    if (!siteGroups[key]) {
+      siteGroups[key] = { siteName, memberName, dates: [], rate, total: 0, count: 0, hours: 0 };
+    }
+    siteGroups[key].dates.push(e.date);
+    siteGroups[key].count++;
+    siteGroups[key].hours += (e.hours || 0);
+  });
+
+  Object.values(siteGroups).forEach(g => {
+    const qty = g.count;
+    const unitPrice = g.rate;
+    const amount = qty * unitPrice;
+    lineItems.push({
+      date: g.dates.sort()[0] + ' ~ ' + g.dates.sort().pop(),
+      description: g.siteName + ' / ' + g.memberName,
+      quantity: qty,
+      unit: '日',
+      unitPrice: unitPrice,
+      amount: amount
+    });
+  });
+
+  const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
+  const taxRate = (invoiceSettings.taxRate || 10) / 100;
+  const tax = Math.floor(subtotal * taxRate);
+  const total = subtotal + tax;
+
+  return { month, lineItems, subtotal, tax, total, taxRate: invoiceSettings.taxRate || 10 };
+}
+
+
+
+function generateInvoiceNumber() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  invoiceCounter++;
+  const num = String(invoiceCounter).padStart(3, '0');
+  return (invoiceSettings.invoicePrefix || 'INV') + '-' + yyyy + '-' + num;
+}
+
+function getPaymentDueDate(issueDate) {
+  const d = new Date(issueDate);
+  // Next month end
+  d.setMonth(d.getMonth() + 2, 0);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function formatYen(n) {
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function generateInvoice() {
+  if (!invoiceSettings) loadInvoiceSettings();
+  const data = getInvoiceData();
+  if (!data) return;
+
+  const invNo = generateInvoiceNumber();
+  const today = new Date();
+  const issueDate = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  const dueDate = getPaymentDueDate(today);
+  const toCompany = document.getElementById('invToCompany').value || '御中';
+  const toPerson = document.getElementById('invToPerson').value || '';
+
+  const invoice = {
+    type: 'invoice',
+    invoiceNo: invNo,
+    issueDate,
+    dueDate,
+    toCompany,
+    toPerson,
+    month: data.month,
+    lineItems: data.lineItems,
+    subtotal: data.subtotal,
+    tax: data.tax,
+    total: data.total,
+    taxRate: data.taxRate,
+    notes: invoiceSettings.notes || '',
+    settings: {...invoiceSettings}
+  };
+
+  generatedInvoices.unshift(invoice);
+  saveGeneratedInvoices();
+  showInvoicePreview(invoice);
+  showToast('請求書 ' + invNo + ' を作成しました');
+}
+
+function generateReceipt() {
+  if (!invoiceSettings) loadInvoiceSettings();
+  const data = getInvoiceData();
+  if (!data) return;
+
+  const rcpNo = 'RCP-' + new Date().getFullYear() + '-' + String(++invoiceCounter).padStart(3, '0');
+  const today = new Date();
+  const issueDate = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  const toCompany = document.getElementById('invToCompany').value || '御中';
+
+  const receipt = {
+    type: 'receipt',
+    invoiceNo: rcpNo,
+    issueDate,
+    dueDate: '',
+    toCompany,
+    toPerson: '',
+    month: data.month,
+    lineItems: data.lineItems,
+    subtotal: data.subtotal,
+    tax: data.tax,
+    total: data.total,
+    taxRate: data.taxRate,
+    notes: '',
+    settings: {...invoiceSettings}
+  };
+
+  generatedInvoices.unshift(receipt);
+  saveGeneratedInvoices();
+  showInvoicePreview(receipt);
+  showToast('領収書 ' + rcpNo + ' を作成しました');
+}
+
+
+
+function showInvoicePreview(inv) {
+  // Remove existing overlay if any
+  let overlay = document.getElementById('invoicePreviewOverlay');
+  if (overlay) overlay.remove();
+
+  const isReceipt = inv.type === 'receipt';
+  const title = isReceipt ? '領 収 書' : '請 求 書';
+  const s = inv.settings || invoiceSettings;
+
+  let itemsHtml = '';
+  inv.lineItems.forEach(item => {
+    itemsHtml += '<tr>' +
+      '<td>' + item.date + '</td>' +
+      '<td>' + item.description + '</td>' +
+      '<td class="text-right">' + item.quantity + ' ' + item.unit + '</td>' +
+      '<td class="text-right">&yen;' + formatYen(item.unitPrice) + '</td>' +
+      '<td class="text-right">&yen;' + formatYen(item.amount) + '</td>' +
+    '</tr>';
+  });
+
+  let receiptStamp = '';
+  if (isReceipt) {
+    receiptStamp = '<div style="text-align:center;margin:20px 0">' +
+      '<div style="display:inline-block;border:3px solid #c00;border-radius:50%;padding:16px 20px;color:#c00;font-size:18px;font-weight:700;transform:rotate(-15deg)">領 収</div>' +
+      '<p style="color:#333;font-size:14px;margin-top:12px">上記正に領収いたしました</p>' +
+    '</div>';
+  }
+
+  let bankHtml = '';
+  if (!isReceipt && s.bankInfo) {
+    bankHtml = '<div class="inv-bank"><h4>お振込先</h4><p>' + s.bankInfo.replace(/\n/g, '<br>') + '</p></div>';
+  }
+
+  let notesHtml = '';
+  if (inv.notes) {
+    notesHtml = '<div class="inv-notes"><h4>備考</h4><p>' + inv.notes.replace(/\n/g, '<br>') + '</p></div>';
+  }
+
+  overlay = document.createElement('div');
+  overlay.id = 'invoicePreviewOverlay';
+  overlay.className = 'invoice-preview-overlay active';
+  overlay.innerHTML = '<div class="invoice-preview" id="invoicePreviewContent">' +
+    '<button class="inv-close" onclick="closeInvoicePreview()">&times;</button>' +
+    '<h2>' + title + '</h2>' +
+    '<p class="inv-subtitle">No. ' + inv.invoiceNo + '</p>' +
+    '<div class="inv-meta">' +
+      '<div class="meta-item"><span class="meta-label">発行日</span><span class="meta-value">' + inv.issueDate + '</span></div>' +
+      (inv.dueDate ? '<div class="meta-item"><span class="meta-label">お支払い期限</span><span class="meta-value">' + inv.dueDate + '</span></div>' : '') +
+      '<div class="meta-item"><span class="meta-label">対象期間</span><span class="meta-value">' + inv.month + '</span></div>' +
+    '</div>' +
+    '<div class="inv-header-row">' +
+      '<div class="inv-to"><h4>請求先</h4><p style="font-size:16px;font-weight:700">' + inv.toCompany + (isReceipt ? ' 様' : ' 御中') + '</p>' +
+        (inv.toPerson ? '<p>' + inv.toPerson + '</p>' : '') +
+      '</div>' +
+      '<div class="inv-from"><h4>発行元</h4>' +
+        '<p style="font-weight:700">' + (s.companyName || '') + '</p>' +
+        (s.companyAddress ? '<p>' + s.companyAddress + '</p>' : '') +
+        (s.companyPhone ? '<p>TEL: ' + s.companyPhone + '</p>' : '') +
+        (s.companyEmail ? '<p>' + s.companyEmail + '</p>' : '') +
+      '</div>' +
+    '</div>' +
+    (isReceipt ? '<div style="text-align:center;margin:16px 0;padding:16px;background:#f5f5f5;border-radius:8px"><p style="font-size:13px;color:#666;margin:0 0 8px">領収金額</p><p style="font-size:28px;font-weight:800;color:#1a1a1a;margin:0">&yen;' + formatYen(inv.total) + '-</p></div>' : '') +
+    '<table class="inv-detail-table">' +
+      '<thead><tr><th>日付</th><th>品名・内容</th><th class="text-right">数量</th><th class="text-right">単価</th><th class="text-right">金額</th></tr></thead>' +
+      '<tbody>' + itemsHtml + '</tbody>' +
+    '</table>' +
+    '<div class="inv-totals">' +
+      '<div class="tot-row"><span>小計</span><span>&yen;' + formatYen(inv.subtotal) + '</span></div>' +
+      '<div class="tot-row"><span>消費税（' + inv.taxRate + '%）</span><span>&yen;' + formatYen(inv.tax) + '</span></div>' +
+      '<div class="tot-row grand"><span>合計</span><span>&yen;' + formatYen(inv.total) + '</span></div>' +
+    '</div>' +
+    receiptStamp +
+    bankHtml +
+    notesHtml +
+    '<div class="inv-actions">' +
+      '<button class="btn-pdf" onclick="downloadInvoicePdf()">PDF ダウンロード</button>' +
+      (!isReceipt ? '<button class="btn-receipt" onclick="convertToReceipt()">領収書に変換</button>' : '') +
+      '<button class="btn-close-preview" onclick="closeInvoicePreview()">閉じる</button>' +
+    '</div>' +
+  '</div>';
+
+  document.body.appendChild(overlay);
+  window._currentPreviewInvoice = inv;
+}
+
+function closeInvoicePreview() {
+  const overlay = document.getElementById('invoicePreviewOverlay');
+  if (overlay) overlay.remove();
+}
+
+function convertToReceipt() {
+  const inv = window._currentPreviewInvoice;
+  if (!inv) return;
+  closeInvoicePreview();
+  const rcpNo = 'RCP-' + new Date().getFullYear() + '-' + String(++invoiceCounter).padStart(3, '0');
+  const receipt = {...inv, type: 'receipt', invoiceNo: rcpNo};
+  generatedInvoices.unshift(receipt);
+  saveGeneratedInvoices();
+  showInvoicePreview(receipt);
+  showToast('領収書に変換しました');
+}
+
+
+
+function downloadInvoicePdf() {
+  const inv = window._currentPreviewInvoice;
+  if (!inv) return;
+
+  if (typeof window.jspdf === 'undefined') {
+    showToast('PDFライブラリを読み込み中...');
+    setTimeout(downloadInvoicePdf, 1000);
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const isReceipt = inv.type === 'receipt';
+  const s = inv.settings || invoiceSettings;
+  const pageW = 210;
+  const margin = 20;
+  let y = 20;
+
+  // Use built-in font for ASCII, and Unicode escape for Japanese
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(24);
+  const titleText = isReceipt ? 'Receipt' : 'Invoice';
+  doc.text(titleText, margin, y);
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  y += 8;
+  doc.text('No. ' + inv.invoiceNo, margin, y);
+  y += 6;
+  doc.text('Date: ' + inv.issueDate, margin, y);
+  if (inv.dueDate) {
+    y += 5;
+    doc.text('Due: ' + inv.dueDate, margin, y);
+  }
+  y += 5;
+  doc.text('Period: ' + inv.month, margin, y);
+
+  // To / From
+  y += 12;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('BILL TO:', margin, y);
+  doc.text('FROM:', pageW/2 + 10, y);
+
+  y += 6;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text(inv.toCompany || '', margin, y);
+  doc.text(s.companyName || '', pageW/2 + 10, y);
+  y += 5;
+  if (inv.toPerson) doc.text(inv.toPerson, margin, y);
+  if (s.companyAddress) doc.text(s.companyAddress, pageW/2 + 10, y);
+  y += 5;
+  if (s.companyPhone) doc.text('TEL: ' + s.companyPhone, pageW/2 + 10, y);
+  y += 5;
+  if (s.companyEmail) doc.text(s.companyEmail, pageW/2 + 10, y);
+
+  // Receipt total
+  if (isReceipt) {
+    y += 12;
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL: Y' + formatYen(inv.total), margin, y);
+    y += 8;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+  }
+
+  // Table using autoTable
+  y += 10;
+  const tableData = inv.lineItems.map(item => [
+    item.date,
+    item.description,
+    item.quantity + ' ' + item.unit,
+    'Y' + formatYen(item.unitPrice),
+    'Y' + formatYen(item.amount)
+  ]);
+
+  doc.autoTable({
+    startY: y,
+    head: [['Date', 'Description', 'Qty', 'Unit Price', 'Amount']],
+    body: tableData,
+    margin: { left: margin, right: margin },
+    styles: { fontSize: 9, cellPadding: 3 },
+    headStyles: { fillColor: [74, 144, 217], textColor: 255, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
+    columnStyles: {
+      2: { halign: 'right' },
+      3: { halign: 'right' },
+      4: { halign: 'right' }
+    }
+  });
+
+  y = doc.lastAutoTable.finalY + 10;
+
+  // Totals
+  const totalsX = pageW - margin - 60;
+  doc.setFontSize(10);
+  doc.text('Subtotal:', totalsX, y);
+  doc.text('Y' + formatYen(inv.subtotal), totalsX + 55, y, { align: 'right' });
+  y += 6;
+  doc.text('Tax (' + inv.taxRate + '%):', totalsX, y);
+  doc.text('Y' + formatYen(inv.tax), totalsX + 55, y, { align: 'right' });
+  y += 2;
+  doc.setDrawColor(74, 144, 217);
+  doc.setLineWidth(0.5);
+  doc.line(totalsX, y, totalsX + 55, y);
+  y += 6;
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Total:', totalsX, y);
+  doc.text('Y' + formatYen(inv.total), totalsX + 55, y, { align: 'right' });
+
+  // Receipt stamp
+  if (isReceipt) {
+    y += 15;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Payment received in full.', margin, y);
+  }
+
+  // Bank info
+  if (!isReceipt && s.bankInfo) {
+    y += 15;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Bank Transfer Info:', margin, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    const bankLines = s.bankInfo.split('\n');
+    bankLines.forEach(line => {
+      doc.text(line, margin, y);
+      y += 4;
+    });
+  }
+
+  // Notes
+  if (inv.notes) {
+    y += 8;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Notes:', margin, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.text(inv.notes, margin, y);
+  }
+
+  const filename = inv.invoiceNo + '.pdf';
+  doc.save(filename);
+  showToast('PDFをダウンロードしました');
+}
+
+
+
+function renderInvoiceList(el) {
+  if (!invoiceSettings) loadInvoiceSettings();
+
+  // Summary cards
+  const now = new Date();
+  const thisMonth = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  const thisMonthEntries = entries.filter(e => e.date && e.date.startsWith(thisMonth));
+
+  // Calculate total revenue this month
+  let monthRevenue = 0;
+  thisMonthEntries.forEach(e => {
+    const site = sites.find(s => String(s.id) === String(e.site_id));
+    const rate = e.rate || (site ? site.rate : 0) || 0;
+    monthRevenue += rate;
+  });
+
+  const taxAmt = Math.floor(monthRevenue * ((invoiceSettings.taxRate||10)/100));
+  const totalWithTax = monthRevenue + taxAmt;
+
+  const invThisMonth = generatedInvoices.filter(i => i.type === 'invoice' && i.month === thisMonth).length;
+  const rcpThisMonth = generatedInvoices.filter(i => i.type === 'receipt' && i.month === thisMonth).length;
+
+  el.innerHTML = '<div class="invoice-summary-cards">' +
+    '<div class="inv-card"><div class="inv-card-label">今月の売上（税抜）</div><div class="inv-card-value">&yen;' + formatYen(monthRevenue) + '</div></div>' +
+    '<div class="inv-card"><div class="inv-card-label">消費税</div><div class="inv-card-value">&yen;' + formatYen(taxAmt) + '</div></div>' +
+    '<div class="inv-card"><div class="inv-card-label">合計（税込）</div><div class="inv-card-value green">&yen;' + formatYen(totalWithTax) + '</div></div>' +
+    '<div class="inv-card"><div class="inv-card-label">発行済み</div><div class="inv-card-value">' + invThisMonth + ' 件 / ' + rcpThisMonth + ' 領収書</div></div>' +
+  '</div>';
+
+  if (generatedInvoices.length === 0) {
+    el.innerHTML += '<div style="text-align:center;padding:40px 20px;color:#888">' +
+      '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5" style="margin-bottom:12px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
+      '<p>まだ請求書が作成されていません</p>' +
+      '<p style="font-size:13px">「新規作成」タブから請求書を作成できます</p>' +
+    '</div>';
+    return;
+  }
+
+  // List of generated invoices
+  let tableHtml = '<table class="invoice-table">' +
+    '<thead><tr><th>番号</th><th>種類</th><th>宛先</th><th>対象月</th><th>金額</th><th>操作</th></tr></thead><tbody>';
+
+  generatedInvoices.forEach((inv, idx) => {
+    const typeLabel = inv.type === 'receipt' ? '<span style="color:#4CAF50">領収書</span>' : '<span style="color:#4a90d9">請求書</span>';
+    tableHtml += '<tr>' +
+      '<td style="font-weight:600">' + inv.invoiceNo + '</td>' +
+      '<td>' + typeLabel + '</td>' +
+      '<td>' + (inv.toCompany || '-') + '</td>' +
+      '<td>' + inv.month + '</td>' +
+      '<td style="font-weight:600">&yen;' + formatYen(inv.total) + '</td>' +
+      '<td><button class="invoice-btn secondary" style="padding:4px 10px;font-size:12px" onclick="showInvoicePreview(generatedInvoices[' + idx + '])">表示</button> ' +
+      '<button class="invoice-btn secondary" style="padding:4px 10px;font-size:12px;background:#c0392b" onclick="deleteInvoice(' + idx + ')">削除</button></td>' +
+    '</tr>';
+  });
+
+  tableHtml += '</tbody></table>';
+  el.innerHTML += tableHtml;
+}
+
+function deleteInvoice(idx) {
+  if (!confirm('この' + (generatedInvoices[idx].type === 'receipt' ? '領収書' : '請求書') + 'を削除しますか？')) return;
+  generatedInvoices.splice(idx, 1);
+  saveGeneratedInvoices();
+  renderInvoice();
+  showToast('削除しました');
+}
+
+</script>
 </body>
 </html>
