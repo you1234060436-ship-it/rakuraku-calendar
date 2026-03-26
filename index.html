@@ -2463,6 +2463,7 @@ function getHolidayName(dateStr){
 
 // ===== Customization System =====
 function renderCustomPickers(){
+  if(!custom.calBg && typeof DEFAULT_CUSTOM !== 'undefined') custom = Object.assign({}, DEFAULT_CUSTOM, custom);
   const pickers = [
     { id: 'pickCalBg', key: 'calBg' },
     { id: 'pickWeekday', key: 'weekday' },
@@ -2480,7 +2481,7 @@ function renderCustomPickers(){
     const isTextPicker = key !== 'calBg' && key !== 'header' && key !== 'statDays' && key !== 'statMoney';
     el.innerHTML = PALETTE.map(c => {
       const isActive = custom[key] === c;
-      const isDisabled = isTextPicker && c.toUpperCase() === custom.calBg.toUpperCase();
+      const isDisabled = isTextPicker && custom.calBg && c.toUpperCase() === custom.calBg.toUpperCase();
       return `<div class="cc${isActive ? ' active' : ''}${isDisabled ? ' disabled' : ''}" style="background:${c};${c === '#FFFFFF' || c === '#F8F9FA' ? 'border:2px solid #CCC;' : ''}" onclick="${isDisabled ? '' : `pickCustom('${key}','${c}')`}" title="${isDisabled ? '背景色と同じ色は選べません' : ''}">
         ${isActive ? '✓' : ''}
       </div>`;
