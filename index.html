@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>楽々カレンダー</title>
+<title>ニチログ - NichiLog</title>
 <meta name="description" content="建設業向け出勤・売上管理アプリ。現場ごとの勤怠管理がスマホで簡単に。">
-<meta property="og:title" content="楽々カレンダー">
+<meta property="og:title" content="ニチログ">
 <meta property="og:description" content="建設業向け出勤・売上管理アプリ。現場ごとの勤怠管理がスマホで簡単に。">
 <meta property="og:image" content="https://rakuraku-calendar.vercel.app/icon-512.png">
 <meta property="og:type" content="website">
@@ -14,7 +14,7 @@
 <meta name="theme-color" content="#4A90D9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="楽々カレンダー">
+<meta name="apple-mobile-web-app-title" content="ニチログ">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -303,7 +303,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <!-- ===== Setup Screen ===== -->
 <div class="setup-screen" id="setupScreen">
   <div class="setup-card">
-    <div class="setup-logo">楽々カレンダー</div>
+    <div class="setup-logo">ニチログ</div>
     <div class="setup-subtitle">ビジネス版 初期設定</div>
     <form onsubmit="handleSetup(event)">
       <label class="setup-input-label">会社名 <span style="color:var(--danger)">*</span></label>
@@ -323,7 +323,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <div class="login-company-name" id="loginCompanyName"></div>
-    <div class="login-logo">楽々カレンダー</div>
+    <div class="login-logo">ニチログ</div>
     <div class="login-sub">ビジネス版へログイン</div>
     <form onsubmit="handleLogin(event)">
       <input type="text" class="login-input" id="loginCompanyInput" placeholder="会社名を入力" autocomplete="off" style="margin-bottom:10px">
@@ -351,7 +351,7 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
 <!-- ===== Main App ===== -->
 <div class="header" id="mainHeader">
   <div>
-    <h1><span class="role-badge" id="roleBadge"></span>楽々カレンダー</h1>
+    <h1><span class="role-badge" id="roleBadge"></span>ニチログ</h1>
     <div class="header-sub">出勤＆売上管理<span style="margin-left:8px" id="accountDisplayName"></span></div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
@@ -1972,7 +1972,7 @@ function exportCSV(){
   const blob = new Blob(['\uFEFF' + csv], { type: '\x74\x65\x78\x74\x2f\x63\x73\x76\x3b\x63\x68\x61\x72\x73\x65\x74\x3d\x75\x74\x66\x2d\x38' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `楽々カレンダー_${ms}.csv`;
+  a.download = `ニチログ_${ms}.csv`;
   a.click();
   showToast('\x43\x53\x56\u3092\u30c0\u30a6\u30f3\u30ed\u30fc\u30c9\u3057\u307e\u3057\u305f');
 }
@@ -2122,7 +2122,7 @@ async function resetAccountPassword(accountId){
   document.getElementById('\x69\x6e\x76\x69\x74\x65\x52\x65\x73\x75\x6c\x74\x50\x61\x73\x73\x77\x6f\x72\x64').textContent = newPw;
   document.getElementById('\x69\x6e\x76\x69\x74\x65\x52\x65\x73\x75\x6c\x74\x4c\x69\x6e\x65\x42\x74\x6e').onclick = function(){
     const loginUrl = `${appUrl}?name=${encodeURIComponent(acc.name)}&pw=${encodeURIComponent(newPw)}&cid=${companyId}`;
-    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップでログイン\n${loginUrl}\n\n※リンクを開くと自動でログインできます`;
+    const msg = `【ニチログ】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップでログイン\n${loginUrl}\n\n※リンクを開くと自動でログインできます`;
     window.open('\x68\x74\x74\x70\x73\x3a\x2f\x2f\x6c\x69\x6e\x65\x2e\x6d\x65\x2f\x52\x2f\x73\x68\x61\x72\x65\x3f\x74\x65\x78\x74\x3d' + encodeURIComponent(msg), '\x5f\x62\x6c\x61\x6e\x6b');
     closeM('\x69\x6e\x76\x69\x74\x65\x52\x65\x73\x75\x6c\x74\x4d\x6f\x64\x61\x6c');
   };
@@ -2166,7 +2166,7 @@ async function createNewAccount(){
     const companyName = setup?.companyName || '\u4f1a\u793e';
     const appUrl = location.origin + location.pathname;
     const loginUrl = `${appUrl}?name=${encodeURIComponent(name)}&pw=${encodeURIComponent(rawPassword)}&cid=${companyId}`;
-    const msg = `【楽々カレンダー】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップでログイン\n${loginUrl}\n\n※リンクを開くと自動でログインできます`;
+    const msg = `【ニチログ】\n${companyName}から${roleName}として招待されました\n\n▼ 下のリンクをタップでログイン\n${loginUrl}\n\n※リンクを開くと自動でログインできます`;
     window.open('\x68\x74\x74\x70\x73\x3a\x2f\x2f\x6c\x69\x6e\x65\x2e\x6d\x65\x2f\x52\x2f\x73\x68\x61\x72\x65\x3f\x74\x65\x78\x74\x3d' + encodeURIComponent(msg), '\x5f\x62\x6c\x61\x6e\x6b');
     closeM('\x69\x6e\x76\x69\x74\x65\x52\x65\x73\x75\x6c\x74\x4d\x6f\x64\x61\x6c');
   };
@@ -2400,6 +2400,26 @@ switchTab = function(t, btn) {
     if (typeof window._renderInvoice === 'function') window._renderInvoice();
   }
 };
+// Expose functions to global scope for inline HTML handlers
+window.handleLogin = handleLogin;
+window.handleLogout = handleLogout;
+window.handleSetup = handleSetup;
+window.handleDeleteAllData = handleDeleteAllData;
+window.showScreen = showScreen;
+window.changeMonth = changeMonth;
+window.changeStatMonth = changeStatMonth;
+window.saveEntry = saveEntry;
+window.saveMember = saveMember;
+window.savePartnerMember = savePartnerMember;
+window.saveSite = saveSite;
+window.saveCompany = saveCompany;
+window.closeM = closeM;
+window.appRefresh = appRefresh;
+window.confirmCustomSite = confirmCustomSite;
+window.confirmSetupDone = confirmSetupDone;
+window.selectAllMembers = selectAllMembers;
+window.selectDayType = selectDayType;
+
 })();</script>
 <script>(function(){if('\x73\x65\x72\x76\x69\x63\x65\x57\x6f\x72\x6b\x65\x72' in navigator){navigator.serviceWorker.register('\x2f\x73\x77\x2e\x6a\x73').catch(()=>{})}
 
