@@ -2751,36 +2751,44 @@ switchTab = function(t, btn) {
   };
 })();
 </script>
-
-
-
-
 <script>
-// Tab button fix - patches onclick handlers after buildTabs runs
+// Tab button fix - patches onclick handlers using label-to-id mapping
 (function(){
-  var origBT = window.buildTabs;
-  if(typeof origBT !== 'function') return;
-  // Wait for the app to initialize, then patch
-  document.addEventListener('DOMContentLoaded', function(){
-    setTimeout(function(){
-      var tb = document.getElementById('tabBar');
-      if(!tb) return;
-      var pages = document.querySelectorAll('.page');
-      var ids = [];
-      pages.forEach(function(p){ ids.push(p.id.replace('page-','')); });
-      var btns = tb.querySelectorAll('button');
-      btns.forEach(function(btn, i){
-        if(i < ids.length){
-          btn.onclick = null;
-          (function(tabId){
-            btn.addEventListener('click', function(){ 
-              if(window._appBridge && window._appBridge.switchTab) window._appBridge.switchTab(tabId, btn);
+  var map={
+    "\u30ab\u30ec\u30f3\u30c0\u30fc":"calendar",
+    "\u96c6\u8a08":"stats",
+    "\u73fe\u5834":"sites",
+    "\u30e1\u30f3\u30d0\u30fc":"members",
+    "\u30ec\u30dd\u30fc\u30c8":"report",
+    "\u8acb\u6c42\u66f8":"invoice",
+    "\u8a2d\u5b9a":"settings"
+  };
+  function fixTabs(){
+    var tb=document.getElementById("tabBar");
+    if(!tb)return;
+    var btns=tb.querySelectorAll("button");
+    btns.forEach(function(btn){
+      var label=btn.textContent.trim();
+      for(var k in map){
+        if(label.indexOf(k)>=0){
+          var tid=map[k];
+          btn.removeAttribute("onclick");
+          btn.onclick=null;
+          (function(id,b){
+            b.addEventListener("click",function(){
+              if(window._appBridge&&window._appBridge.switchTab)window._appBridge.switchTab(id,b);
             });
-          })(ids[i]);
+          })(tid,btn);
+          break;
         }
-      });
-    }, 500);
-  });
+      }
+    });
+  }
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",function(){setTimeout(fixTabs,500);});
+  }else{
+    setTimeout(fixTabs,500);
+  }
 })();
 </script>
 </body>
