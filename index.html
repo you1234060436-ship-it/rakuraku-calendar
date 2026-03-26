@@ -1907,7 +1907,7 @@ function exportCSV(){
     const m = members.find(x => x.id === e.memberId);
     csv += `${e.date},${m ? m.name : ''},${s ? s.name : ''},${s ? s.price : ''},${e.memo}\n`;
   });
-  const blob = new Blob(['\u\x46\x45\x46\x46' + csv], { type: '\x74\x65\x78\x74\x2f\x63\x73\x76\x3b\x63\x68\x61\x72\x73\x65\x74\x3d\x75\x74\x66\x2d\x38' });
+  const blob = new Blob(['\uFEFF' + csv], { type: '\x74\x65\x78\x74\x2f\x63\x73\x76\x3b\x63\x68\x61\x72\x73\x65\x74\x3d\x75\x74\x66\x2d\x38' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `楽々カレンダー_${ms}.csv`;
