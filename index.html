@@ -2226,6 +2226,11 @@ function renderSettings(){
       '<div class="account-creation-title" style="margin-bottom:12px">📄 請求書・領収書</div>' +
       '<button class="add-btn" onclick="openInvoiceTool()" style="width:100%;padding:12px;font-size:15px">請求書・領収書を作成</button>' +
     '</div>';
+    // Invoice/Receipt Menu
+    html += '<div class="settings-group" style="padding:16px">' +
+      '<div class="account-creation-title" style="margin-bottom:12px">📄 請求書・領収書</div>' +
+      '<button class="add-btn" onclick="openInvoiceTool()" style="width:100%;padding:12px;font-size:15px">請求書・領収書を作成</button>' +
+    '</div>';
   document.getElementById('settingsContent').innerHTML = html;
 
   if(userRole === 'master'){
@@ -2605,6 +2610,15 @@ async function appRefresh(){
     location.reload(true);
   }
 }
+    function openInvoiceTool() {
+      try {
+        var data = {};
+        localStorage.setItem('nichilog_invoice_data', JSON.stringify(data));
+        window.location.href = 'invoice.html';
+      } catch(e) {
+        alert('エラー: ' + e.message);
+      }
+    }
     function openInvoiceTool() {
       try {
         var data = {};
