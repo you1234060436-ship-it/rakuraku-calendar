@@ -1293,26 +1293,7 @@ function openEntry(ds){
   inCompanySelectionMode = true;
   const p = ds.split('-');
   document.getElementById('entryModalTitle').textContent = `${+p[1]}月${+p[2]}日の出勤登録`;
-function showDateEntries(dateStr) {
-  window._selectedDate = dateStr;
-  const dayEntries = entries.filter(e => e.date === dateStr);
-  if (dayEntries.length === 0) {
-    openEntry(dateStr);
-    return;
-  }
-  const d = new Date(dateStr);
-  document.getElementById('dateEntriesTitle').textContent = (d.getMonth()+1) + '/' + d.getDate() + ' \u306E\u51FA\u52E4\u8A18\u9332 (' + dayEntries.length + '\u4EF6)';
-  let listHtml = '';
-  dayEntries.forEach(entry => {
-    const site = sites.find(s => s.id === entry.site_id);
-    const siteName = site ? site.name : '\u4E0D\u660E';
-    const siteColor = site ? site.color : '#ccc';
-    const hours = entry.hours ? entry.hours + 'h' : '';
-    listHtml += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:8px;background:#f9f9f9;border-radius:8px;border-left:4px solid ' + siteColor + ';"><div style="flex:1;"><span style="font-weight:bold;font-size:14px;">' + siteName + '</span>' + (hours ? ' <span style="color:#888;font-size:13px;">' + hours + '</span>' : '') + '</div><div style="display:flex;gap:8px;"><button onclick="document.getElementById(\'dateEntriesModal\').style.display=\'none\';editEntry(' + entry.id + ')" style="padding:6px 12px;background:#1a73e8;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">\u7DE8\u96C6</button><button onclick="if(confirm(\'\u3053\u306E\u8A18\u9332\u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F\')){delEntry(' + entry.id + ');document.getElementById(\'dateEntriesModal\').style.display=\'none\';}" style="padding:6px 12px;background:#ea4335;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">\u524A\u9664</button></div></div>';
-  });
-  document.getElementById('dateEntriesList').innerHTML = listHtml;
-  document.getElementById('dateEntriesModal').style.display = 'flex';
-}
+
 
   document.getElementById('entryMemo').value = '';
   document.getElementById('saveEntryBtn').disabled = true;
@@ -1347,6 +1328,27 @@ function showDateEntries(dateStr) {
 
   document.getElementById('entryModal').classList.add('show');
 }
+function showDateEntries(dateStr) {
+  window._selectedDate = dateStr;
+  const dayEntries = entries.filter(e => e.date === dateStr);
+  if (dayEntries.length === 0) {
+    openEntry(dateStr);
+    return;
+  }
+  const d = new Date(dateStr);
+  document.getElementById('dateEntriesTitle').textContent = (d.getMonth()+1) + '/' + d.getDate() + ' \u306E\u51FA\u52E4\u8A18\u9332 (' + dayEntries.length + '\u4EF6)';
+  let listHtml = '';
+  dayEntries.forEach(entry => {
+    const site = sites.find(s => s.id === entry.site_id);
+    const siteName = site ? site.name : '\u4E0D\u660E';
+    const siteColor = site ? site.color : '#ccc';
+    const hours = entry.hours ? entry.hours + 'h' : '';
+    listHtml += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:8px;background:#f9f9f9;border-radius:8px;border-left:4px solid ' + siteColor + ';"><div style="flex:1;"><span style="font-weight:bold;font-size:14px;">' + siteName + '</span>' + (hours ? ' <span style="color:#888;font-size:13px;">' + hours + '</span>' : '') + '</div><div style="display:flex;gap:8px;"><button onclick="document.getElementById(\'dateEntriesModal\').style.display=\'none\';editEntry(' + entry.id + ')" style="padding:6px 12px;background:#1a73e8;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">\u7DE8\u96C6</button><button onclick="if(confirm(\'\u3053\u306E\u8A18\u9332\u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F\')){delEntry(' + entry.id + ');document.getElementById(\'dateEntriesModal\').style.display=\'none\';}" style="padding:6px 12px;background:#ea4335;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">\u524A\u9664</button></div></div>';
+  });
+  document.getElementById('dateEntriesList').innerHTML = listHtml;
+  document.getElementById('dateEntriesModal').style.display = 'flex';
+}
+
 
 function renderEntrySiteSelection(){
   let h = '';
