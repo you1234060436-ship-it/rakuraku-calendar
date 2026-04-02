@@ -469,6 +469,11 @@ document.querySelectorAll('#invoiceControls input, #invoiceControls textarea').f
 document.querySelectorAll('#receiptControls input, #receiptControls textarea').forEach(el => { el.addEventListener('input', renderReceipt); });
 
 initFromNichilog();
+
+// Check URL params for tab mode
+const urlParams = new URLSearchParams(window.location.search);
+const tabParam = urlParams.get("tab");
+if (tabParam === "receipt") switchTab("receipt");
 renderInvRows();
 renderReceipt();
 </script>
