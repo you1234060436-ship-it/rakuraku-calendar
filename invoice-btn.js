@@ -2,8 +2,8 @@
 if(document.getElementById('nichilogInvoiceBtn'))return;
 var btn=document.createElement('button');
 btn.id='nichilogInvoiceBtn';
-btn.innerHTML='\uD83D\uDCC4 請求書・領収書';
-btn.style.cssText='position:fixed;bottom:20px;right:20px;z-index:99999;background:#1a73e8;color:#fff;border:none;border-radius:50px;padding:14px 20px;font-size:15px;font-weight:bold;font-family:sans-serif;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:transform 0.2s;';
+btn.innerHTML='\uD83D\uDCC4 請求書';
+btn.style.cssText='position:fixed;bottom:80px;right:12px;z-index:99999;background:#1a73e8;color:#fff;border:none;border-radius:50px;padding:10px 16px;font-size:13px;font-weight:bold;font-family:sans-serif;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:transform 0.2s;';
 btn.onmouseover=function(){this.style.transform='scale(1.05)'};
 btn.onmouseout=function(){this.style.transform='scale(1)'};
 btn.onclick=async function(){
@@ -37,7 +37,7 @@ btn.onclick=async function(){
     window.location.href='invoice.html';
   }catch(e){
     alert('データ取得エラー: '+e.message);
-    btn.disabled=false;btn.innerHTML='\uD83D\uDCC4 請求書・領収書';
+    btn.disabled=false;btn.innerHTML='\uD83D\uDCC4 請求書';
   }
 };
 document.body.appendChild(btn);
