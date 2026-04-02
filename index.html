@@ -2565,7 +2565,6 @@ async function appRefresh(){
     location.reload(true);
   }
 }
-    }
 function createInvoiceForCompany(companyId) {
   const company = clientCompanies.find(c => c.id === companyId);
   if (!company) return;
@@ -2587,7 +2586,6 @@ function createInvoiceForCompany(companyId) {
   localStorage.setItem("nichilog_invoice_data", JSON.stringify(invoiceData));
   window.open("invoice.html", "_blank");
 }
-    }
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}</script>
 </body>
