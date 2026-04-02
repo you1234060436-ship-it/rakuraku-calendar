@@ -2080,12 +2080,6 @@ function renderReport() {
 
   c.innerHTML = h;
 }
-    </div>`;
-  }
-
-  c.innerHTML = h;
-}
-
 function exportCSV(){
   const ms = `${cY}-${String(cM+1).padStart(2,'0')}`;
   const me = entries.filter(e => e.date.startsWith(ms));
