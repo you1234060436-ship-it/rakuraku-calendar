@@ -422,6 +422,16 @@ body.screen-app .setup-screen,body.screen-app .login-screen{display:none!importa
   </div>
 </div>
 
+
+<!-- Date Entries Modal -->
+<div class="modal-overlay" id="dateEntriesModal" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box" style="max-height:80vh;overflow-y:auto;">
+    <h3 id="dateEntriesTitle" style="margin:0 0 12px;font-size:18px;color:#1a73e8;"></h3>
+    <div id="dateEntriesList"></div>
+    <button onclick="document.getElementById('dateEntriesModal').style.display='none';openEntry(window._selectedDate)" style="width:100%;margin-top:12px;padding:12px;background:#1a73e8;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;">＋ 新規追加</button>
+    <button onclick="document.getElementById('dateEntriesModal').style.display='none'" style="width:100%;margin-top:8px;padding:10px;background:#f5f5f5;color:#666;border:none;border-radius:8px;font-size:14px;cursor:pointer;">閉じる</button>
+  </div>
+</div>
 <div class="modal-overlay" id="siteModal">
   <div class="modal">
     <div class="modal-header">
@@ -1105,7 +1115,7 @@ function renderCalendar(){
     }
 
     const holLabel = holName ? `<div class="hol-name">${holName}</div>` : '';
-    h += `<div class="${cls}" style="color:${dayColor}" data-ds="${ds}" onclick="openEntry('${ds}')">${d}${holLabel}${dots}</div>`;
+    h += `<div class="${cls}" style="color:${dayColor}" data-ds="${ds}" onclick="showDateEntries('${ds}')">${d}${holLabel}${dots}</div>`;
   }
 
   const tot = fd + dim;
@@ -1283,6 +1293,27 @@ function openEntry(ds){
   inCompanySelectionMode = true;
   const p = ds.split('-');
   document.getElementById('entryModalTitle').textContent = `${+p[1]}月${+p[2]}日の出勤登録`;
+function showDateEntries(dateStr) {
+  window._selectedDate = dateStr;
+  const dayEntries = entries.filter(e => e.date === dateStr);
+  if (dayEntries.length === 0) {
+    openEntry(dateStr);
+    return;
+  }
+  const d = new Date(dateStr);
+  document.getElementById('dateEntriesTitle').textContent = (d.getMonth()+1) + '/' + d.getDate() + ' \u306E\u51FA\u52E4\u8A18\u9332 (' + dayEntries.length + '\u4EF6)';
+  let listHtml = '';
+  dayEntries.forEach(entry => {
+    const site = sites.find(s => s.id === entry.site_id);
+    const siteName = site ? site.name : '\u4E0D\u660E';
+    const siteColor = site ? site.color : '#ccc';
+    const hours = entry.hours ? entry.hours + 'h' : '';
+    listHtml += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:8px;background:#f9f9f9;border-radius:8px;border-left:4px solid ' + siteColor + ';"><div style="flex:1;"><span style="font-weight:bold;font-size:14px;">' + siteName + '</span>' + (hours ? ' <span style="color:#888;font-size:13px;">' + hours + '</span>' : '') + '</div><div style="display:flex;gap:8px;"><button onclick="document.getElementById(\'dateEntriesModal\').style.display=\'none\';editEntry(' + entry.id + ')" style="padding:6px 12px;background:#1a73e8;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">\u7DE8\u96C6</button><button onclick="if(confirm(\'\u3053\u306E\u8A18\u9332\u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F\')){delEntry(' + entry.id + ');document.getElementById(\'dateEntriesModal\').style.display=\'none\';}" style="padding:6px 12px;background:#ea4335;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">\u524A\u9664</button></div></div>';
+  });
+  document.getElementById('dateEntriesList').innerHTML = listHtml;
+  document.getElementById('dateEntriesModal').style.display = 'flex';
+}
+
   document.getElementById('entryMemo').value = '';
   document.getElementById('saveEntryBtn').disabled = true;
   document.getElementById('hoursGroup').style.display = 'none';
@@ -2066,6 +2097,7 @@ function renderReport() {
       '</div>' +
       '<div style="padding:8px 12px;">' +
         '<button onclick="createInvoiceForCompany(' + company.id + ')" style="width:100%;padding:10px;background:#1a73e8;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;">\u3053\u306E\u4F1A\u793E\u306E\u8ACB\u6C42\u66F8\u3092\u4F5C\u6210</button>' +
+      '<div style="padding:4px 12px 8px;"><button onclick="createInvoiceForCompany(' + company.id + ',\'receipt\')" style="width:100%;padding:10px;background:#34a853;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;">\u3053\u306E\u4F1A\u793E\u306E\u9818\u53CE\u66F8\u3092\u4F5C\u6210</button></div>' +
       '</div>' +
     '</div>';
   });
@@ -2572,7 +2604,7 @@ async function appRefresh(){
     location.reload(true);
   }
 }
-function createInvoiceForCompany(companyId) {
+function createInvoiceForCompany(companyId, mode) {
   const company = clientCompanies.find(c => c.id === companyId);
   if (!company) return;
   const companySites = sites.filter(s => s.client_company_id === companyId);
@@ -2591,7 +2623,7 @@ function createInvoiceForCompany(companyId) {
     details: details
   };
   localStorage.setItem("nichilog_invoice_data", JSON.stringify(invoiceData));
-  window.open("invoice.html", "_blank");
+  window.open("invoice.html" + (mode === "receipt" ? "?tab=receipt" : ""), "_blank");
 }
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}</script>
