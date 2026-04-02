@@ -2025,90 +2025,61 @@ async function savePartnerMember(){
 }
 
 // ===== Report Page =====
-function renderReport(){
-  const c = document.getElementById('reportContent');
-  const ms = `${cY}-${String(cM+1).padStart(2,'0')}`;
-  const me = entries.filter(e => e.date.startsWith(ms));
+function renderReport() {
+  const c = document.getElementById("reportContent");
+  const ms = `${cY}-${String(cM).padStart(2,"0")}`;
+  const me = entries.filter(e => e.date && e.date.startsWith(ms));
+  let h = "";
+  let grandTotalDays = 0;
+  let grandTotalAmount = 0;
 
-  let h = `<div class="report-card">
-    <div class="report-title">
-      <span>${cM+1}月 現場別サマリー</span>
-      <button class="csv-btn" onclick="exportCSV()">📥 CSV出力</button>
-    </div>
-    <table class="report-table">
-      <tr><th>現場名</th><th class="num">人日</th><th class="num">売上</th></tr>`;
+  clientCompanies.forEach(company => {
+    const companySites = sites.filter(s => s.client_company_id === company.id);
+    if (companySites.length === 0) return;
+    let companyDays = 0;
+    let companyAmount = 0;
+    let siteHtml = "";
 
-  let totalD = 0, totalR = 0;
-  sites.forEach(s => {
-    const se = me.filter(e => e.siteId === s.id);
-    if(!se.length) return;
-    const d = sumDays(se);
-    let r = 0;
-    se.forEach(e => { r += calcRev(e, s); });
-    totalD += d;
-    totalR += r;
-    h += `<tr><td>${s.name}</td><td class="num">${d}日</td><td class="num">¥${r.toLocaleString()}</td></tr>`;
+    companySites.forEach(site => {
+      const se = me.filter(e => e.site_id === site.id);
+      if (se.length === 0) return;
+      const days = se.length;
+      const amount = site.rate_type === "hourly" ? se.reduce((sum, e) => sum + (e.hours || 0) * site.price, 0) : days * site.price;
+      companyDays += days;
+      companyAmount += amount;
+      siteHtml += '<div style="display:flex;justify-content:space-between;padding:6px 12px;font-size:14px;">' +
+        '<span>\u3000' + site.name + '</span>' +
+        '<span>' + days + '\u65E5 \u00A5' + amount.toLocaleString() + '</span>' +
+        '</div>';
+    });
+
+    if (siteHtml === "") return;
+    grandTotalDays += companyDays;
+    grandTotalAmount += companyAmount;
+
+    h += '<div style="background:#fff;border-radius:12px;margin-bottom:16px;padding:12px 0;box-shadow:0 1px 3px rgba(0,0,0,0.1);">' +
+      '<div style="font-weight:bold;font-size:16px;padding:8px 12px;border-bottom:2px solid #1a73e8;margin-bottom:4px;color:#1a73e8;">\u2500\u2500 ' + company.name + ' \u2500\u2500</div>' +
+      siteHtml +
+      '<div style="display:flex;justify-content:space-between;padding:8px 12px;font-weight:bold;border-top:1px solid #eee;margin-top:4px;">' +
+        '<span>\u5408\u8A08</span>' +
+        '<span>' + companyDays + '\u65E5 \u00A5' + companyAmount.toLocaleString() + '</span>' +
+      '</div>' +
+      '<div style="padding:8px 12px;">' +
+        '<button onclick="createInvoiceForCompany(' + company.id + ')" style="width:100%;padding:10px;background:#1a73e8;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;">\u3053\u306E\u4F1A\u793E\u306E\u8ACB\u6C42\u66F8\u3092\u4F5C\u6210</button>' +
+      '</div>' +
+    '</div>';
   });
 
-  h += `<tr><td>合計</td><td class="num">${totalD}日</td><td class="num">¥${totalR.toLocaleString()}</td></tr></table></div>`;
+  if (h === "") {
+    h = '<div style="text-align:center;padding:40px;color:#888;">\u3053\u306E\u6708\u306E\u30C7\u30FC\u30BF\u306F\u3042\u308A\u307E\u305B\u3093</div>';
+  } else {
+    h += '<div style="background:#f0f4ff;border-radius:12px;padding:12px;text-align:center;font-weight:bold;font-size:16px;">' +
+      '\u7DCF\u5408\u8A08\uFF1A' + grandTotalDays + '\u65E5 \u00A5' + grandTotalAmount.toLocaleString() +
+    '</div>';
+  }
 
-  h += `<div class="report-card">
-    <div class="report-title">メンバー × 現場 出勤表</div>
-    <div style="overflow-x:auto">
-      <table class="report-table">
-        <tr><th>メンバー</th>`;
-
-  const activeSites = sites.filter(s => me.some(e => e.siteId === s.id));
-  activeSites.forEach(s => { h += `<th class="num">${s.name.slice(0,4)}</th>`; });
-  h += `<th class="num">合計</th></tr>`;
-
-  members.forEach(m => {
-    const mme = me.filter(e => e.memberId === m.id);
-    if(!mme.length) return;
-    h += `<tr><td>${m.name}</td>`;
-    let mt = 0;
-    activeSites.forEach(s => {
-      const d = sumDays(mme.filter(e => e.siteId === s.id));
-      mt += d;
-      h += `<td class="num">${d || '-'}</td>`;
-    });
-    h += `<td class="num">${mt}日</td></tr>`;
-  });
-
-  h += `</table></div></div>`;
-
-  // 協力会社支払サマリー（レポート）
-  const partnerMems = members.filter(m => m.type === 'partner');
-  if(partnerMems.length > 0 && canSeeRevenue()){
-    const pCompanies = [...new Set(partnerMems.map(m => m.partnerCompany))];
-    h += `<div class="report-card">
-      <div class="report-title">協力会社 支払サマリー</div>
-      <table class="report-table">
-        <tr><th>会社名</th><th class="num">人日</th><th class="num">支払額</th></tr>`;
-    let pTotalD = 0, pTotalR = 0;
-    pCompanies.forEach(pc => {
-      const pcMems = partnerMems.filter(m => m.partnerCompany === pc);
-      let d = 0, r = 0;
-      pcMems.forEach(m => {
-        const mme = me.filter(e => e.memberId === m.id);
-        const days = sumDays(mme);
-        d += days;
-        r += days * m.rate;
-      });
-      if(d > 0){
-        pTotalD += d; pTotalR += r;
-        h += `<tr><td>${pc}</td><td class="num">${d}日</td><td class="num" style="color:#E53935">−¥${r.toLocaleString()}</td></tr>`;
-      }
-    });
-    h += `<tr><td>合計</td><td class="num">${pTotalD}日</td><td class="num" style="color:#E53935;font-weight:700">−¥${pTotalR.toLocaleString()}</td></tr></table></div>`;
-
-    // 粗利計算
-    h += `<div class="report-card" style="border-left:3px solid var(--success)">
-      <div class="report-title">粗利</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0">
-        <span style="font-size:13px">売上 − 協力会社支払</span>
-        <span style="font-size:20px;font-weight:700;color:${totalR - pTotalR >= 0 ? 'var(--success)' : '#E53935'}">¥${(totalR - pTotalR).toLocaleString()}</span>
-      </div>
+  c.innerHTML = h;
+}
     </div>`;
   }
 
@@ -2221,11 +2192,6 @@ function renderSettings(){
   <button class="logout-btn" onclick="handleLogout()">ログアウト</button>
   ${userRole === 'master' ? `<button onclick="handleDeleteAllData()" style="width:100%;padding:14px;background:none;color:var(--danger);border:1.5px solid var(--danger);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px">会社データを全て削除</button>` : `<button onclick="handleDeleteMyAccount()" style="width:100%;padding:14px;background:none;color:var(--danger);border:1.5px solid var(--danger);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px">自分のアカウントを削除</button>`}`;
 
-    // Invoice/Receipt Menu
-    html += '<div class="settings-group" style="padding:16px">' +
-      '<div class="account-creation-title" style="margin-bottom:12px">📄 請求書・領収書</div>' +
-      '<button class="add-btn" onclick="openInvoiceTool()" style="width:100%;padding:12px;font-size:15px">請求書・領収書を作成</button>' +
-    '</div>';
   document.getElementById('settingsContent').innerHTML = html;
 
   if(userRole === 'master'){
@@ -2606,14 +2572,27 @@ async function appRefresh(){
   }
 }
     }
-    function openInvoiceTool() {
-      try {
-        var data = {};
-        localStorage.setItem('nichilog_invoice_data', JSON.stringify(data));
-        window.location.href = 'invoice.html';
-      } catch(e) {
-        alert('エラー: ' + e.message);
-      }
+function createInvoiceForCompany(companyId) {
+  const company = clientCompanies.find(c => c.id === companyId);
+  if (!company) return;
+  const companySites = sites.filter(s => s.client_company_id === companyId);
+  const ms = `${cY}-${String(cM).padStart(2,"0")}`;
+  const monthEntries = entries.filter(e => e.date && e.date.startsWith(ms));
+  const details = companySites.map(site => {
+    const se = monthEntries.filter(e => e.site_id === site.id);
+    if (se.length === 0) return null;
+    const days = se.length;
+    const amount = site.rate_type === "hourly" ? se.reduce((sum, e) => sum + (e.hours || 0) * site.price, 0) : days * site.price;
+    return { name: site.name + " " + cY + "/" + cM, spec: site.rate_type === "hourly" ? "\u6642\u7D66" : "\u65E5\u7D66", qty: days, unit: site.rate_type === "hourly" ? "\u6642\u9593" : "\u65E5", price: site.price, taxRate: 10, amount: amount };
+  }).filter(Boolean);
+  const invoiceData = {
+    clientCompany: company.name,
+    siteName: companySites.map(s => s.name).join(", "),
+    details: details
+  };
+  localStorage.setItem("nichilog_invoice_data", JSON.stringify(invoiceData));
+  window.open("invoice.html", "_blank");
+}
     }
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}</script>
