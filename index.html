@@ -2186,6 +2186,13 @@ function renderSettings(){
   <button class="logout-btn" onclick="handleLogout()">ログアウト</button>
   ${userRole === 'master' ? `<button onclick="handleDeleteAllData()" style="width:100%;padding:14px;background:none;color:var(--danger);border:1.5px solid var(--danger);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px">会社データを全て削除</button>` : `<button onclick="handleDeleteMyAccount()" style="width:100%;padding:14px;background:none;color:var(--danger);border:1.5px solid var(--danger);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px">自分のアカウントを削除</button>`}`;
 
+
+  h += '<div style="margin:16px 0;padding:16px;background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">' +
+    '<div style="font-weight:bold;font-size:16px;margin-bottom:12px;color:#1a73e8;">\u66F8\u985E\u4F5C\u6210</div>' +
+    '<div style="display:flex;gap:12px;">' +
+    '<button onclick="window.open(\'invoice.html\',\'_blank\')" style="flex:1;padding:12px;background:#1a73e8;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;">\u8ACB\u6C42\u66F8\u3092\u4F5C\u6210</button>' +
+    '<button onclick="window.open(\'invoice.html?tab=receipt\',\'_blank\')" style="flex:1;padding:12px;background:#34a853;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;">\u9818\u53CE\u66F8\u3092\u4F5C\u6210</button>' +
+    '</div></div>';
   document.getElementById('settingsContent').innerHTML = html;
 
   if(userRole === 'master'){
