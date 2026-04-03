@@ -704,8 +704,8 @@ async function loadAllData(){
     dbLoad('team_members', { company_id: companyId })
   ]);
   clientCompanies = ccArr.map(cc => ({ id: cc.id, name: cc.name, companyId: cc.company_id }));
-  sites = sArr.map(s => ({ id: s.id, name: s.name, price: Number(s.price), rateType: s.rateType, color: s.color, memo: s.memo||'', clientCompanyId: s.clientCompanyId||null }));
-  entries = eArr.map(e => ({ id: e.id, date: e.date, siteId: e.siteId, memberId: e.memberId, hours: Number(e.hours)||0, memo: e.memo||'', clientCompanyId: e.clientCompanyId||null }));
+  sites = sArr.map(s => ({ id: s.id, name: s.name, price: Number(s.price), rateType: s.rate_type, color: s.color, memo: s.memo||'', clientCompanyId: s.client_company_id||null }));
+  entries = eArr.map(e => ({ id: e.id, date: e.date, siteId: e.site_id, memberId: e.member_id, hours: Number(e.hours)||0, memo: e.memo||'', clientCompanyId: e.client_company_id||null }));
   members = mArr.map(m => ({ id: m.id, accountId: m.account_id, name: m.name, team: m.team||'', color: m.color||'#FF9800', type: m.type||'internal', partnerCompany: m.partner_company||'', rate: Number(m.rate)||0 }));
   accounts = await dbLoad('accounts', { company_id: companyId });
   nxSite = sites.length > 0 ? Math.max(...sites.map(s=>s.id))+1 : 1;
