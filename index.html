@@ -2060,7 +2060,7 @@ async function savePartnerMember(){
 
 // ===== Report Page =====
 function renderReport() {
-  const c = document.getElementById("reportContent");
+  let c = document.getElementById("statsReportSection"); if(!c){c=document.createElement("div");c.id="statsReportSection";c.style.cssText="padding:0 0 20px";document.getElementById("page-stats").appendChild(c);}
   const ms = `${cY}-${String(cM).padStart(2,"0")}`;
   const me = entries.filter(e => e.date && e.date.startsWith(ms));
   let h = "";
