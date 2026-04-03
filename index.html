@@ -704,8 +704,8 @@ async function loadAllData(){
     dbLoad('team_members', { company_id: companyId })
   ]);
   clientCompanies = ccArr.map(cc => ({ id: cc.id, name: cc.name, companyId: cc.company_id }));
-  sites = sArr.map(s => ({ id: s.id, name: s.name, price: Number(s.price), rateType: s.rate_type, color: s.color, memo: s.memo||'', clientCompanyId: s.client_company_id||null }));
-  entries = eArr.map(e => ({ id: e.id, date: e.date, siteId: e.site_id, memberId: e.member_id, hours: Number(e.hours)||0, memo: e.memo||'', clientCompanyId: e.client_company_id||null }));
+  sites = sArr.map(s => ({ id: s.id, name: s.name, price: Number(s.price), rateType: s.rateType, color: s.color, memo: s.memo||'', clientCompanyId: s.clientCompanyId||null }));
+  entries = eArr.map(e => ({ id: e.id, date: e.date, siteId: e.siteId, memberId: e.memberId, hours: Number(e.hours)||0, memo: e.memo||'', clientCompanyId: e.clientCompanyId||null }));
   members = mArr.map(m => ({ id: m.id, accountId: m.account_id, name: m.name, team: m.team||'', color: m.color||'#FF9800', type: m.type||'internal', partnerCompany: m.partner_company||'', rate: Number(m.rate)||0 }));
   accounts = await dbLoad('accounts', { company_id: companyId });
   nxSite = sites.length > 0 ? Math.max(...sites.map(s=>s.id))+1 : 1;
@@ -1339,7 +1339,7 @@ function showDateEntries(dateStr) {
   document.getElementById('dateEntriesTitle').textContent = (d.getMonth()+1) + '/' + d.getDate() + ' \u306E\u51FA\u52E4\u8A18\u9332 (' + dayEntries.length + '\u4EF6)';
   let listHtml = '';
   dayEntries.forEach(entry => {
-    const site = sites.find(s => s.id === entry.site_id);
+    const site = sites.find(s => s.id === entry.siteId);
     const siteName = site ? site.name : '\u4E0D\u660E';
     const siteColor = site ? site.color : '#ccc';
     const hours = entry.hours ? entry.hours + 'h' : '';
@@ -1557,7 +1557,7 @@ async function saveEntry(){
   });
   if(toInsert.length > 0){
     const inserted = await dbInsertMany('attendance_entries', toInsert);
-    inserted.forEach(e => entries.push({ id: e.id, date: e.date, siteId: e.site_id, memberId: e.member_id, hours: Number(e.hours)||0, memo: e.memo||'', clientCompanyId: e.client_company_id||null }));
+    inserted.forEach(e => entries.push({ id: e.id, date: e.date, siteId: e.siteId, memberId: e.memberId, hours: Number(e.hours)||0, memo: e.memo||'', clientCompanyId: e.clientCompanyId||null }));
   }
   closeM('entryModal');
   renderCalendar();
@@ -2625,15 +2625,15 @@ async function appRefresh(){
 function createInvoiceForCompany(companyId, mode) {
   const company = clientCompanies.find(c => c.id === companyId);
   if (!company) return;
-  const companySites = sites.filter(s => s.client_company_id === companyId);
+  const companySites = sites.filter(s => s.clientCompanyId === companyId);
   const ms = `${cY}-${String(cM).padStart(2,"0")}`;
   const monthEntries = entries.filter(e => e.date && e.date.startsWith(ms));
   const details = companySites.map(site => {
-    const se = monthEntries.filter(e => e.site_id === site.id);
+    const se = monthEntries.filter(e => e.siteId === site.id);
     if (se.length === 0) return null;
     const days = se.length;
-    const amount = site.rate_type === "hourly" ? se.reduce((sum, e) => sum + (e.hours || 0) * site.price, 0) : days * site.price;
-    return { name: site.name + " " + cY + "/" + cM, spec: site.rate_type === "hourly" ? "\u6642\u7D66" : "\u65E5\u7D66", qty: days, unit: site.rate_type === "hourly" ? "\u6642\u9593" : "\u65E5", price: site.price, taxRate: 10, amount: amount };
+    const amount = site.rateType === "hourly" ? se.reduce((sum, e) => sum + (e.hours || 0) * site.price, 0) : days * site.price;
+    return { name: site.name + " " + cY + "/" + cM, spec: site.rateType === "hourly" ? "\u6642\u7D66" : "\u65E5\u7D66", qty: days, unit: site.rateType === "hourly" ? "\u6642\u9593" : "\u65E5", price: site.price, taxRate: 10, amount: amount };
   }).filter(Boolean);
   const invoiceData = {
     clientCompany: company.name,
