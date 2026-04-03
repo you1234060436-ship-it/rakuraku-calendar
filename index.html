@@ -1220,7 +1220,7 @@ function renderToday(){
     let metaText = priceText;
     if(userRole !== 'worker' && m) metaText += (metaText ? ' · ' : '') + m.name;
     if(e.memo) metaText += (metaText ? ' · ' : '') + e.memo;
-    h += `<div class="entry-card" onclick="editEntry(${e.id})" style="cursor:pointer"><div class="entry-color" style="background:${s.color}"></div><div class="entry-info"><div class="entry-name">${s.name}</div><div class="entry-meta">${metaText}</div></div><button class="entry-del" onclick="event.stopPropagation();delEntry('${e.date}',${s.id},${e.memberId||0})">✕</button></div>`;
+    h += `<div class="entry-card" onclick="editEntry(${e.id})" style="cursor:pointer"><div class="entry-color" style="background:${s.color}"></div><div class="entry-info"><div class="entry-name">${s.name}</div><div class="entry-meta">${metaText}</div></div><button class="entry-del" onclick="event.stopPropagation();delEntry(${e.id})">✕</button></div>`;
   });
   c.innerHTML = h;
 }
