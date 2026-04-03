@@ -1062,7 +1062,7 @@ function switchTab(id, el){
   document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   if(el) el.classList.add('active');
-  if(id === 'stats') renderStats();
+  if(id === 'stats'){ renderStats(); renderReport(); }
   if(id === 'sites') renderSites();
   if(id === 'members') renderMembers();
   if(id === 'report') renderReport();
@@ -1707,6 +1707,7 @@ function changeStatMonth(d){
   if(statM > 11){ statM = 0; statY++; }
   if(statM < 0){ statM = 11; statY--; }
   renderStats();
+  renderReport();
 }
 
 // ===== Sites Page =====
@@ -2061,7 +2062,7 @@ async function savePartnerMember(){
 // ===== Report Page =====
 function renderReport() {
   let c = document.getElementById("statsReportSection"); if(!c){c=document.createElement("div");c.id="statsReportSection";c.style.cssText="padding:0 0 20px";document.getElementById("page-stats").appendChild(c);}
-  const ms = `${cY}-${String(cM+1).padStart(2,"0")}`;
+  const ms = `${statY}-${String(statM+1).padStart(2,"0")}`;
   const me = entries.filter(e => e.date && e.date.startsWith(ms));
   let h = "";
   let grandTotalDays = 0;
@@ -2640,7 +2641,7 @@ function createInvoiceForCompany(companyId, mode) {
   const company = clientCompanies.find(c => c.id === companyId);
   if (!company) return;
   const companySites = sites.filter(s => s.clientCompanyId === companyId);
-  const ms = `${cY}-${String(cM+1).padStart(2,"0")}`;
+  const ms = `${statY}-${String(statM+1).padStart(2,"0")}`;
   const monthEntries = entries.filter(e => e.date && e.date.startsWith(ms));
   const details = companySites.map(site => {
     const se = monthEntries.filter(e => e.siteId === site.id);
@@ -2661,4 +2662,5 @@ function createInvoiceForCompany(companyId, mode) {
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}</script>
 </body>
 </html>
+
 
