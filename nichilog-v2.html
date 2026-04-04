@@ -34,8 +34,141 @@ function openSiteModal(id){window.__eSI=id||null;var s=id?sites.find(function(x)
 async function saveSite(){var n=document.getElementById('siteName').value.trim(),p=parseFloat(document.getElementById('sitePrice').value),rt=document.getElementById('siteRateType').value,c=document.getElementById('siteColor').value,m=document.getElementById('siteMemo').value.trim();if(!n){alert('現場名を入力してください。');return}if(!p||p<=0){alert('正しい単価を入力してください。');return}var d={name:n,price:p,rate_type:rt,color:c,memo:m,company_id:company.id};try{var r;if(window.__eSI){r=await fetch(SB+'/work_sites?id=eq.'+window.__eSI,{method:'PATCH',headers:H,body:JSON.stringify(d)})}else{r=await fetch(SB+'/work_sites',{method:'POST',headers:H,body:JSON.stringify(d)})}if(!r.ok)throw new Error(r.status);sites=await sbGet('work_sites','company_id=eq.'+company.id);closeSiteModal();renderSites()}catch(e){alert('保存に失敗しました。')}}
 async function deleteSite(id){if(!confirm('この現場を削除しますか？'))return;try{var r=await fetch(SB+'/work_sites?id=eq.'+id,{method:'DELETE',headers:H});if(!r.ok)throw new Error(r.status);sites=await sbGet('work_sites','company_id=eq.'+company.id);renderSites()}catch(e){alert('削除に失敗しました。')}}
 function renderMembers(){var el=document.getElementById('t3'),h='<h3 style="font-size:15px;margin-bottom:12px">メンバー ('+members.length+'名)</h3>';members.forEach(function(m){var init=(m.name||'?')[0],role=m.role==='admin'?'管理者':'メンバー';h+='<div class="mi"><div class="ma">'+init+'</div><div style="flex:1"><div style="font-size:14px;font-weight:500">'+(m.name||'名前なし')+'</div><div style="font-size:12px;color:#5f6368">'+role+(m.team?' / '+m.team:'')+'</div></div></div>';});if(!members.length)h+='<div class="cd" style="text-align:center;color:#5f6368">メンバーなし</div>';el.innerHTML=h;}function renderReport(){var el=document.getElementById('t4'),now=new Date(),ms=now.getFullYear()+'年'+(now.getMonth()+1)+'月',tm=entries.filter(function(e){var d=new Date(e.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}),bs={};tm.forEach(function(e){var sid=e.work_site_id||'x';if(!bs[sid])bs[sid]={c:0,h:0};bs[sid].c++;if(e.start_time&&e.end_time){var s=e.start_time.split(':'),en=e.end_time.split(':');bs[sid].h+=(parseInt(en[0])-parseInt(s[0]))+(parseInt(en[1])-parseInt(s[1]))/60;}});var h='<h3 style="font-size:15px;margin-bottom:12px">'+ms+' 請求レポート</h3><div class="cd"><div class="ct2">現場別集計</div>',gt=0;Object.keys(bs).forEach(function(sid){var site=sites.find(function(s){return s.id==sid;}),d=bs[sid],amt=d.h*15000;gt+=amt;h+='<div class="cr"><span class="l">'+(site?site.name:'その他')+' ('+d.c+'日/'+d.h.toFixed(1)+'h)</span><span class="v">¥'+amt.toLocaleString()+'</span></div>';});if(!Object.keys(bs).length)h+='<div style="color:#5f6368;font-size:13px;padding:8px 0">今月の記録なし</div>';h+='</div>';var tx=Math.floor(gt*0.1);h+='<div class="cd"><div class="cr"><span class="l">小計</span><span class="v">¥'+gt.toLocaleString()+'</span></div><div class="cr"><span class="l">消費税 (10%)</span><span class="v">¥'+tx.toLocaleString()+'</span></div><div class="cr" style="font-size:16px;font-weight:700;border-top:2px solid var(--p);padding-top:8px;margin-top:4px"><span class="l">合計</span><span class="v" style="color:var(--p)">¥'+(gt+tx).toLocaleString()+'</span></div></div><button class="btn" style="margin-top:8px" onclick="showInvoice()">御請求書を作成</button>';el.innerHTML=h;}
-function showInvoice(){var ex=document.getElementById('invV');if(ex)ex.remove();var mc=document.getElementById('mc');if(mc)mc.style.display='none';var today=new Date(),year=today.getFullYear(),month=String(today.getMonth()+1).padStart(2,'0'),day=String(today.getDate()).padStart(2,'0'),dateStr=year+'/'+month+'/'+day;var cme=entries.filter(function(e){var d=new Date(e.date);return d.getFullYear()===year&&(d.getMonth()+1)===parseInt(month)});var sg={};cme.forEach(function(e){if(!sg[e.site_id])sg[e.site_id]=[];sg[e.site_id].push(e)});var sd=[],subtotal=0;Object.keys(sg).forEach(function(sid){var site=sites.find(function(s){return s.id==sid});if(!site)return;var se=sg[sid],amt=0,qty=0;if(site.rate_type==='hourly'){qty=se.reduce(function(s,e){return s+(e.hours||0)},0);amt=qty*site.price}else{qty=se.length;amt=qty*site.price}sd.push({n:site.name,q:qty,u:site.rate_type==='hourly'?'\u6642\u9593':'\u65e5',p:site.price,a:amt});subtotal+=amt});while(sd.length<10)sd.push({n:'',q:'',u:'',p:'',a:''});var tax10=Math.round(subtotal*0.1),gt=subtotal+tax10,fc=function(n){return n===''||n===null?'':'\u00a5'+n.toLocaleString('ja-JP')};var invoiceNum=year+'-010-101';var uSites=Object.keys(sg).map(function(id){return sites.find(function(s){return s.id==id})}).filter(Boolean);var sn=uSites.length===1?uSites[0].name:'';var rows='';sd.forEach(function(r,i){var bg=i%2===0?'#fff':'#fafafa';rows+='<tr style="background:'+bg+'"><td style="border:1px solid #ccc;padding:8px">'+r.n+'</td><td style="border:1px solid #ccc;padding:8px"></td><td style="border:1px solid #ccc;padding:8px;text-align:right">'+(r.q!==''?r.q:'')+'</td><td style="border:1px solid #ccc;padding:8px;text-align:center">'+r.u+'</td><td style="border:1px solid #ccc;padding:8px;text-align:right">'+(r.p!==''?fc(r.p):'')+'</td><td style="border:1px solid #ccc;padding:8px;text-align:right">'+(r.a!==''?fc(r.a):'')+'</td></tr>'});var cRow=function(l,v,b){return'<div style="display:flex;justify-content:space-between;border-bottom:1px solid #ccc;padding:8px 0;'+(b?'font-weight:bold;font-size:14px;':'')+'"><span>'+l+'</span><span>'+v+'</span></div>'};var iv=document.createElement('div');iv.id='invV';iv.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:#f0f0f0;display:flex;flex-direction:column;align-items:center;padding:20px;overflow-y:auto;z-index:10000;font-family:system-ui,sans-serif;box-sizing:border-box';iv.innerHTML='<div style="width:100%;max-width:210mm;margin-bottom:20px;display:flex;gap:10px;padding:10px;background:#fff;border-radius:4px;box-shadow:0 2px 4px rgba(0,0,0,.1)"><button onclick="closeInvoice()" style="padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;font-size:14px">\u2190 \u623b\u308b</button><button onclick="window.print()" style="padding:8px 16px;background:#2563EB;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px">\u5370\u5237</button></div>';iv.innerHTML+='<div style="width:210mm;min-height:297mm;background:#fff;box-shadow:0 0 10px rgba(0,0,0,.2);padding:40px;box-sizing:border-box;position:relative;overflow:hidden">'+'<div style="position:absolute;top:40px;right:40px;text-align:right;font-size:12px;color:#666"><div>1/1 \u30da\u30fc\u30b8</div><div>No. '+invoiceNum+'</div></div>'+'<div style="background:#2563EB;color:#fff;padding:12px 20px;margin-bottom:20px;font-size:28px;font-weight:bold;border-radius:4px;display:inline-block">\u5fa1\u8acb\u6c42\u66f8</div>'+'<div style="text-align:center;margin:20px 0;font-size:18px;border-bottom:1px solid #333;padding-bottom:10px">\u3000\u3000\u3000\u3000\u3000\u5fa1\u4e2d</div>'+'<div style="text-align:right;margin:10px 0 20px;font-size:14px">\u62c5\u5f53\uff1a</div>'+'<div style="font-size:13px;line-height:1.6;margin:20px 0">\u5e73\u7d20\u306f\u683c\u5225\u306e\u304a\u5f15\u304d\u7acb\u3066\u3092\u8cdc\u308a\u539a\u304f\u5fa1\u793c\u7533\u3057\u4e0a\u3052\u307e\u3059\u3002\u4e0b\u8a18\u306e\u901a\u308a\u3054\u8acb\u6c42\u7533\u3057\u4e0a\u3052\u307e\u3059\u3002</div>';iv.innerHTML+='<div style="margin:30px 0;font-size:14px"><div style="margin-bottom:8px">\u8acb\u6c42\u65e5\u3000\u3000\u3000'+dateStr+'</div><div style="margin-bottom:8px">\u632f\u8fbc\u671f\u9650</div><div style="margin-bottom:8px">\u5de5\u4e8b\u540d\u3000\u3000\u3000'+sn+'</div><div style="margin-bottom:8px;font-weight:bold;font-size:16px">\u5fa1\u8acb\u6c42\u91d1\u984d\uff08\u7a0e\u8fbc\uff09\u3000\u3000'+fc(gt)+'\u5186</div></div>';iv.innerHTML+='<div style="position:relative"><table style="width:100%;border-collapse:collapse;font-size:13px;position:relative;z-index:10"><thead><tr style="background:#E8ECF0"><th style="border:1px solid #ccc;padding:8px;text-align:left;font-weight:normal;width:30%">\u540d\u79f0</th><th style="border:1px solid #ccc;padding:8px;text-align:left;font-weight:normal;width:20%">\u4ed5\u69d8</th><th style="border:1px solid #ccc;padding:8px;text-align:right;font-weight:normal;width:10%">\u6570\u91cf</th><th style="border:1px solid #ccc;padding:8px;text-align:center;font-weight:normal;width:10%">\u5358\u4f4d</th><th style="border:1px solid #ccc;padding:8px;text-align:right;font-weight:normal;width:15%">\u5358\u4fa1</th><th style="border:1px solid #ccc;padding:8px;text-align:right;font-weight:normal;width:15%">\u91d1\u984d</th></tr></thead><tbody>'+rows+'</tbody></table>'+'<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-20deg);font-size:120px;color:red;border:5px solid red;padding:10px 30px;opacity:.15;font-weight:bold;white-space:nowrap;pointer-events:none;z-index:1">\u4e0b\u66f8\u304d</div></div>';iv.innerHTML+='<div style="margin-top:30px;position:relative;z-index:10"><div style="font-size:13px;margin-bottom:20px"><strong>\u5099\u8003</strong></div><div style="width:300px;margin-left:auto;font-size:13px">'+cRow('\u5c0f\u8a08\u3000\u2460',fc(subtotal)+'\u5186',false)+cRow('\u6d88\u8cbb\u7a0e\u7b49\u3000\u2461 (\u2463+\u2464)',fc(tax10)+'\u5186',false)+cRow('\u5408\u8a08\u91d1\u984d\u3000\u2462 (\u2460+\u2461)',fc(gt)+'\u5186',true)+cRow('(8%)\u6d88\u8cbb\u7a0e\u5408\u8a08\u3000\u2463',fc(0)+'\u5186',false)+cRow('(10%)\u6d88\u8cbb\u7a0e\u5408\u8a08\u3000\u2464',fc(tax10)+'\u5186',false)+'</div></div></div>';document.body.appendChild(iv)}
-function closeInvoice(){var iv=document.getElementById('invV');if(iv)iv.remove();var mc=document.getElementById('mc');if(mc)mc.style.display=''}
+function showInvoice(){
+const mc=document.getElementById('mc');
+if(mc)mc.style.display='none';
+const d=document.createElement('div');
+d.id='invV';
+d.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;z-index:10000;background:#e8e8e8;overflow:auto;padding:16px';
+const now=new Date();
+const y=now.getFullYear(),m=String(now.getMonth()+1).padStart(2,'0'),dd=String(now.getDate()).padStart(2,'0');
+const invNo='INV-'+y+'-'+m+'-001';
+const invDate=y+'年'+parseInt(m)+'月'+parseInt(dd)+'日';
+const dueDate=now.getMonth()===11?((y+1)+'年1月末日'):(y+'年'+(parseInt(m)+1)+'月末日');
+// Collect data from entries
+let items=[];let total=0;
+if(typeof entries!=='undefined'&&entries.length){
+  const siteMap={};
+  entries.forEach(e=>{
+    const sn=e.site_name||'作業';
+    if(!siteMap[sn])siteMap[sn]={name:sn,count:0,unit_price:0};
+    siteMap[sn].count++;
+    if(e.unit_price)siteMap[sn].unit_price=e.unit_price;
+  });
+  Object.values(siteMap).forEach(s=>{
+    const amt=s.count*(s.unit_price||25000);
+    items.push({name:s.name,spec:'',qty:s.count,unit:'人',price:s.unit_price||25000,amount:amt});
+    total+=amt;
+  });
+}
+const tax10=Math.floor(total*0.1);
+const grandTotal=total+tax10;
+// Build item rows (8 rows min)
+let rowsHtml='';
+for(let i=0;i<Math.max(8,items.length);i++){
+  const it=items[i]||{};
+  const bg=i%2===0?'#fff':'#fafafa';
+  rowsHtml+='<tr style="background:'+bg+'">'
+    +'<td style="border:1px solid #000;padding:6px 8px;font-size:12px;text-align:left">'+( it.name||'')+'</td>'
+    +'<td style="border:1px solid #000;padding:6px 8px;font-size:12px;text-align:left">'+(it.spec||'')+'</td>'
+    +'<td style="border:1px solid #000;padding:6px 8px;font-size:12px;text-align:center">'+(it.qty?it.qty.toLocaleString():'')+'</td>'
+    +'<td style="border:1px solid #000;padding:6px 8px;font-size:12px;text-align:center">'+(it.unit||'')+'</td>'
+    +'<td style="border:1px solid #000;padding:6px 8px;font-size:12px;text-align:right">'+(it.price?'¥'+it.price.toLocaleString():'')+'</td>'
+    +'<td style="border:1px solid #000;padding:6px 8px;font-size:12px;text-align:right">'+(it.amount?'¥'+it.amount.toLocaleString():'')+'</td>'
+    +'</tr>';
+}
+d.innerHTML=
+'<div style="display:flex;justify-content:space-between;padding:8px 0;margin-bottom:12px">'
+  +'<button onclick="closeInvoice()" style="padding:8px 16px;background:#666;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px">← 戻る</button>'
+  +'<button onclick="window.print()" style="padding:8px 16px;background:#2563EB;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px">印刷 / PDF</button>'
++'</div>'
+// === A4 Invoice Page ===
++'<div id="invoicePage" style="width:210mm;min-height:297mm;background:#fff;margin:0 auto;padding:15mm 20mm 20mm;'
+  +'font-family:\'Hiragino Mincho ProN\',\'Yu Mincho\',\'MS Mincho\',serif;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15);position:relative;box-sizing:border-box">'
+  // Page num
+  +'<div style="text-align:right;font-size:8pt;color:#999;margin-bottom:4mm">1/1 ページ</div>'
+  // Title
+  +'<div style="text-align:center;font-size:22pt;font-weight:bold;padding-bottom:2mm;border-bottom:2px solid #000;letter-spacing:8pt;margin-bottom:3mm">御　請　求　書</div>'
+  // Doc No
+  +'<div style="text-align:right;font-size:10pt;margin-bottom:5mm">No. '+invNo+'</div>'
+  // Two columns: To (left) + Issuer (right)
+  +'<div style="display:flex;justify-content:space-between;margin-bottom:5mm">'
+    // Left: recipient
+    +'<div style="width:55%">'
+      +'<div style="font-size:14pt;padding-bottom:1mm;border-bottom:1px solid #000;margin-bottom:3mm">　御中</div>'
+      +'<div style="font-size:9pt;margin-bottom:2mm">担当：</div>'
+      +'<div style="font-size:8pt;line-height:1.6">平素は格別のお引き立てを賭り厚く御礼申し上げます。<br>下記の通りご請求申し上げます。</div>'
+    +'</div>'
+    // Right: issuer + dates
+    +'<div style="width:40%;text-align:right">'
+      +'<div style="font-size:10pt;font-weight:bold;margin-bottom:1mm">株式会社サンプル建設</div>'
+      +'<div style="font-size:8pt;margin-bottom:0.5mm">東京都千代田区丸の内1-1-1 サンプルビル3F</div>'
+      +'<div style="font-size:8pt;margin-bottom:0.5mm">TEL: 03-1234-5678　FAX: 03-1234-5679</div>'
+      +'<div style="font-size:8pt;margin-bottom:3mm">登録番号: T1234567890123</div>'
+      +'<div style="font-size:9pt;margin-bottom:1mm">請求日：'+invDate+'</div>'
+      +'<div style="font-size:9pt">振込期限：'+dueDate+'</div>'
+    +'</div>'
+  +'</div>'
+  // Construction row
+  +'<div style="font-size:10pt;margin-bottom:4mm">工事名：</div>'
+  // Amount box
+  +'<div style="border:2px solid #000;padding:3mm 5mm;text-align:center;font-size:16pt;font-weight:bold;margin-bottom:6mm">'
+    +'御請求金額（税込）　¥'+grandTotal.toLocaleString()
+  +'</div>'
+  // Detail table
+  +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4mm">'
+    +'<colgroup><col style="width:28%"><col style="width:22%"><col style="width:9%"><col style="width:8%"><col style="width:15%"><col style="width:18%"></colgroup>'
+    +'<thead><tr>'
+      +'<th style="border:1px solid #000;padding:6px;text-align:center;font-weight:normal;font-size:9pt">名称</th>'
+      +'<th style="border:1px solid #000;padding:6px;text-align:center;font-weight:normal;font-size:9pt">仕様</th>'
+      +'<th style="border:1px solid #000;padding:6px;text-align:center;font-weight:normal;font-size:9pt">数量</th>'
+      +'<th style="border:1px solid #000;padding:6px;text-align:center;font-weight:normal;font-size:9pt">単位</th>'
+      +'<th style="border:1px solid #000;padding:6px;text-align:center;font-weight:normal;font-size:9pt">単価</th>'
+      +'<th style="border:1px solid #000;padding:6px;text-align:center;font-weight:normal;font-size:9pt">金額</th>'
+    +'</tr></thead>'
+    +'<tbody>'+rowsHtml+'</tbody>'
+  +'</table>'
+  // Summary + Tax detail (right-aligned)
+  +'<div style="display:flex;justify-content:space-between;margin-bottom:4mm">'
+    // Remarks (left)
+    +'<div style="width:55%;border:1px solid #000;padding:2mm 3mm;font-size:9pt;min-height:20mm">'
+      +'<strong>備考</strong><br>'
+      +'<span style="font-size:8pt">お振込手数料はご負担願います。</span>'
+    +'</div>'
+    // Summary (right)
+    +'<div style="width:42%">'
+      +'<table style="width:100%;border-collapse:collapse;font-size:9pt;border:1px solid grey">'
+        +'<tr><td style="border:1px solid #ccc;padding:5px 8px;text-align:center">小計 ①</td><td style="border:1px solid #ccc;padding:5px 8px;text-align:right;font-weight:bold">¥'+total.toLocaleString()+'</td></tr>'
+        +'<tr><td style="border:1px solid #ccc;padding:5px 8px;text-align:center">消費税等 ② (❣+❤)</td><td style="border:1px solid #ccc;padding:5px 8px;text-align:right;font-weight:bold">¥'+tax10.toLocaleString()+'</td></tr>'
+        +'<tr><td style="border:1px solid #ccc;padding:5px 8px;text-align:center">合計金額 ③ (①+②)</td><td style="border:1px solid #ccc;padding:5px 8px;text-align:right;font-weight:bold">¥'+grandTotal.toLocaleString()+'</td></tr>'
+      +'</table>'
+      +'<div style="font-size:8pt;margin-top:2mm">'
+        +'<div style="display:flex;justify-content:space-between;padding:2px 8px"><span>(8%) 消費税合計 ❣</span><span>¥0</span></div>'
+        +'<div style="display:flex;justify-content:space-between;padding:2px 8px"><span>(10%) 消費税合計 ❤</span><span>¥'+tax10.toLocaleString()+'</span></div>'
+      +'</div>'
+    +'</div>'
+  +'</div>'
+  // Bank info
+  +'<div style="border:1px solid #000;padding:2mm 3mm;font-size:9pt;margin-bottom:4mm">'
+    +'<strong>お振込先</strong><br>'
+    +'<span style="font-size:9pt">○○銀行　○○支店　普通　1234567</span><br>'
+    +'<span style="font-size:9pt">口座名義：カ）サンプルケンセツ</span>'
+  +'</div>'
+  // Issuer area (right-aligned) + seal
+  +'<div style="text-align:right;margin-top:6mm;padding-right:25mm;position:relative">'
+    +'<div style="font-size:10pt;font-weight:bold">株式会社サンプル建設</div>'
+    +'<div style="font-size:8pt">東京都千代田区丸の内1-1-1 サンプルビル3F</div>'
+    +'<div style="font-size:8pt">TEL: 03-1234-5678　FAX: 03-1234-5679</div>'
+    +'<div style="font-size:8pt">登録番号: T1234567890123</div>'
+    // Seal space
+    +'<div style="position:absolute;right:0;top:0;width:22mm;height:22mm;border:1px solid #c00;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#c00">印</div>'
+  +'</div>'
+// Close A4 page
++'</div>';
+document.body.appendChild(d);
+}
+function closeInvoice(){var v=document.getElementById('invV');if(v)v.remove();var mc=document.getElementById('mc');if(mc)mc.style.display='';}
+
 function renderSettings(){var el=document.getElementById('t5'),items=[{i:'person',l:'アカウント情報',d:account?account.name+' ('+account.role+')':''},{i:'business',l:'会社情報',d:company?company.name:''},{i:'palette',l:'テーマ設定',d:'ライトモード'},{i:'notifications',l:'通知設定',d:'オン'},{i:'language',l:'言語',d:'日本語'},{i:'info',l:'バージョン',d:'2.0.0'},{i:'logout',l:'ログアウト',d:''}],h='<h3 style="font-size:15px;margin-bottom:8px">設定</h3>';items.forEach(function(it){var oc=it.i==='logout'?' onclick="doLogout()" style="cursor:pointer;color:#d93025"':'';h+='<div class="si"'+oc+'><div class="sl"><span class="ms material-symbols-outlined">'+it.i+'</span><div><div style="font-size:14px">'+it.l+'</div>'+(it.d?'<div style="font-size:12px;color:#5f6368">'+it.d+'</div>':'')+'</div></div><span class="ms material-symbols-outlined" style="color:#5f6368;font-size:20px">chevron_right</span></div>';});el.innerHTML=h;}
 function doLogout(){company=null;account=null;sites=[];members=[];entries=[];document.getElementById('ms').style.display='none';document.getElementById('ls').style.display='flex';document.getElementById('ci').value='';document.getElementById('pi').value='';}
 </script></body></html>
