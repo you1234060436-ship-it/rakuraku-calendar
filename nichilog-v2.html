@@ -385,7 +385,7 @@
       const bankNo = document.getElementById('invBankNo').value;
       const bankHolder = document.getElementById('invBankHolder').value;
       const showDue = document.getElementById('invDueShow').checked;
-      const rows = document.getElementById('invRows');
+      const rows = document.getElementById('invDetailBody');
       const trs = rows ? rows.querySelectorAll('tr') : [];
       let detailRows = '';
       let subtotal = 0;
@@ -399,7 +399,7 @@
         const qty = inputs[2] ? parseFloat(inputs[2].value) || 0 : 0;
         const unit = inputs[3] ? inputs[3].value : '';
         const price = inputs[4] ? parseFloat(inputs[4].value) || 0 : 0;
-        const taxRate = selects[0] ? parseFloat(selects[0].value) || 0.10 : 0.10;
+        const taxRate = selects[0] ? (parseFloat(selects[0].value)||10)/100 : 0.10;
         const amt = qty * price;
         subtotal += amt;
         if(taxRate === 0.08) tax8 += amt * 0.08;
