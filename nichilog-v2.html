@@ -561,18 +561,19 @@
       switchTab(1)
     }
     async function doRegister() {
-      company = document.getElementById('regCompany').value.trim();
+      const cName = document.getElementById('regCompany').value.trim();
       const name = document.getElementById('regName').value.trim();
       const pwd = document.getElementById('regPassword').value;
       const role = document.getElementById('regRole').value;
       const errEl = document.getElementById('regError');
       errEl.textContent = ''; errEl.style.color = '#e74c3c';
-      if (!company || !name || !pwd) { errEl.textContent = '全項目を入力してください'; return; }
+      if (!cName || !name || !pwd) { errEl.textContent = '全項目を入力してください'; return; }
       try {
         companyId;
-        const ec = await sbGet('companies', 'name=eq.' + encodeURIComponent(company));
+        const ec = await sbGet('companies', 'name=eq.' + encodeURIComponent(cName));
         if (ec && ec.length > 0) { companyId = ec[0].id; } else {
-          const nc = await sbPost('companies', { name: company });
+          const nc = await sbPost('companies', { name: cName });
+      company = nc[0];
           if (nc && nc.length > 0) { companyId = nc[0].id; } else { errEl.textContent = '会社登録に失敗'; return; }
         }
         const ex = await sbGet('accounts', 'company_id=eq.' + companyId + '&name=eq.' + encodeURIComponent(name));
@@ -581,7 +582,7 @@
         const na = await sbPost('accounts', { company_id: companyId, name: name, password: hash, role: role });
         if (na && na.length > 0) {
           errEl.style.color = '#27ae60'; errEl.textContent = '登録完了！ログインしてください';
-          setTimeout(() => { document.getElementById('regPanel').style.display = 'none'; document.getElementById('loginPanel').style.display = 'block'; document.getElementById('loginCompany').value = company; document.getElementById('loginName').value = name; errEl.textContent = ''; }, 1500);
+          setTimeout(() => { document.getElementById('regPanel').style.display = 'none'; document.getElementById('loginPanel').style.display = 'block'; document.getElementById('loginCompany').value = cName; document.getElementById('loginName').value = name; errEl.textContent = ''; }, 1500);
         } else { errEl.textContent = 'アカウント登録に失敗'; }
       } catch(e) { errEl.textContent = 'エラー: ' + e.message;
       // Set currentUser from the newly created account
