@@ -561,39 +561,41 @@
       switchTab(1)
     }
     async function doRegister() {
-      const cName = document.getElementById('regCompany').value.trim();
-      const name = document.getElementById('regName').value.trim();
-      const pwd = document.getElementById('regPassword').value;
-      const role = document.getElementById('regRole').value;
-      const errEl = document.getElementById('regError');
-      errEl.textContent = ''; errEl.style.color = '#e74c3c';
-      if (!cName || !name || !pwd) { errEl.textContent = '全項目を入力してください'; return; }
       try {
-        companyId;
-        const ec = await sbGet('companies', 'name=eq.' + encodeURIComponent(cName));
-        if (ec && ec.length > 0) { companyId = ec[0].id; } else {
-          const nc = await sbPost('companies', { name: cName });
-      company = nc[0];
-          if (nc && nc.length > 0) { companyId = nc[0].id; } else { errEl.textContent = '会社登録に失敗'; return; }
+        const cName = document.getElementById('regCompany').value.trim();
+        const name = document.getElementById('regName').value.trim();
+        const pw = document.getElementById('regPassword').value;
+        const role = document.getElementById('regRole').value;
+        if (!cName || !name || !pw) { alert('全ての項目を入力してください'); return; }
+        const hash = await sha256(pw);
+        // Check or create company
+        const ec = await sbGet('companies', `name=eq.${encodeURIComponent(cName)}`);
+        let cid;
+        if (ec[0]) {
+          company = ec[0];
+          cid = ec[0].id;
+        } else {
+          const nc = await sbPost('companies', {name: cName});
+          if (!nc || !nc[0]) { alert('会社の作成に失敗しました'); return; }
+          company = nc[0];
+          cid = nc[0].id;
         }
-        const ex = await sbGet('accounts', 'company_id=eq.' + companyId + '&name=eq.' + encodeURIComponent(name));
-        if (ex && ex.length > 0) { errEl.textContent = 'この会社に同名のユーザーが既にいます'; return; }
-        const hash = await sha256(pwd);
-        const na = await sbPost('accounts', { company_id: companyId, name: name, password: hash, role: role });
-        if (na && na.length > 0) {
-          errEl.style.color = '#27ae60'; errEl.textContent = '登録完了！ログインしてください';
-          setTimeout(() => { document.getElementById('regPanel').style.display = 'none'; document.getElementById('loginPanel').style.display = 'block'; document.getElementById('loginCompany').value = cName; document.getElementById('loginName').value = name; errEl.textContent = ''; }, 1500);
-        } else { errEl.textContent = 'アカウント登録に失敗'; }
-      } catch(e) { errEl.textContent = 'エラー: ' + e.message;
-      // Set currentUser from the newly created account
-      const newAccounts = await sbGet('accounts', `company_id=eq.${company.id}&name=eq.${encodeURIComponent(document.getElementById('regName').value)}`);
-      if (newAccounts.length > 0) {
-        currentUser = newAccounts[newAccounts.length - 1];
-        companyName = company.name;
+        companyId = cid;
+        companyName = cName;
+        // Check duplicate user
+        const existingAccounts = await sbGet('accounts', `company_id=eq.${cid}&name=eq.${encodeURIComponent(name)}`);
+        if (existingAccounts.length > 0) { alert('同じ名前のアカウントが既に存在します'); return; }
+        // Create account
+        const na = await sbPost('accounts', {company_id: cid, name: name, password: hash, role: role, team: ''});
+        if (!na || !na[0]) { alert('アカウントの作成に失敗しました'); return; }
+        currentUser = na[0];
+        // Login
         document.getElementById('loginScreen').style.display = 'none';
         await renderAll();
         switchTab(1);
-      } }
+      } catch(e) {
+        alert('登録エラー: ' + e.message);
+      }
     }
 function doLogout() {
       if (!confirm('ログアウトしますか？')) return;
