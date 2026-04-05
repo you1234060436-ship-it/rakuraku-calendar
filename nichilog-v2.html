@@ -625,12 +625,15 @@ function doLogout() {
       return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
+    function isWorker() { return currentUser && currentUser.role === 'worker'; }
+
     function switchTab(n) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
       document.getElementById('t' + n).classList.add('active');
       document.querySelectorAll('.nav-item')[n - 1].classList.add('active');
       currentTab = n;
+      if(n === 5 && isWorker()) { switchTab(1); return; }
       const renderMap = {1: renderCalendar, 2: renderSummary, 3: renderSites, 4: renderMembers, 5: renderReport, 6: renderSettings};
       if (renderMap[n]) renderMap[n]();
     }
@@ -650,6 +653,10 @@ function doLogout() {
       renderMembers();
       renderReport();
       renderSettings();
+    
+      // Hide billing tab for workers
+      const navItems = document.querySelectorAll('.nav-item');
+      if(navItems[4]) navItems[4].style.display = isWorker() ? 'none' : '';
     }
 
     // === Calendar (T1) ===
@@ -735,7 +742,7 @@ function doLogout() {
             <span class="card-label">今月の出勤日数</span>
             <span class="card-value">${monthDays}日</span>
           </div>
-          <div class="card-row">
+          <div class="card-row" style="${isWorker()?'display:none':''}">
             <span class="card-label">売上見込</span>
             <span class="card-value">¥${totalAmount.toLocaleString()}</span>
           </div>
@@ -909,6 +916,14 @@ function doLogout() {
       html += '</tbody></table>';
 
       document.getElementById('t2').innerHTML = html;
+    
+      // Hide price column for workers
+      if(isWorker()) {
+        document.querySelectorAll('#t2 table tr').forEach(tr => {
+          const cells = tr.querySelectorAll('th, td');
+          if(cells[2]) cells[2].style.display = 'none';
+        });
+      }
     }
 
     // === Sites (T3) ===
@@ -946,7 +961,7 @@ function doLogout() {
           const bg = site.color || '#f0f0f0';
           html += '<div style="border:1px solid #ddd;border-radius:4px;padding:12px;background:' + bg + ';">';
           html += '<div style="font-weight:bold;margin-bottom:5px;">' + site.name + '</div>';
-          if (site.rate_type || site.price) { html += '<div style="font-size:12px;color:#666;margin-bottom:8px;">'; if (site.rate_type) html += site.rate_type; if (site.price) html += ' / \u00a5' + Number(site.price).toLocaleString(); html += '</div>'; }
+          if (!isWorker() && site.rate_type || site.price) { html += '<div style="font-size:12px;color:#666;margin-bottom:8px;">'; if (site.rate_type) html += site.rate_type; if (site.price) html += ' / \u00a5' + Number(site.price).toLocaleString(); html += '</div>'; }
           if (site.memo) html += '<div style="font-size:11px;color:#999;margin-bottom:8px;border-top:1px solid #ddd;padding-top:5px;">' + site.memo + '</div>';
           html += '<div style="display:flex;gap:5px;">';
           html += '<button onclick="openSiteModal(' + site.id + ')" style="flex:1;padding:5px;background:#28a745;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;">編集</button>';
