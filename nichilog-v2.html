@@ -1161,10 +1161,10 @@ function doLogout() {
       }
       
       Object.keys(siteMap).forEach(siteId => {
-        const site = sites.find(s => s.id === siteId) || {name:'不明', rate:0, rate_type:'daily'};
+        const site = sites.find(s => s.id=== siteId) || {name:'不明', price:0, rate_type:'daily'};
         const data = siteMap[siteId];
         const days = data.entries.length;
-        const rate = site.rate || 0;
+        const rate = site.price || 0;
         const amount = rate * days;
         totalAmount += amount;
         totalDays += days;
@@ -1221,7 +1221,7 @@ function doLogout() {
           spec: yr + '年' + (mo+1) + '月分',
           qty: days,
           unit: site.rate_type === 'hourly' ? '時間' : '日',
-          price: site.rate || 0,
+          price: site.price || 0,
           taxRate: 10
         });
       });
