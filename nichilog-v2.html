@@ -1392,52 +1392,75 @@ function doLogout() {
 
     // === Settings (T6) ===
     function renderSettings() {
-      let html = '<h2 style="margin-bottom: 16px;">設定</h2>';
+      if (!company || !currentUser) return;
+      const isMaster = currentUser.role === 'master';
+      let html = '<div style="padding:20px;max-width:700px;margin:0 auto;">';
 
-      html += `
-        <div class="card">
-          <div class="card-header">アカウント情報</div>
-          <div class="card-row">
-            <span class="card-label">名前</span>
-            <span class="card-value">${currentUser ? currentUser.name : 'N/A'}</span>
-          </div>
-          <div class="card-row">
-            <span class="card-label">役職</span>
-            <span class="badge ${currentUser && currentUser.role === 'master' ? 'badge-master' : currentUser && currentUser.role === 'submaster' ? 'badge-submaster' : 'badge-worker'}">${currentUser && currentUser.role === 'master' ? '経営' : currentUser && currentUser.role === 'submaster' ? '職長' : '作業員'}</span>
-          </div>
-          ${currentUser && currentUser.team ? `<div class="card-row"><span class="card-label">チーム</span><span class="card-value">${currentUser.team}</span></div>` : ''}
-        </div>
+      // === アカウント発行（master only） ===
+      if (isMaster) {
+        html += '<div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;margin-bottom:20px;">';
+        html += '<h3 style="margin-top:0;">アカウント管理</h3>';
+        html += '<div style="margin-bottom:12px;"><label style="display:block;margin-bottom:4px;font-weight:bold;">ロール</label>';
+        html += '<select id="newAccRole" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">';
+        html += '<option value="member">メンバー</option><option value="admin">管理者</option><option value="master">マスター</option>';
+        html += '</select></div>';
+        html += '<div style="margin-bottom:12px;"><label style="display:block;margin-bottom:4px;font-weight:bold;">アカウント名</label>';
+        html += '<input type="text" id="newAccName" placeholder="例: 田中太郎" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;" /></div>';
+        html += '<div style="margin-bottom:12px;"><label style="display:block;margin-bottom:4px;font-weight:bold;">チーム</label>';
+        html += '<input type="text" id="newAccTeam" placeholder="例: 現場A" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;" /></div>';
+        html += '<div style="margin-bottom:12px;"><label style="display:block;margin-bottom:4px;font-weight:bold;">パスワード（空欄で自動生成）</label>';
+        html += '<input type="text" id="newAccPassword" placeholder="4桁以上" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;" /></div>';
+        html += '<button onclick="createNewAccount()" style="width:100%;padding:10px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:15px;">パスワードを発行</button>';
+        html += '</div>';
 
-        <div class="card">
-          <div class="card-header">会社情報</div>
-          <div class="card-row">
-            <span class="card-label">会社名</span>
-            <span class="card-value">${company ? company.name : 'N/A'}</span>
-          </div>
-          <div class="form-group" style="margin-top: 12px;">
-            <input type="text" id="companyNameInput" value="${company ? company.name : ''}" placeholder="会社名">
-          </div>
-          <button class="btn btn-primary" style="width: 100%;" onclick="updateCompanyName()">会社名を更新</button>
-        </div>
+        // === 発行済みアカウント一覧 ===
+        html += '<div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;margin-bottom:20px;">';
+        html += '<h3 style="margin-top:0;">発行済みアカウント</h3>';
+        if (members && members.length > 0) {
+          html += '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:14px;">';
+          html += '<tr style="background:#f8f9fa;"><th style="padding:8px;border:1px solid #ddd;text-align:left;">名前</th><th style="padding:8px;border:1px solid #ddd;">ロール</th><th style="padding:8px;border:1px solid #ddd;">チーム</th><th style="padding:8px;border:1px solid #ddd;">パスワード</th><th style="padding:8px;border:1px solid #ddd;">操作</th></tr>';
+          members.forEach(m => {
+            const isSelf = m.id === currentUser.id;
+            html += '<tr' + (isSelf ? ' style="background:#e8f4fd;"' : '') + '>';
+            html += '<td style="padding:8px;border:1px solid #ddd;">' + m.name + (isSelf ? ' (自分)' : '') + '</td>';
+            html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + (m.role || '-') + '</td>';
+            html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + (m.team || '-') + '</td>';
+            html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + (m.password || '-') + '</td>';
+            html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">';
+            if (!isSelf) html += '<button onclick="deleteAccount(' + m.id + ')" style="padding:4px 8px;background:#dc3545;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;">削除</button>';
+            html += '</td></tr>';
+          });
+          html += '</table></div>';
+        } else {
+          html += '<p style="color:#999;">アカウントがありません</p>';
+        }
+        html += '</div>';
+      }
 
-        <div class="card">
-          <div class="card-header">セキュリティ</div>
-          <div class="form-group">
-            <label>新しいパスワード</label>
-            <input type="password" id="newPassword" placeholder="新しいパスワード">
-          </div>
-          <button class="btn btn-primary" style="width: 100%;" onclick="changePassword()">パスワードを変更</button>
-        </div>
+      // === 現在のログイン情報 ===
+      html += '<div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;margin-bottom:20px;">';
+      html += '<h3 style="margin-top:0;">ログイン情報</h3>';
+      html += '<p><strong>会社:</strong> ' + (company.name || '-') + '</p>';
+      html += '<p><strong>名前:</strong> ' + (currentUser.name || '-') + '</p>';
+      html += '<p><strong>ロール:</strong> ' + (currentUser.role || '-') + '</p>';
+      html += '<p><strong>チーム:</strong> ' + (currentUser.team || '-') + '</p>';
+      html += '<button onclick="logout()" style="width:100%;padding:10px;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;">ログアウト</button>';
+      html += '</div>';
 
-        <div class="card">
-          <div class="card-header">データ管理</div>
-          <button class="btn btn-danger" style="width: 100%; margin-bottom: 8px;" onclick="resetData()">すべてのデータをリセット</button>
-          <p class="text-muted text-sm">この操作は取り消せません。</p>
-        </div>
+      // === 危険ゾーン（master only）===
+      if (isMaster) {
+        html += '<div style="background:#fff;border:2px solid #dc3545;border-radius:8px;padding:20px;margin-bottom:20px;">';
+        html += '<h3 style="margin-top:0;color:#dc3545;">危険ゾーン</h3>';
+        html += '<button onclick="handleDeleteAllData()" style="width:100%;padding:10px;background:#dc3545;color:#fff;border:none;border-radius:4px;cursor:pointer;margin-bottom:10px;">会社データを全て削除</button>';
+        html += '<button onclick="handleDeleteMyAccount()" style="width:100%;padding:10px;background:#ffc107;color:#333;border:none;border-radius:4px;cursor:pointer;">自分のアカウントを削除</button>';
+        html += '</div>';
+      } else {
+        html += '<div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;margin-bottom:20px;">';
+        html += '<button onclick="handleDeleteMyAccount()" style="width:100%;padding:10px;background:#ffc107;color:#333;border:none;border-radius:4px;cursor:pointer;">自分のアカウントを削除</button>';
+        html += '</div>';
+      }
 
-        <button class="btn btn-secondary" style="width: 100%; margin-top: 20px;" onclick="doLogout()">ログアウト</button>
-      `;
-
+      html += '</div>';
       document.getElementById('t6').innerHTML = html;
     }
 
@@ -1542,6 +1565,77 @@ function doLogout() {
       if (!confirm('この取引先企業を削除しますか？\n関連サイトは「未分類」に移動します。')) return;
       try { await sbDelete('client_companies', ccId); showToast('取引先企業を削除しました'); await renderAll(); }
       catch(e) { console.error('deleteCC error:', e); showToast('削除エラー: ' + e.message); }
+    }
+
+    
+    // === Account Management ===
+    async function createNewAccount() {
+      const role = document.getElementById('newAccRole').value;
+      const name = document.getElementById('newAccName').value.trim();
+      const team = document.getElementById('newAccTeam').value.trim();
+      let password = document.getElementById('newAccPassword').value.trim();
+      if (!name) { showToast('アカウント名を入力してください'); return; }
+      if (!password) { password = Math.random().toString(36).substring(2, 6).toUpperCase(); }
+      if (password.length < 4) { showToast('パスワードは4桁以上にしてください'); return; }
+      try {
+        const result = await sbPost('accounts', { company_id: company.id, name, role, team, password });
+        if (!result) { showToast('アカウント作成に失敗しました'); return; }
+        showToast('アカウントを作成しました');
+        // Show result modal
+        let modal = document.getElementById('inviteResultModal');
+        if (!modal) { modal = document.createElement('div'); modal.id = 'inviteResultModal'; modal.style.cssText = 'display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);'; document.body.appendChild(modal); }
+        const acc = Array.isArray(result) ? result[0] : result;
+        modal.innerHTML = '<div style="position:relative;background:#fff;margin:15% auto;padding:20px;width:80%;max-width:400px;border-radius:8px;text-align:center;">'
+          + '<h2 style="margin-top:0;">アカウント発行完了</h2>'
+          + '<div style="background:#f8f9fa;padding:15px;border-radius:4px;margin-bottom:15px;text-align:left;">'
+          + '<p><strong>名前:</strong> ' + acc.name + '</p>'
+          + '<p><strong>ロール:</strong> ' + acc.role + '</p>'
+          + '<p><strong>パスワード:</strong> <span style="font-size:20px;font-weight:bold;color:#007bff;">' + acc.password + '</span></p>'
+          + '</div>'
+          + '<p style="font-size:12px;color:#666;">このパスワードをメンバーに伝えてください</p>'
+          + '<button onclick="document.getElementById(\x27inviteResultModal\x27).style.display=\x27none\x27" style="width:100%;padding:10px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;">閉じる</button>'
+          + '</div>';
+        modal.style.display = 'block';
+        document.getElementById('newAccName').value = '';
+        document.getElementById('newAccTeam').value = '';
+        document.getElementById('newAccPassword').value = '';
+        await renderAll();
+      } catch(e) { console.error('createNewAccount error:', e); showToast('エラー: ' + e.message); }
+    }
+
+    async function deleteAccount(accId) {
+      if (!confirm('このアカウントを削除しますか？')) return;
+      try {
+        await sbDelete('accounts', accId);
+        showToast('アカウントを削除しました');
+        await renderAll();
+      } catch(e) { console.error('deleteAccount error:', e); showToast('削除エラー: ' + e.message); }
+    }
+
+    async function handleDeleteAllData() {
+      if (!confirm('本当に会社データを全て削除しますか？\n全アカウント・出勤記録・現場が完全に削除され、復元できません。')) return;
+      if (!confirm('最終確認：この操作は取り消せません。本当に削除しますか？')) return;
+      if (!company || !company.id) { showToast('ログインしてください'); return; }
+      try {
+        const cid = company.id;
+        await fetch(SB + '/attendance?company_id=eq.' + cid, { method: 'DELETE', headers: H });
+        await fetch(SB + '/client_companies?company_id=eq.' + cid, { method: 'DELETE', headers: H });
+        await fetch(SB + '/work_sites?company_id=eq.' + cid, { method: 'DELETE', headers: H });
+        await fetch(SB + '/accounts?company_id=eq.' + cid, { method: 'DELETE', headers: H });
+        await fetch(SB + '/companies?id=eq.' + cid, { method: 'DELETE', headers: H });
+        showToast('全データを削除しました。ログアウトします。');
+        setTimeout(() => { logout(); }, 1500);
+      } catch(e) { console.error('deleteAllData error:', e); showToast('削除エラー: ' + e.message); }
+    }
+
+    async function handleDeleteMyAccount() {
+      if (!confirm('自分のアカウントを削除しますか？\nこの操作は取り消せません。')) return;
+      if (!currentUser || !currentUser.id) { showToast('ログインしてください'); return; }
+      try {
+        await sbDelete('accounts', currentUser.id);
+        showToast('アカウントを削除しました。ログアウトします。');
+        setTimeout(() => { logout(); }, 1500);
+      } catch(e) { console.error('deleteMyAccount error:', e); showToast('削除エラー: ' + e.message); }
     }
 
     </script>
