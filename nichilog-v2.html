@@ -558,6 +558,7 @@
       document.getElementById('appHeader').style.display = '';
       document.getElementById('navBar').style.display = '';
       await renderAll();
+      localStorage.setItem('nichilog_session', JSON.stringify({companyName: companyName, userName: currentUser.name, pwd: document.getElementById('loginPassword').value}));
       switchTab(1)
     }
     async function doRegister() {
@@ -599,6 +600,7 @@
     }
 function doLogout() {
       if (!confirm('ログアウトしますか？')) return;
+      localStorage.removeItem('nichilog_session');
       currentUser = null;
       company = null;
       entries = [];
@@ -1672,6 +1674,20 @@ function doLogout() {
         setTimeout(() => { logout(); }, 1500);
       } catch(e) { console.error('deleteMyAccount error:', e); showToast('削除エラー: ' + e.message); }
     }
+
+        // Auto-login from localStorage
+    (async () => {
+      const saved = localStorage.getItem('nichilog_session');
+      if (saved) {
+        try {
+          const s = JSON.parse(saved);
+          document.getElementById('loginCompany').value = s.companyName;
+          document.getElementById('loginName').value = s.userName;
+          document.getElementById('loginPassword').value = s.pwd;
+          await doLogin();
+        } catch(e) { localStorage.removeItem('nichilog_session'); }
+      }
+    })();
 
     </script>
 </body>
