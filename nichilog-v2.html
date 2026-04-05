@@ -1440,7 +1440,7 @@ function doLogout() {
             html += '<td style="padding:8px;border:1px solid #ddd;">' + m.name + (isSelf ? ' (自分)' : '') + '</td>';
             html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + (m.role || '-') + '</td>';
             html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + (m.team || '-') + '</td>';
-            html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + (m.password || '-') + '</td>';
+            html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + '****' + '</td>';
             html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">';
             if (!isSelf) html += '<button onclick="deleteAccount(' + m.id + ')" style="padding:4px 8px;background:#dc3545;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;">削除</button>';
             html += '</td></tr>';
