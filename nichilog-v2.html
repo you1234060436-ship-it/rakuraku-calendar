@@ -508,47 +508,32 @@
     }
 
     async function sbPost(table, data) {
-      try {
-        const res = await fetch(SB + '/' + table, {
-          method: 'POST',
-          headers: {...H, 'Prefer': 'return=representation'},
-          body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error(`${res.status}`);
-        return await res.json();
-      } catch (e) {
-        console.error('sbPost error:', e);
-        return null;
-      }
+      const res = await fetch(SB + '/' + table, {
+        method: 'POST',
+        headers: {...H, 'Prefer': 'return=representation'},
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) { const e = await res.text(); console.error('sbPost', res.status, e); throw new Error(res.status + ':' + e); }
+      return await res.json();
     }
 
     async function sbPatch(table, id, data) {
-      try {
-        const res = await fetch(`${SB}/${table}?id=eq.${id}`, {
-          method: 'PATCH',
-          headers: {...H, 'Prefer': 'return=representation'},
-          body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error(`${res.status}`);
-        return true;
-      } catch (e) {
-        console.error('sbPatch error:', e);
-        return false;
-      }
+      const res = await fetch(SB + '/' + table + '?id=eq.' + id, {
+        method: 'PATCH',
+        headers: {...H, 'Prefer': 'return=representation'},
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) { const e = await res.text(); console.error('sbPatch', res.status, e); throw new Error(res.status + ':' + e); }
+      return await res.json();
     }
 
     async function sbDelete(table, id) {
-      try {
-        const res = await fetch(`${SB}/${table}?id=eq.${id}`, {
-          method: 'DELETE',
-          headers: H
-        });
-        if (!res.ok) throw new Error(`${res.status}`);
-        return true;
-      } catch (e) {
-        console.error('sbDelete error:', e);
-        return false;
-      }
+      const res = await fetch(SB + '/' + table + '?id=eq.' + id, {
+        method: 'DELETE',
+        headers: H
+      });
+      if (!res.ok) { const e = await res.text(); console.error('sbDelete', res.status, e); throw new Error(res.status + ':' + e); }
+      return true;
     }
 
     // === Auth ===
@@ -994,19 +979,20 @@ function doLogout() {
       const color = document.getElementById('siteColor').value;
       const ccId = document.getElementById('siteClientCompanyId').value;
       if (!name) { showToast('サイト名を入力してください'); return; }
+      if (!siteId && (!company || !company.id)) { showToast('ログインしてください'); return; }
       const body = { name, price: price ? parseInt(price) : null, rate_type: rateType || null, memo: memo || null, color, client_company_id: ccId ? parseInt(ccId) : null };
       try {
         if (siteId) { await sbPatch('work_sites', siteId, body); showToast('サイトを更新しました'); }
         else { await sbPost('work_sites', { company_id: company.id, ...body }); showToast('サイトを追加しました'); }
         document.getElementById('siteModal').style.display = 'none';
         await renderAll();
-      } catch(e) { console.error(e); showToast('エラーが発生しました'); }
+      } catch(e) { console.error('saveSite error:', e); showToast('エラー: ' + e.message); }
     }
 
     async function confirmDeleteSite(id) {
       if (!confirm('このサイトを削除しますか？')) return;
       try { await sbDelete('work_sites', id); showToast('サイトを削除しました'); await renderAll(); }
-      catch(e) { console.error(e); showToast('削除エラー'); }
+      catch(e) { console.error('deleteSite error:', e); showToast('削除エラー: ' + e.message); }
     }
 
         // === Members (T4) ===
@@ -1537,18 +1523,25 @@ function doLogout() {
       const id = document.getElementById('ccEditId').value;
       const name = document.getElementById('ccEditName').value.trim();
       if (!name) { showToast('企業名を入力してください'); return; }
+      if (!id && (!company || !company.id)) { showToast('ログインしてください'); return; }
       try {
-        if (id) { await sbPatch('client_companies', id, { name }); showToast('取引先企業を更新しました'); }
-        else { await sbPost('client_companies', { company_id: company.id, name, created_by: currentUser.id }); showToast('取引先企業を追加しました'); }
+        let result;
+        if (id) {
+          result = await sbPatch('client_companies', id, { name });
+        } else {
+          result = await sbPost('client_companies', { company_id: company.id, name });
+        }
+        if (!result) { showToast('保存に失敗しました（API応答なし）'); return; }
+        showToast(id ? '取引先企業を更新しました' : '取引先企業を追加しました');
         document.getElementById('ccModal').style.display = 'none';
         await renderAll();
-      } catch(e) { console.error(e); showToast('エラーが発生しました'); }
+      } catch(e) { console.error('saveClientCompany error:', e); showToast('エラー: ' + e.message); }
     }
 
     async function deleteClientCompany(ccId) {
       if (!confirm('この取引先企業を削除しますか？\n関連サイトは「未分類」に移動します。')) return;
       try { await sbDelete('client_companies', ccId); showToast('取引先企業を削除しました'); await renderAll(); }
-      catch(e) { console.error(e); showToast('削除エラー'); }
+      catch(e) { console.error('deleteCC error:', e); showToast('削除エラー: ' + e.message); }
     }
 
     </script>
