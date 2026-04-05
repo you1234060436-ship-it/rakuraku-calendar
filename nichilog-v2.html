@@ -1161,7 +1161,7 @@ function doLogout() {
       }
       
       Object.keys(siteMap).forEach(siteId => {
-        const site = sites.find(s => s.id=== siteId) || {name:'不明', price:0, rate_type:'daily'};
+        const site = sites.find(s => s.id== siteId) || {name:'不明', price:0, rate_type:'daily'};
         const data = siteMap[siteId];
         const days = data.entries.length;
         const rate = site.price || 0;
