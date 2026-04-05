@@ -377,7 +377,7 @@
       try {
         const res = await fetch(SB + '/' + table, {
           method: 'POST',
-          headers: H,
+          headers: {...H, 'Prefer': 'return=representation'},
           body: JSON.stringify(data)
         });
         if (!res.ok) throw new Error(`${res.status}`);
@@ -392,7 +392,7 @@
       try {
         const res = await fetch(`${SB}/${table}?id=eq.${id}`, {
           method: 'PATCH',
-          headers: H,
+          headers: {...H, 'Prefer': 'return=representation'},
           body: JSON.stringify(data)
         });
         if (!res.ok) throw new Error(`${res.status}`);
