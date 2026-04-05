@@ -938,6 +938,7 @@ function doLogout() {
       let html = '<div style="padding:20px;">';
       html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3 style="margin:0;">取引先企業 / 現場</h3>';
       html += '<button onclick="openClientCompanyModal(null)" style="padding:8px 15px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;">+ 取引先企業を追加</button></div>';
+      if (clientCompanies) clientCompanies.forEach(cc => { const id = String(cc.id); if (!grouped[id]) grouped[id] = []; });
       const ccIds = Object.keys(grouped).sort((a,b) => a === '__none__' ? 1 : b === '__none__' ? -1 : 0);
       ccIds.forEach(ccId => {
         let groupTitle = ccId === '__none__' ? '未分類' : '';
