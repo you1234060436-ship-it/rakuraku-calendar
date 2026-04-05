@@ -473,12 +473,16 @@
     }
     function openInvoice(prefill){
       const d = new Date();
-      document.getElementById('invDate').value = d.toISOString().slice(0,10);
       const y = d.getFullYear();
       const m = String(d.getMonth()+1).padStart(2,'0');
+      document.getElementById('invDate').value = d.toISOString().slice(0,10);
       document.getElementById('invNo').value = y + '-' + m + '-001';
       if(prefill){
-        if(prefill.to) document.getElementById('invTo').value = prefill.to;
+        if(prefill.invNo) document.getElementById('invNo').value = prefill.invNo;
+        if(prefill.invDate) document.getElementById('invDate').value = prefill.invDate;
+        if(prefill.invDue) { document.getElementById('invDue').value = prefill.invDue; document.getElementById('invDueShow').checked = true; }
+        if(prefill.invTo) document.getElementById('invTo').value = prefill.invTo;
+        if(prefill.invTanto) document.getElementById('invTanto').value = prefill.invTanto;
         if(prefill.rows) { invRows = prefill.rows; }
       }
       if(companyName) document.getElementById('invFrom').value = companyName;
