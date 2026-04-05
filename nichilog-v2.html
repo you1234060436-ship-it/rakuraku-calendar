@@ -1168,107 +1168,99 @@ function doLogout() {
       const yr = viewMonth.getFullYear();
       const mo = viewMonth.getMonth();
       const moStr = yr + '-' + String(mo+1).padStart(2,'0');
-      
-      // Group entries by site
-      const siteMap = {};
-      entries.filter(e => e.work_date && e.work_date.startsWith(moStr)).forEach(e => {
-        if (!siteMap[e.site_id]) siteMap[e.site_id] = {entries:[], members: new Set()};
-        siteMap[e.site_id].entries.push(e);
-        siteMap[e.site_id].members.add(e.account_id);
-      });
-      
-      let totalAmount = 0;
-      let totalDays = 0;
-      
-      let html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">';
-      html += '<h3 style="margin:0">請求・レポート</h3>';
-      html += '<div><button class="btn" onclick="chMo(-1);switchTab(5)">◀</button>';
-      html += ' <strong>' + yr + '年' + (mo+1) + '月</strong> ';
-      html += '<button class="btn" onclick="chMo(1);switchTab(5)">▶</button></div></div>';
-      
-      // Site-wise breakdown
-      html += '<div style="display:flex;flex-direction:column;gap:12px">';
-      
-      if (Object.keys(siteMap).length === 0) {
-        html += '<div class="card" style="text-align:center;color:#888;padding:24px">この月の出勤データはありません</div>';
+      const moEntries = entries.filter(e => e.work_date && e.work_date.startsWith(moStr));
+      let html = '<h2 style="margin-bottom:10px">\u8ACB\u6C42\u30FB\u30EC\u30DD\u30FC\u30C8</h2>';
+      html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><button onclick="reportPrevMonth()">\u25C0</button><span>' + yr + '\u5E74' + (mo+1) + '\u6708</span><button onclick="reportNextMonth()">\u25B6</button></div>';
+      if(moEntries.length === 0){
+        html += '<p>\u3053\u306E\u6708\u306E\u51FA\u52E4\u30C7\u30FC\u30BF\u306F\u3042\u308A\u307E\u305B\u3093</p>';
+        html += '<div style="background:#f9fafb;border-radius:12px;padding:16px;margin-top:16px;display:flex;gap:24px"><div><b>\u6708\u9593\u5408\u8A08</b></div><div>0\u65E5\u7A3C\u50CD</div><div>\u00A50</div></div>';
+        html += '<div style="margin-top:12px;display:flex;gap:8px"><button onclick="generateInvoiceFromReport()" style="background:#2563eb;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer">\uD83D\uDCC4 \u8ACB\u6C42\u66F8\u3092\u4F5C\u6210</button><button onclick="exportCSV()" style="background:#f3f4f6;border:1px solid #d1d5db;padding:8px 16px;border-radius:6px;cursor:pointer">\uD83D\uDCE5 CSV\u51FA\u529B</button></div>';
+        el.innerHTML = html;
+        return;
       }
-      
+      const siteMap = {};
+      moEntries.forEach(e => {
+        const sid = e.site_id;
+        if(!siteMap[sid]) siteMap[sid] = [];
+        siteMap[sid].push(e);
+      });
+      // Group sites by client_company_id
+      const clientGrouped = {};
       Object.keys(siteMap).forEach(siteId => {
-        const site = sites.find(s => s.id== siteId) || {name:'不明', price:0, rate_type:'daily'};
-        const data = siteMap[siteId];
-        const days = data.entries.length;
-        const rate = site.price || 0;
-        const amount = rate * days;
-        totalAmount += amount;
-        totalDays += days;
-        
-        html += '<div class="card">';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center">';
-        html += '<div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + (site.color||'#4CAF50') + ';margin-right:6px"></span>';
-        html += '<strong>' + site.name + '</strong></div>';
-        html += '<span class="badge" style="background:#e3f2fd;color:#1565c0">' + days + '日</span></div>';
-        html += '<div style="margin-top:8px;font-size:13px;color:#666">';
-        html += '単価: ¥' + rate.toLocaleString() + '/' + (site.rate_type === 'hourly' ? '時間' : '日') + ' × ' + days + (site.rate_type === 'hourly' ? '時間' : '日');
-        html += '</div>';
-        html += '<div style="margin-top:4px;font-size:16px;font-weight:bold;text-align:right">¥' + amount.toLocaleString() + '</div>';
-        html += '<div style="margin-top:6px;font-size:12px;color:#888">作業員: ' + data.members.size + '名</div>';
+        const site = sites.find(s => s.id == siteId) || {name:'\u4E0D\u660E',price:0,rate_type:'daily',client_company_id:null};
+        const ccId = site.client_company_id || 'none';
+        if(!clientGrouped[ccId]) clientGrouped[ccId] = {};
+        clientGrouped[ccId][siteId] = siteMap[siteId];
+      });
+      let totalDays = 0;
+      let totalAmount = 0;
+      Object.keys(clientGrouped).forEach(ccId => {
+        const cc = clientCompanies.find(c => c.id == ccId);
+        const ccName = cc ? cc.name : '\u672A\u8A2D\u5B9A';
+        html += '<div style="background:#f0f7ff;border-radius:10px;padding:14px 16px;margin-bottom:14px;border:1px solid #bfdbfe">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="margin:0;font-size:15px">\uD83C\uDFE2 ' + ccName + '</h3>';
+        html += '<button onclick="generateInvoiceFromReport(' + ccId + ')" style="background:#2563eb;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px">\uD83D\uDCC4 \u8ACB\u6C42\u66F8\u3092\u4F5C\u6210</button></div>';
+        const sitesInGroup = clientGrouped[ccId];
+        Object.keys(sitesInGroup).forEach(siteId => {
+          const site = sites.find(s => s.id == siteId) || {name:'\u4E0D\u660E',price:0,rate_type:'daily'};
+          const data = sitesInGroup[siteId];
+          const days = data.length;
+          const rate = site.price || 0;
+          const amount = rate * days;
+          totalDays += days;
+          totalAmount += amount;
+          const members = [...new Set(data.map(d => d.account_id))];
+          html += '<div style="background:#fff;border-radius:8px;padding:12px;margin-bottom:8px">';
+          html += '<div style="font-weight:bold;margin-bottom:4px">' + site.name + '</div>';
+          html += '<div style="color:#666;font-size:13px">' + days + '\u65E5</div>';
+          html += '<div style="font-size:13px">\u5358\u4FA1: \u00A5' + rate.toLocaleString() + '/' + (site.rate_type==='hourly'?'\u6642\u9593':'\u65E5') + ' \u00D7 ' + days + (site.rate_type==='hourly'?'\u6642\u9593':'\u65E5') + '</div>';
+          html += '<div style="font-weight:bold;font-size:15px">\u00A5' + amount.toLocaleString() + '</div>';
+          html += '<div style="font-size:12px;color:#888">\u4F5C\u696D\u54E1: ' + members.length + '\u540D</div>';
+          html += '</div>';
+        });
         html += '</div>';
       });
-      
-      html += '</div>';
-      
-      // Total summary
-      html += '<div class="card" style="margin-top:16px;background:#f8f9fa;border:2px solid #dee2e6">';
-      html += '<div style="display:flex;justify-content:space-between;align-items:center">';
-      html += '<div><strong>月間合計</strong><br><span style="font-size:13px;color:#666">' + totalDays + '日稼働</span></div>';
-      html += '<div style="font-size:22px;font-weight:bold;color:#1565c0">¥' + totalAmount.toLocaleString() + '</div>';
-      html += '</div></div>';
-      
-      // Action buttons
-      html += '<div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">';
-      html += '<button class="btn btn-primary" style="flex:1;min-width:140px" onclick="generateInvoiceFromReport()">📄 請求書を作成</button>';
-      html += '<button class="btn" style="flex:1;min-width:140px" onclick="downloadCSV()">📥 CSV出力</button>';
-      html += '</div>';
-      
+      html += '<div style="background:#f9fafb;border-radius:12px;padding:16px;margin-top:16px;display:flex;gap:24px"><div><b>\u6708\u9593\u5408\u8A08</b></div><div>' + totalDays + '\u65E5\u7A3C\u50CD</div><div>\u00A5' + totalAmount.toLocaleString() + '</div></div>';
+      html += '<div style="margin-top:12px"><button onclick="exportCSV()" style="background:#f3f4f6;border:1px solid #d1d5db;padding:8px 16px;border-radius:6px;cursor:pointer">\uD83D\uDCE5 CSV\u51FA\u529B</button></div>';
       el.innerHTML = html;
     }
-
-    function generateInvoiceFromReport() {
+    function generateInvoiceFromReport(clientCompanyId) {
       const yr = viewMonth.getFullYear();
       const mo = viewMonth.getMonth();
       const moStr = yr + '-' + String(mo+1).padStart(2,'0');
-      
-      // Build invoice detail rows from entries grouped by site
+      const moEntries = entries.filter(e => e.work_date && e.work_date.startsWith(moStr));
       const siteMap = {};
-      entries.filter(e => e.work_date && e.work_date.startsWith(moStr)).forEach(e => {
-        if (!siteMap[e.site_id]) siteMap[e.site_id] = [];
-        siteMap[e.site_id].push(e);
+      moEntries.forEach(e => {
+        const sid = e.site_id;
+        if(!siteMap[sid]) siteMap[sid] = [];
+        siteMap[sid].push(e);
       });
-      
       const rows = [];
       Object.keys(siteMap).forEach(siteId => {
-        const site = sites.find(s => s.id == siteId) || {name:'不明', rate:0, rate_type:'daily'};
+        const site = sites.find(s => s.id == siteId);
+        if(!site) return;
+        if(clientCompanyId && site.client_company_id != clientCompanyId) return;
         const days = siteMap[siteId].length;
+        const dueDate = new Date(yr, mo+1, 0);
+        dueDate.setMonth(dueDate.getMonth() + 1);
         rows.push({
-          name: site.name + ' 作業',
-          spec: yr + '年' + (mo+1) + '月分',
+          name: site.name + ' \u4F5C\u696D',
+          spec: yr + '\u5E74' + (mo+1) + '\u6708\u5206',
           qty: days,
-          unit: site.rate_type === 'hourly' ? '時間' : '日',
+          unit: site.rate_type === 'hourly' ? '\u6642\u9593' : '\u65E5',
           price: site.price || 0,
           taxRate: 10
         });
       });
-      
-      // Prefill invoice data
-      const today = new Date();
-      const dueDate = new Date(today);
-      dueDate.setMonth(dueDate.getMonth() + 1);
-      
+      const cc = clientCompanies.find(c => c.id == clientCompanyId);
+      const ccName = cc ? cc.name : '';
+      const invNo = moStr.replace('-','') + '-' + String(clientCompanyId||0).padStart(3,'0');
+      const today = new Date().toISOString().split('T')[0];
       openInvoice({
-        invNo: moStr.replace('-','') + '-001',
-        invDate: today.toISOString().split('T')[0],
-        invDue: dueDate.toISOString().split('T')[0],
-        invTo: '',
+        invNo: invNo,
+        invDate: today,
+        invDue: '',
+        invTo: ccName,
         invTanto: '',
         rows: rows
       });
