@@ -134,35 +134,22 @@
     <div id="loginScreen" class="login-screen">
       <div class="login-logo">ニチログ</div>
       <div id="loginPanel" class="login-form">
-        <div class="form-group">
-          <label>ユーザーID</label>
-          <input type="text" id="loginName" placeholder="名前を入力">
-        </div>
-        <div class="form-group">
-          <label>パスワード</label>
-          <input type="password" id="loginPassword" placeholder="パスワード">
-        </div>
-        <button class="btn-primary" onclick="doLogin()">ログイン</button>
+        <div class="form-group"><label>会社名</label><input type="text" id="loginCompany" placeholder="会社名を入力"></div>
+        <div class="form-group"><label>名前</label><input type="text" id="loginName" placeholder="名前を入力"></div>
+        <div class="form-group"><label>パスワード</label><input type="password" id="loginPassword" placeholder="パスワード"></div>
+        <button class="btn-primary" style="width:100%;padding:12px;margin-top:8px;" onclick="doLogin()">ログイン</button>
         <div id="loginError" style="color:#e74c3c;text-align:center;margin-top:8px;font-size:13px;"></div>
-        <div style="text-align:center;margin-top:16px;">
-          <a href="#" onclick="event.preventDefault();document.getElementById('loginPanel').style.display='none';document.getElementById('regPanel').style.display='block';" style="color:#4a90d9;font-size:14px;">新規アカウント登録</a>
-        </div>
+        <div style="text-align:center;margin-top:16px;"><a href="#" onclick="event.preventDefault();document.getElementById('loginPanel').style.display='none';document.getElementById('regPanel').style.display='block';" style="color:#4a90d9;font-size:14px;">新規アカウント登録</a></div>
       </div>
       <div id="regPanel" class="login-form" style="display:none;">
         <h3 style="text-align:center;margin-bottom:16px;font-size:16px;">新規アカウント登録</h3>
         <div class="form-group"><label>会社名</label><input type="text" id="regCompany" placeholder="会社名"></div>
-        <div class="form-group"><label>名前（ログインID）</label><input type="text" id="regName" placeholder="名前"></div>
+        <div class="form-group"><label>名前</label><input type="text" id="regName" placeholder="名前"></div>
         <div class="form-group"><label>パスワード</label><input type="password" id="regPassword" placeholder="パスワード"></div>
-        <div class="form-group"><label>ロール</label><select id="regRole" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
-          <option value="master">master（管理者）</option>
-          <option value="foreman">foreman（職長）</option>
-          <option value="worker">worker（作業員）</option>
-        </select></div>
-        <button onclick="doRegister()" style="width:100%;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:6px;font-size:16px;cursor:pointer;">登録</button>
+        <div class="form-group"><label>ロール</label><select id="regRole" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;"><option value="master">master（管理者）</option><option value="foreman">foreman（職長）</option><option value="worker">worker（作業員）</option></select></div>
+        <button style="width:100%;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:6px;font-size:16px;cursor:pointer;margin-top:8px;" onclick="doRegister()">登録</button>
         <div id="regError" style="color:#e74c3c;text-align:center;margin-top:8px;font-size:13px;"></div>
-        <div style="text-align:center;margin-top:16px;">
-          <a href="#" onclick="event.preventDefault();document.getElementById('regPanel').style.display='none';document.getElementById('loginPanel').style.display='block';" style="color:#4a90d9;font-size:14px;">ログインに戻る</a>
-        </div>
+        <div style="text-align:center;margin-top:16px;"><a href="#" onclick="event.preventDefault();document.getElementById('regPanel').style.display='none';document.getElementById('loginPanel').style.display='block';" style="color:#4a90d9;font-size:14px;">ログインに戻る</a></div>
       </div>
     </div>
 
@@ -419,18 +406,21 @@
 
     // === Auth ===
     async function doLogin() {
+      const company = document.getElementById('loginCompany').value.trim();
       const name = document.getElementById('loginName').value.trim();
       const pwd = document.getElementById('loginPassword').value;
-      if (!name || !pwd) { showLoginError('名前とパスワードを入力してください'); return; }
-      const accounts = await sbGet('accounts', 'name=eq.' + encodeURIComponent(name));
+      if (!company || !name || !pwd) { showLoginError('全項目を入力してください'); return; }
+      const companies = await sbGet('companies', 'name=eq.' + encodeURIComponent(company));
+      if (!companies || companies.length === 0) { showLoginError('会社が見つかりません'); return; }
+      const compId = companies[0].id;
+      const accounts = await sbGet('accounts', 'company_id=eq.' + compId + '&name=eq.' + encodeURIComponent(name));
       if (!accounts || accounts.length === 0) { showLoginError('ユーザーが見つかりません'); return; }
       const acct = accounts[0];
       const hash = await sha256(pwd);
       if (hash !== acct.password) { showLoginError('パスワードが違います'); return; }
       window.currentUser = acct;
-      window.companyId = acct.company_id;
-      const companies = await sbGet('companies', 'id=eq.' + acct.company_id);
-      window.companyName = companies.length > 0 ? companies[0].name : '';
+      window.companyId = compId;
+      window.companyName = companies[0].name;
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('appHeader').style.display = '';
       document.getElementById('appNav').style.display = '';
@@ -445,19 +435,19 @@
       errEl.textContent = ''; errEl.style.color = '#e74c3c';
       if (!company || !name || !pwd) { errEl.textContent = '全項目を入力してください'; return; }
       try {
-        const ex = await sbGet('accounts', 'name=eq.' + encodeURIComponent(name));
-        if (ex && ex.length > 0) { errEl.textContent = 'この名前は既に登録されています'; return; }
         let companyId;
         const ec = await sbGet('companies', 'name=eq.' + encodeURIComponent(company));
         if (ec && ec.length > 0) { companyId = ec[0].id; } else {
           const nc = await sbPost('companies', { name: company });
           if (nc && nc.length > 0) { companyId = nc[0].id; } else { errEl.textContent = '会社登録に失敗'; return; }
         }
+        const ex = await sbGet('accounts', 'company_id=eq.' + companyId + '&name=eq.' + encodeURIComponent(name));
+        if (ex && ex.length > 0) { errEl.textContent = 'この会社に同名のユーザーが既にいます'; return; }
         const hash = await sha256(pwd);
         const na = await sbPost('accounts', { company_id: companyId, name: name, password: hash, role: role });
         if (na && na.length > 0) {
           errEl.style.color = '#27ae60'; errEl.textContent = '登録完了！ログインしてください';
-          setTimeout(() => { document.getElementById('regPanel').style.display = 'none'; document.getElementById('loginPanel').style.display = 'block'; document.getElementById('loginName').value = name; errEl.textContent = ''; }, 1500);
+          setTimeout(() => { document.getElementById('regPanel').style.display = 'none'; document.getElementById('loginPanel').style.display = 'block'; document.getElementById('loginCompany').value = company; document.getElementById('loginName').value = name; errEl.textContent = ''; }, 1500);
         } else { errEl.textContent = 'アカウント登録に失敗'; }
       } catch(e) { errEl.textContent = 'エラー: ' + e.message; }
     }
@@ -471,6 +461,7 @@ function doLogout() {
       document.getElementById('loginScreen').style.display = 'flex';
       document.getElementById('appHeader').style.display = 'none';
       document.getElementById('navBar').style.display = 'none';
+      document.getElementById('loginCompany').value = '';
       document.getElementById('loginName').value = '';
       document.getElementById('loginPassword').value = '';
       document.getElementById('loginError').style.display = 'none';
