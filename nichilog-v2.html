@@ -619,6 +619,8 @@ function doLogout() {
       document.getElementById('t' + n).classList.add('active');
       document.querySelectorAll('.nav-item')[n - 1].classList.add('active');
       currentTab = n;
+      const renderMap = {1: renderCalendar, 2: renderSummary, 3: renderSites, 4: renderMembers, 5: renderReport, 6: renderSettings};
+      if (renderMap[n]) renderMap[n]();
     }
 
     function clModal() {
@@ -1078,7 +1080,8 @@ function doLogout() {
       }
 
       if (ok) {
-        clModal();
+        await renderAll();
+      clModal();
         members = await sbGet('accounts', `company_id=eq.${company.id}`);
         renderMembers();
       }
@@ -1475,6 +1478,9 @@ function doLogout() {
         company.name = newName;
         renderSettings();
       }
+    
+      await renderAll();
+      showToast('会社名を更新しました');
     }
 
     async function changePassword() {
