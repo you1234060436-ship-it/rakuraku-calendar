@@ -424,6 +424,7 @@
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('appHeader').style.display = '';
       document.getElementById('appNav').style.display = '';
+      await renderAll();
       switchTab(1)
     }
     async function doRegister() {
