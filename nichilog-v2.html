@@ -418,6 +418,7 @@
       const acct = accounts[0];
       const hash = await sha256(pwd);
       if (hash !== acct.password) { showLoginError('パスワードが違います'); return; }
+      company = companies[0];
       window.currentUser = acct;
       window.companyId = compId;
       window.companyName = companies[0].name;
