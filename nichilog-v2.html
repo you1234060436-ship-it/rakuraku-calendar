@@ -1596,6 +1596,7 @@ function doLogout() {
       if (!password) { password = Math.random().toString(36).substring(2, 6).toUpperCase(); }
       if (password.length < 4) { showToast('パスワードは4桁以上にしてください'); return; }
       try {
+      password = await sha256(password);
         const result = await sbPost('accounts', { company_id: company.id, name, role, team, password });
         if (!result) { showToast('アカウント作成に失敗しました'); return; }
         showToast('アカウントを作成しました');
