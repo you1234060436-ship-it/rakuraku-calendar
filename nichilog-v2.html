@@ -51,7 +51,7 @@
     /* Badge */
     .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
     .badge-master { background: #fee2e2; color: #dc2626; }
-    .badge-foreman { background: #dbeafe; color: #2563EB; }
+    .badge-submaster { background: #dbeafe; color: #2563EB; }
     .badge-worker { background: #dcfce7; color: #16a34a; }
 
     /* Calendar */
@@ -146,7 +146,7 @@
         <div class="form-group"><label>会社名</label><input type="text" id="regCompany" placeholder="会社名"></div>
         <div class="form-group"><label>名前</label><input type="text" id="regName" placeholder="名前"></div>
         <div class="form-group"><label>パスワード</label><input type="password" id="regPassword" placeholder="パスワード"></div>
-        <div class="form-group"><label>ロール</label><select id="regRole" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;"><option value="master">master（管理者）</option><option value="foreman">foreman（職長）</option><option value="worker">worker（作業員）</option></select></div>
+        <div class="form-group"><label>ロール</label><select id="regRole" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;"><option value="master">master（管理者）</option><option value="submaster">submaster（職長）</option><option value="worker">worker（作業員）</option></select></div>
         <button style="width:100%;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:6px;font-size:16px;cursor:pointer;margin-top:8px;" onclick="doRegister()">登録</button>
         <div id="regError" style="color:#e74c3c;text-align:center;margin-top:8px;font-size:13px;"></div>
         <div style="text-align:center;margin-top:16px;"><a href="#" onclick="event.preventDefault();document.getElementById('regPanel').style.display='none';document.getElementById('loginPanel').style.display='block';" style="color:#4a90d9;font-size:14px;">ログインに戻る</a></div>
@@ -271,7 +271,7 @@
         <label>役職</label>
         <select id="memberRole">
           <option value="master">経営</option>
-          <option value="foreman">職長</option>
+          <option value="submaster">職長</option>
           <option value="worker">作業員</option>
         </select>
       </div>
@@ -868,8 +868,8 @@ function doLogout() {
       html += '<button class="btn btn-primary" style="width: 100%; margin-bottom: 16px;" onclick="openMemberModal()">+ 新規メンバー</button>';
 
       members.forEach(m => {
-        const roleBadges = { master: 'badge-master', foreman: 'badge-foreman', worker: 'badge-worker' };
-        const roleNames = { master: '経営', foreman: '職長', worker: '作業員' };
+        const roleBadges = { master: 'badge-master', submaster: 'badge-submaster', worker: 'badge-worker' };
+        const roleNames = { master: '経営', submaster: '職長', worker: '作業員' };
         html += `
           <div class="card">
             <div class="card-row">
@@ -1216,7 +1216,7 @@ function doLogout() {
           </div>
           <div class="card-row">
             <span class="card-label">役職</span>
-            <span class="badge ${currentUser && currentUser.role === 'master' ? 'badge-master' : currentUser && currentUser.role === 'foreman' ? 'badge-foreman' : 'badge-worker'}">${currentUser && currentUser.role === 'master' ? '経営' : currentUser && currentUser.role === 'foreman' ? '職長' : '作業員'}</span>
+            <span class="badge ${currentUser && currentUser.role === 'master' ? 'badge-master' : currentUser && currentUser.role === 'submaster' ? 'badge-submaster' : 'badge-worker'}">${currentUser && currentUser.role === 'master' ? '経営' : currentUser && currentUser.role === 'submaster' ? '職長' : '作業員'}</span>
           </div>
           ${currentUser && currentUser.team ? `<div class="card-row"><span class="card-label">チーム</span><span class="card-value">${currentUser.team}</span></div>` : ''}
         </div>
