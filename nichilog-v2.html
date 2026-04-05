@@ -77,56 +77,47 @@
     .bar-label { font-size: 12px; color: #6b7280; text-align: center; }
     .bar-amount { font-size: 12px; font-weight: 600; color: #374151; }
 
-    /* Invoice/Receipt */
-    .invoice-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; z-index: 1100; overflow-y: auto; }
-    .invoice-overlay.show { display: block; }
-    .invoice-page { width: 210mm; height: 297mm; background: white; margin: 20px auto; padding: 40px; font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif; position: relative; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-    .invoice-header { text-align: center; margin-bottom: 40px; }
-    .invoice-title { font-size: 36px; letter-spacing: 8px; font-weight: 600; margin-bottom: 40px; }
-    .invoice-subtitle { font-size: 14px; margin-bottom: 30px; }
-    .invoice-info { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; font-size: 14px; }
-    .invoice-info-block { }
-    .invoice-info-block-label { font-weight: 600; margin-bottom: 8px; }
-    .invoice-detail-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; }
-    .invoice-detail-table th { border-top: 2px solid #000; border-bottom: 1px solid #000; padding: 8px; text-align: left; font-weight: 600; }
-    .invoice-detail-table td { border-bottom: 1px solid #f0f0f0; padding: 8px; text-align: left; }
-    .invoice-detail-table .amount { text-align: right; }
-    .invoice-total { text-align: right; margin-bottom: 30px; }
-    .invoice-total-row { display: flex; justify-content: flex-end; gap: 40px; margin-bottom: 8px; font-size: 14px; }
-    .invoice-total-label { width: 100px; }
-    .invoice-total-value { width: 120px; text-align: right; }
-    .invoice-total-amount { font-size: 24px; font-weight: 600; border: 2px solid #000; padding: 12px 20px; display: inline-block; }
-    .invoice-seal { border: 3px solid #dc2626; width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #dc2626; font-size: 18px; font-weight: 600; float: right; margin-bottom: 20px; }
-    .invoice-footer { margin-top: 40px; text-align: center; font-size: 12px; }
-    .invoice-actions { text-align: center; margin-top: 30px; padding-top: 30px; border-top: 1px solid #e5e7eb; }
-    .invoice-actions .btn { margin: 0 10px; }
-
-    /* Receipt */
-    .receipt-page { width: 210mm; height: 297mm; background: white; margin: 20px auto; padding: 60px 80px; font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif; position: relative; box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-    .receipt-title { text-align: center; font-size: 32px; letter-spacing: 12px; font-weight: 600; margin-bottom: 60px; }
-    .receipt-fields { margin-bottom: 40px; }
-    .receipt-field { display: flex; margin-bottom: 30px; }
-    .receipt-field-label { width: 120px; font-size: 16px; font-weight: 600; text-align: right; padding-right: 30px; }
-    .receipt-field-value { flex: 1; }
-    .receipt-field-box { border-bottom: 1px solid #000; padding-bottom: 10px; min-height: 30px; font-size: 18px; }
-    .receipt-seal-area { text-align: center; margin-top: 60px; }
-    .receipt-seal { border: 3px solid #dc2626; width: 140px; height: 140px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #dc2626; font-size: 20px; font-weight: 600; margin: 0 auto; }
-
-    /* Login */
-    .login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 40px 24px; }
-    .login-logo { font-size: 36px; font-weight: 700; color: #2563EB; }
-    .login-form { width: 100%; max-width: 300px; }
-    .login-form .form-group { margin-bottom: 16px; }
-    .login-form .btn { width: 100%; }
-
-    /* Utility */
-    .text-center { text-align: center; }
-    .text-sm { font-size: 12px; }
-    .text-muted { color: #6b7280; }
-    .mt-16 { margin-top: 16px; }
-    .mb-16 { margin-bottom: 16px; }
-    .hidden { display: none; }
-  </style>
+    
+/* === Invoice Overlay === */
+.invoice-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f5f5;z-index:9999;overflow-y:auto;display:none}
+.invoice-overlay .toolbar{position:sticky;top:0;background:#333;color:#fff;padding:8px 16px;display:flex;gap:10px;align-items:center;z-index:1}
+.invoice-overlay .toolbar button{padding:6px 16px;border:none;border-radius:4px;cursor:pointer;font-size:14px}
+.invoice-overlay .toolbar .btn-close{background:#666;color:#fff}
+.invoice-overlay .toolbar .btn-print{background:#1a73e8;color:#fff}
+.inv-form{max-width:900px;margin:16px auto;padding:16px;background:#fff;border-radius:8px}
+.inv-form .form-row{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.inv-form .form-group{flex:1;min-width:140px}
+.inv-form label{display:block;font-size:12px;color:#666;margin-bottom:2px}
+.inv-form input,.inv-form select,.inv-form textarea{width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:14px}
+.inv-form textarea{resize:vertical}
+.inv-detail-table{width:100%;border-collapse:collapse;margin:10px 0}
+.inv-detail-table th{background:#f0f0f0;padding:6px;font-size:12px;border:1px solid #ccc}
+.inv-detail-table td{padding:4px;border:1px solid #ccc}
+.inv-detail-table input,.inv-detail-table select{width:100%;padding:4px;border:1px solid #ddd;border-radius:3px;font-size:13px}
+.invoice-page{width:210mm;min-height:297mm;background:#fff;margin:20px auto;padding:12mm 15mm;font-family:'Hiragino Mincho ProN','Yu Mincho','MS PMincho',serif;font-size:10pt;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15);position:relative}
+.invoice-page .doc-title{font-size:18pt;letter-spacing:4mm;text-align:center;border-bottom:2px solid #333;padding-bottom:3mm;margin-bottom:4mm}
+.invoice-page .doc-no{text-align:right;font-size:9pt;margin-bottom:2mm}
+.invoice-page .doc-date{text-align:right;font-size:9pt;margin-bottom:4mm}
+.invoice-page .doc-to{font-size:12pt;border-bottom:1px solid #333;padding-bottom:2mm;margin-bottom:2mm}
+.invoice-page .total-band{background:#f0f0f0;border:1px solid #333;padding:3mm 5mm;font-size:14pt;text-align:center;margin:4mm 0;font-weight:bold}
+.invoice-page .detail-table{width:100%;border-collapse:collapse;margin:4mm 0;font-size:9pt}
+.invoice-page .detail-table th{background:#f0f0f0;border:1px solid #999;padding:2mm 3mm;font-weight:bold}
+.invoice-page .detail-table td{border:1px solid #999;padding:2mm 3mm}
+.invoice-page .detail-table .right{text-align:right}
+.invoice-page .subtotal-area{margin:3mm 0;font-size:9pt}
+.invoice-page .subtotal-area .row{display:flex;justify-content:flex-end;gap:10mm;margin-bottom:1mm}
+.invoice-page .subtotal-area .label{width:40mm;text-align:right}
+.invoice-page .subtotal-area .val{width:30mm;text-align:right}
+.invoice-page .subtotal-area .total-row{font-size:11pt;font-weight:bold;border-top:2px solid #333;padding-top:2mm}
+.invoice-page .remarks{border:1px solid #ccc;padding:3mm;margin:4mm 0;font-size:9pt;min-height:15mm}
+.invoice-page .bank-info{border:1px solid #333;padding:3mm 5mm;margin:4mm 0;font-size:9pt}
+.invoice-page .bank-label{font-weight:bold;margin-bottom:2mm}
+.invoice-page .issuer-area{text-align:right;font-size:9pt;margin-top:4mm}
+.invoice-page .issuer-area .company{font-size:11pt;font-weight:bold}
+.invoice-page .seal-space{display:inline-block;width:20mm;height:20mm;border:2px solid #c00;margin-left:5mm;vertical-align:middle}
+.receipt-page{width:128mm;min-height:182mm;background:#fff;margin:20px auto;padding:8mm 10mm;font-family:'Hiragino Mincho ProN','Yu Mincho','MS PMincho',serif;font-size:9pt;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15);position:relative}
+@media print{body>*{display:none!important}.invoice-overlay{display:block!important;position:static;background:#fff}.invoice-overlay .toolbar,.invoice-overlay .inv-form{display:none!important}.invoice-page,.receipt-page{box-shadow:none;margin:0;page-break-after:always}}
+    </style>
 </head>
 <body>
   <div class="container">
@@ -288,30 +279,184 @@
   </div>
 
   <div id="invoiceOverlay" class="invoice-overlay">
-    <div style="text-align: center; padding: 20px;">
-      <button class="btn btn-secondary" onclick="closeInvoice()" style="margin-bottom: 20px;">閉じる</button>
-      <button class="btn btn-primary" onclick="window.print()" style="margin-bottom: 20px;">印刷/PDF保存</button>
+    <div class="toolbar">
+      <button class="btn-close" onclick="closeInvoice()">閉じる</button>
+      <button class="btn-print" onclick="window.print()">印刷 / PDF</button>
+      <span style="flex:1"></span>
+      <span style="font-size:13px">請求書プレビュー</span>
     </div>
-    <div id="invoicePage"></div>
-    <div style="text-align: center; padding: 20px;">
-      <button class="btn btn-secondary" onclick="closeInvoice()">閉じる</button>
-      <button class="btn btn-primary" onclick="window.print()">印刷/PDF保存</button>
+    <div class="inv-form" id="invForm">
+      <div class="form-row">
+        <div class="form-group"><label>請求書No.</label><input id="invNo" value=""></div>
+        <div class="form-group"><label>発行日</label><input id="invDate" type="date"></div>
+        <div class="form-group"><label>振込期限</label><input id="invDue" type="date"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2"><label>宛先会社名</label><input id="invTo"></div>
+        <div class="form-group"><label>担当者名</label><input id="invTanto"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2"><label>発行元会社名</label><input id="invFrom"></div>
+        <div class="form-group"><label>発行元住所</label><input id="invAddr"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>発行元TEL</label><input id="invTel"></div>
+        <div class="form-group"><label>発行元FAX</label><input id="invFax"></div>
+        <div class="form-group"><label>登録番号</label><input id="invRegNo" placeholder="T0000000000000"></div>
+      </div>
+      <h4 style="margin:12px 0 6px;font-size:14px">明細</h4>
+      <table class="inv-detail-table" id="invDetailTable">
+        <thead><tr><th style="width:25%">名称</th><th style="width:20%">仕様</th><th style="width:8%">数量</th><th style="width:8%">単位</th><th style="width:12%">単価</th><th style="width:8%">税率</th><th style="width:14%">金額</th><th style="width:5%"></th></tr></thead>
+        <tbody id="invDetailBody"></tbody>
+      </table>
+      <button class="btn btn-secondary" onclick="addInvRow()" style="margin:6px 0">＋ 行追加</button>
+      <div class="form-row">
+        <div class="form-group" style="flex:2"><label>備考</label><textarea id="invRemarks" rows="2">お振込手数料はご負担願います。</textarea></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>銀行名</label><input id="invBankName"></div>
+        <div class="form-group"><label>支店名</label><input id="invBankBranch"></div>
+        <div class="form-group"><label>口座種別</label><select id="invBankType"><option>普通</option><option>当座</option></select></div>
+        <div class="form-group"><label>口座番号</label><input id="invBankNo"></div>
+        <div class="form-group"><label>口座名義</label><input id="invBankHolder"></div>
+      </div>
+      <button class="btn btn-primary" onclick="renderInvoicePreview()" style="margin-top:10px">プレビュー更新</button>
     </div>
+    <div class="invoice-page" id="invoicePage"></div>
   </div>
-
   <div id="receiptOverlay" class="invoice-overlay">
-    <div style="text-align: center; padding: 20px;">
-      <button class="btn btn-secondary" onclick="closeReceipt()" style="margin-bottom: 20px;">閉じる</button>
-      <button class="btn btn-primary" onclick="window.print()" style="margin-bottom: 20px;">印刷/PDF保存</button>
+    <div class="toolbar">
+      <button class="btn-close" onclick="closeReceipt()">閉じる</button>
+      <button class="btn-print" onclick="window.print()">印刷 / PDF</button>
+      <span style="flex:1"></span>
+      <span style="font-size:13px">領収書プレビュー</span>
     </div>
-    <div id="receiptPage"></div>
-    <div style="text-align: center; padding: 20px;">
-      <button class="btn btn-secondary" onclick="closeReceipt()">閉じる</button>
-      <button class="btn btn-primary" onclick="window.print()">印刷/PDF保存</button>
-    </div>
+    <div class="receipt-page" id="receiptPage"></div>
   </div>
 
   <script>
+
+    // === Invoice Functions ===
+    let invRows = [{name:'',spec:'',qty:1,unit:'人工',price:25000,taxRate:10}];
+    
+    function addInvRow(){
+      invRows.push({name:'',spec:'',qty:1,unit:'人工',price:0,taxRate:10});
+      renderInvForm();
+    }
+    function removeInvRow(i){
+      invRows.splice(i,1);
+      renderInvForm();
+    }
+    function updInvRow(i,key,val){
+      invRows[i][key] = (key==='qty'||key==='price'||key==='taxRate') ? Number(val) : val;
+    }
+    function renderInvForm(){
+      const tb = document.getElementById('invDetailBody');
+      tb.innerHTML = invRows.map((r,i) =>
+        '<tr>' +
+        '<td><input value="' + (r.name||'') + '" onchange="updInvRow('+i+',\'name\',this.value)"></td>' +
+        '<td><input value="' + (r.spec||'') + '" onchange="updInvRow('+i+',\'spec\',this.value)"></td>' +
+        '<td><input type="number" value="' + r.qty + '" onchange="updInvRow('+i+',\'qty\',this.value)" style="width:60px"></td>' +
+        '<td><input value="' + (r.unit||'') + '" onchange="updInvRow('+i+',\'unit\',this.value)" style="width:60px"></td>' +
+        '<td><input type="number" value="' + r.price + '" onchange="updInvRow('+i+',\'price\',this.value)"></td>' +
+        '<td><select onchange="updInvRow('+i+',\'taxRate\',this.value)"><option value="10"' + (r.taxRate==10?' selected':'') + '>10%</option><option value="8"' + (r.taxRate==8?' selected':'') + '>8%</option></select></td>' +
+        '<td class="right">' + (r.qty*r.price).toLocaleString() + '</td>' +
+        '<td><button onclick="removeInvRow('+i+')" style="color:red;border:none;background:none;cursor:pointer">✕</button></td>' +
+        '</tr>'
+      ).join('');
+    }
+    function renderInvoicePreview(){
+      const no = document.getElementById('invNo').value;
+      const date = document.getElementById('invDate').value;
+      const due = document.getElementById('invDue').value;
+      const to = document.getElementById('invTo').value;
+      const tanto = document.getElementById('invTanto').value;
+      const from = document.getElementById('invFrom').value;
+      const addr = document.getElementById('invAddr').value;
+      const tel = document.getElementById('invTel').value;
+      const fax = document.getElementById('invFax').value;
+      const regNo = document.getElementById('invRegNo').value;
+      const remarks = document.getElementById('invRemarks').value;
+      const bankName = document.getElementById('invBankName').value;
+      const bankBranch = document.getElementById('invBankBranch').value;
+      const bankType = document.getElementById('invBankType').value;
+      const bankNo = document.getElementById('invBankNo').value;
+      const bankHolder = document.getElementById('invBankHolder').value;
+      let subtotal = 0;
+      let tax10 = 0, tax8 = 0, base10 = 0, base8 = 0;
+      invRows.forEach(r => {
+        const amt = r.qty * r.price;
+        subtotal += amt;
+        if(r.taxRate == 10){ base10 += amt; tax10 += Math.floor(amt * 0.1); }
+        else { base8 += amt; tax8 += Math.floor(amt * 0.08); }
+      });
+      const totalTax = tax10 + tax8;
+      const total = subtotal + totalTax;
+      const detailRows = invRows.map(r =>
+        '<tr><td>' + r.name + '</td><td>' + r.spec + '</td><td class="right">' + r.qty + '</td><td>' + r.unit + '</td><td class="right">' + r.price.toLocaleString() + '</td><td class="right">' + r.taxRate + '%</td><td class="right">' + (r.qty*r.price).toLocaleString() + '</td></tr>'
+      ).join('');
+      const fmtDate = date ? new Date(date).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}) : '';
+      const dueLine = due ? '<div style="font-size:9pt;margin-top:2mm">お支払期限: ' + new Date(due).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}) + '</div>' : '';
+      document.getElementById('invoicePage').innerHTML =
+        '<div class="doc-title">御 請 求 書</div>' +
+        '<div class="doc-no">No. ' + no + '</div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4mm;gap:6mm">' +
+          '<div style="flex:1">' +
+            '<div class="doc-to">' + to + '　御中</div>' +
+            (tanto ? '<div style="font-size:9pt;margin-bottom:3mm">担当：' + tanto + '</div>' : '') +
+            dueLine +
+            '<div class="total-band">ご請求金額　￥' + total.toLocaleString() + '-(税込)</div>' +
+          '</div>' +
+          '<div style="text-align:right">' +
+            '<div class="doc-date">' + fmtDate + '</div>' +
+            '<div class="issuer-area">' +
+              '<div class="company">' + from + '</div>' +
+              '<div>' + addr + '</div>' +
+              (tel ? '<div>TEL: ' + tel + '</div>' : '') +
+              (fax ? '<div>FAX: ' + fax + '</div>' : '') +
+              (regNo ? '<div>登録番号: ' + regNo + '</div>' : '') +
+              '<div class="seal-space"></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<table class="detail-table"><thead><tr><th>名称</th><th>仕様</th><th>数量</th><th>単位</th><th>単価</th><th>税率</th><th>金額</th></tr></thead><tbody>' +
+        detailRows +
+        '</tbody></table>' +
+        '<div class="subtotal-area">' +
+          '<div class="row"><span class="label">小計</span><span class="val">' + subtotal.toLocaleString() + '</span></div>' +
+          (base10 > 0 ? '<div class="row"><span class="label">消費税(10%)</span><span class="val">' + tax10.toLocaleString() + '</span></div>' : '') +
+          (base8 > 0 ? '<div class="row"><span class="label">消費税(8%)</span><span class="val">' + tax8.toLocaleString() + '</span></div>' : '') +
+          '<div class="row total-row"><span class="label">合計</span><span class="val">￥' + total.toLocaleString() + '</span></div>' +
+        '</div>' +
+        '<div class="remarks"><strong>備考</strong><br>' + remarks + '</div>' +
+        '<div class="bank-info"><div class="bank-label">お振込先</div><div>' + bankName + '　' + bankBranch + '　' + bankType + '　' + bankNo + '<br>口座名義：' + bankHolder + '</div></div>' +
+        '<div class="issuer-area" style="margin-top:6mm">' +
+          '<div class="company">' + from + '</div>' +
+          '<div>' + addr + '</div>' +
+          (tel ? '<div>TEL: ' + tel + '</div>' : '') +
+        '</div>';
+    }
+    function openInvoice(prefill){
+      const d = new Date();
+      document.getElementById('invDate').value = d.toISOString().slice(0,10);
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      document.getElementById('invNo').value = y + '-' + m + '-001';
+      if(prefill){
+        if(prefill.to) document.getElementById('invTo').value = prefill.to;
+        if(prefill.rows) { invRows = prefill.rows; }
+      }
+      if(companyName) document.getElementById('invFrom').value = companyName;
+      renderInvForm();
+      document.getElementById('invoiceOverlay').style.display = 'block';
+    }
+    function closeInvoice(){
+      document.getElementById('invoiceOverlay').style.display = 'none';
+    }
+    function closeReceipt(){
+      document.getElementById('receiptOverlay').style.display = 'none';
+    }
+
     // SQL to create attendance table (run in Supabase SQL editor):
     // CREATE TABLE IF NOT EXISTS attendance (
     //   id SERIAL PRIMARY KEY,
