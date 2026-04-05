@@ -290,7 +290,7 @@
       <div class="form-row">
         <div class="form-group"><label>請求書No.</label><input id="invNo" value=""></div>
         <div class="form-group"><label>発行日</label><input id="invDate" type="date"></div>
-        <div class="form-group"><label>振込期限</label><input id="invDue" type="date"></div>
+        <div class="form-group"><label><input type="checkbox" id="invDueShow" checked onchange="document.getElementById('invDue').disabled=!this.checked" style="margin-right:4px">振込期限</label><input id="invDue" type="date"></div>
       </div>
       <div class="form-row">
         <div class="form-group" style="flex:2"><label>宛先会社名</label><input id="invTo"></div>
@@ -398,7 +398,7 @@
         '<tr><td>' + r.name + '</td><td>' + r.spec + '</td><td class="right">' + r.qty + '</td><td>' + r.unit + '</td><td class="right">' + r.price.toLocaleString() + '</td><td class="right">' + r.taxRate + '%</td><td class="right">' + (r.qty*r.price).toLocaleString() + '</td></tr>'
       ).join('');
       const fmtDate = date ? new Date(date).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}) : '';
-      const dueLine = due ? '<div style="font-size:9pt;margin-top:2mm">お支払期限: ' + new Date(due).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}) + '</div>' : '';
+      const dueLine = (due && document.getElementById('invDueShow').checked) ? '<div style="font-size:9pt;margin-top:2mm">お支払期限: ' + new Date(due).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}) + '</div>' : '';
       document.getElementById('invoicePage').innerHTML =
         '<div class="doc-title">御 請 求 書</div>' +
         '<div class="doc-no">No. ' + no + '</div>' +
