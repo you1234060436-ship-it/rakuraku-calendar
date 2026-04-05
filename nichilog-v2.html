@@ -483,6 +483,7 @@
     let company = null;
     let entries = [];
     let sites = [];
+    let clientCompanies = [];
     let members = [];
     let selectedDate = new Date().toISOString().split('T')[0];
     let viewMonth = new Date();
@@ -642,6 +643,7 @@ function doLogout() {
     async function renderAll() {
       members = await sbGet('accounts', `company_id=eq.${company.id}`);
       sites = await sbGet('work_sites', `company_id=eq.${company.id}`);
+      clientCompanies = await sbGet('client_companies', 'company_id=eq.' + company.id);
       await ldMo();
       renderCalendar();
       renderSummary();
@@ -912,105 +914,102 @@ function doLogout() {
 
     // === Sites (T3) ===
     function renderSites() {
-      let html = '<h2 style="margin-bottom: 16px;">現場管理</h2>';
-      html += '<button class="btn btn-primary" style="width: 100%; margin-bottom: 16px;" onclick="openSiteModal()">+ 新規現場</button>';
-
-      sites.forEach(s => {
-        html += `
-          <div class="card" style="border-left: 4px solid ${s.color || '#3b82f6'};">
-            <div class="card-row">
-              <span class="card-value">${s.name}</span>
-              <div style="display: flex; gap: 8px;">
-                <button class="btn btn-secondary" onclick="editSite(${s.id})" style="padding: 6px 12px; font-size: 12px;">編集</button>
-                <button class="btn btn-danger" onclick="deleteSiteConfirm(${s.id})" style="padding: 6px 12px; font-size: 12px;">削除</button>
-              </div>
-            </div>
-            <div class="card-row">
-              <span class="card-label">単価</span>
-              <span class="card-value">¥${(s.price || 0).toLocaleString()} (${s.rate_type === 'daily' ? '日給' : '時給'})</span>
-            </div>
-            ${s.memo ? `<div class="card-row"><span class="text-muted">${s.memo}</span></div>` : ''}
-          </div>
-        `;
+      if (!sites) return;
+      const grouped = {};
+      sites.forEach(site => {
+        const ccId = site.client_company_id || '__none__';
+        if (!grouped[ccId]) grouped[ccId] = [];
+        grouped[ccId].push(site);
       });
-
+      let html = '<div style="padding:20px;">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3 style="margin:0;">取引先企業 / 現場</h3>';
+      html += '<button onclick="openClientCompanyModal(null)" style="padding:8px 15px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;">+ 取引先企業を追加</button></div>';
+      const ccIds = Object.keys(grouped).sort((a,b) => a === '__none__' ? 1 : b === '__none__' ? -1 : 0);
+      ccIds.forEach(ccId => {
+        let groupTitle = ccId === '__none__' ? '未分類' : '';
+        if (ccId !== '__none__') {
+          const cc = clientCompanies && clientCompanies.find(c => String(c.id) === String(ccId));
+          if (cc) groupTitle = cc.name; else groupTitle = '不明な企業';
+        }
+        const groupSites = grouped[ccId];
+        html += '<div style="margin-bottom:25px;">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;border-bottom:2px solid #007bff;padding-bottom:8px;">';
+        html += '<h4 style="margin:0;">' + groupTitle + '</h4>';
+        html += '<div style="display:flex;gap:8px;align-items:center;">';
+        html += '<span style="font-size:12px;color:#666;">サイト数: ' + groupSites.length + '</span>';
+        if (ccId !== '__none__') {
+          html += '<button onclick="openClientCompanyModal(' + ccId + ')" style="padding:4px 8px;background:#ffc107;color:#333;border:none;border-radius:3px;cursor:pointer;font-size:11px;">編集</button>';
+          html += '<button onclick="deleteClientCompany(' + ccId + ')" style="padding:4px 8px;background:#dc3545;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;">削除</button>';
+        }
+        html += '</div></div>';
+        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:12px;">';
+        groupSites.forEach(site => {
+          const bg = site.color || '#f0f0f0';
+          html += '<div style="border:1px solid #ddd;border-radius:4px;padding:12px;background:' + bg + ';">';
+          html += '<div style="font-weight:bold;margin-bottom:5px;">' + site.name + '</div>';
+          if (site.rate_type || site.price) { html += '<div style="font-size:12px;color:#666;margin-bottom:8px;">'; if (site.rate_type) html += site.rate_type; if (site.price) html += ' / \u00a5' + Number(site.price).toLocaleString(); html += '</div>'; }
+          if (site.memo) html += '<div style="font-size:11px;color:#999;margin-bottom:8px;border-top:1px solid #ddd;padding-top:5px;">' + site.memo + '</div>';
+          html += '<div style="display:flex;gap:5px;">';
+          html += '<button onclick="openSiteModal(' + site.id + ')" style="flex:1;padding:5px;background:#28a745;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;">編集</button>';
+          html += '<button onclick="confirmDeleteSite(' + site.id + ')" style="flex:1;padding:5px;background:#dc3545;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;">削除</button>';
+          html += '</div></div>';
+        });
+        html += '</div>';
+        html += '<button onclick="openSiteModal(null,' + (ccId === '__none__' ? 'null' : ccId) + ')" style="width:100%;padding:8px;background:#17a2b8;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;">+ このグループにサイトを追加</button>';
+        html += '</div>';
+      });
+      html += '</div>';
       document.getElementById('t3').innerHTML = html;
     }
 
-    function openSiteModal() {
-      editingSiteId = null;
-      document.getElementById('siteModalTitle').textContent = '新規現場';
-      document.getElementById('siteName').value = '';
-      document.getElementById('sitePrice').value = '';
-      document.getElementById('siteRateType').value = 'daily';
-      document.getElementById('siteColor').value = '#3b82f6';
-      document.getElementById('siteClientCompanyId').value = '';
-      document.getElementById('siteMemo').value = '';
-      document.getElementById('siteDeletBtn').style.display = 'none';
-      document.getElementById('siteModal').classList.add('show');
-    }
-
-    function editSite(id) {
-      const site = sites.find(s => s.id === id);
-      if (!site) return;
-      editingSiteId = id;
-      document.getElementById('siteModalTitle').textContent = '現場編集';
-      document.getElementById('siteName').value = site.name;
-      document.getElementById('sitePrice').value = site.price || '';
-      document.getElementById('siteRateType').value = site.rate_type || 'daily';
-      document.getElementById('siteColor').value = site.color || '#3b82f6';
-      document.getElementById('siteClientCompanyId').value = site.client_company_id || '';
-      document.getElementById('siteMemo').value = site.memo || '';
-      document.getElementById('siteDeletBtn').style.display = 'inline-block';
-      document.getElementById('siteModal').classList.add('show');
+    function openSiteModal(siteId, preselectedCcId) {
+      const site = siteId ? sites.find(s => s.id === siteId) : null;
+      const isEdit = !!site;
+      let modal = document.getElementById('siteModal');
+      if (!modal) { modal = document.createElement('div'); modal.id = 'siteModal'; modal.style.cssText = 'display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);'; document.body.appendChild(modal); }
+      let ccOpts = '<option value="">未分類</option>';
+      if (clientCompanies && clientCompanies.length > 0) { clientCompanies.forEach(cc => { ccOpts += '<option value="' + cc.id + '">' + cc.name + '</option>'; }); }
+      modal.innerHTML = '<div style="position:relative;background:#fff;margin:8% auto;padding:20px;width:90%;max-width:600px;border-radius:4px;box-shadow:0 4px 8px rgba(0,0,0,0.2);max-height:80vh;overflow-y:auto;">'
+        + '<span style="position:absolute;color:#aaa;font-size:28px;font-weight:bold;cursor:pointer;top:10px;right:15px;" onclick="document.getElementById(\x27siteModal\x27).style.display=\x27none\x27">&times;</span>'
+        + '<h2 style="margin-top:0;">' + (isEdit ? 'サイトを編集' : 'サイトを追加') + '</h2>'
+        + '<input type="hidden" id="siteId" value="' + (site ? site.id : '') + '" />'
+        + '<div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:bold;">取引先企業</label><select id="siteClientCompanyId" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;">' + ccOpts + '</select></div>'
+        + '<div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:bold;">サイト名 *</label><input type="text" id="siteName" value="' + (site ? site.name : '') + '" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;" /></div>'
+        + '<div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:bold;">金額</label><input type="number" id="sitePrice" value="' + (site ? (site.price||'') : '') + '" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;" /></div>'
+        + '<div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:bold;">レートタイプ</label><input type="text" id="siteRateType" value="' + (site ? (site.rate_type||'') : '') + '" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;" /></div>'
+        + '<div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:bold;">色</label><input type="color" id="siteColor" value="' + (site ? (site.color||'#f0f0f0') : '#f0f0f0') + '" style="width:60px;height:40px;border:1px solid #ddd;border-radius:4px;cursor:pointer;" /></div>'
+        + '<div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:bold;">メモ</label><textarea id="siteMemo" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;height:80px;resize:vertical;">' + (site ? (site.memo||'') : '') + '</textarea></div>'
+        + '<div style="display:flex;gap:10px;"><button onclick="saveSite()" style="flex:1;padding:10px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;">保存</button><button onclick="document.getElementById(\x27siteModal\x27).style.display=\x27none\x27" style="flex:1;padding:10px;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;">キャンセル</button></div></div>';
+      if (site && site.client_company_id) document.getElementById('siteClientCompanyId').value = site.client_company_id;
+      else if (preselectedCcId) document.getElementById('siteClientCompanyId').value = preselectedCcId;
+      modal.style.display = 'block';
     }
 
     async function saveSite() {
+      const siteId = document.getElementById('siteId').value;
       const name = document.getElementById('siteName').value.trim();
-      const price = parseInt(document.getElementById('sitePrice').value) || 0;
-      const rateType = document.getElementById('siteRateType').value;
-      const color = document.getElementById('siteColor').value;
-      const clientId = document.getElementById('siteClientCompanyId').value.trim() || null;
+      const price = document.getElementById('sitePrice').value;
+      const rateType = document.getElementById('siteRateType').value.trim();
       const memo = document.getElementById('siteMemo').value.trim();
-
-      if (!name) {
-        alert('現場名を入力してください');
-        return;
-      }
-
-      const data = { name, price, rate_type: rateType, color, client_company_id: clientId, memo, company_id: company.id };
-
-      let ok = false;
-      if (editingSiteId) {
-        ok = await sbPatch('work_sites', editingSiteId, data);
-      } else {
-        const res = await sbPost('work_sites', data);
-        ok = !!res;
-      }
-
-      if (ok) {
-        clModal();
-        sites = await sbGet('work_sites', `company_id=eq.${company.id}`);
-        renderSites();
-      }
+      const color = document.getElementById('siteColor').value;
+      const ccId = document.getElementById('siteClientCompanyId').value;
+      if (!name) { showToast('サイト名を入力してください'); return; }
+      const body = { name, price: price ? parseInt(price) : null, rate_type: rateType || null, memo: memo || null, color, client_company_id: ccId ? parseInt(ccId) : null };
+      try {
+        if (siteId) { await sbPatch('work_sites', siteId, body); showToast('サイトを更新しました'); }
+        else { await sbPost('work_sites', { company_id: company.id, ...body }); showToast('サイトを追加しました'); }
+        document.getElementById('siteModal').style.display = 'none';
+        await renderAll();
+      } catch(e) { console.error(e); showToast('エラーが発生しました'); }
     }
 
-    function deleteSiteConfirm(id) {
-      if (!confirm('削除しますか？')) return;
-      deleteSite(id);
+    async function confirmDeleteSite(id) {
+      if (!confirm('このサイトを削除しますか？')) return;
+      try { await sbDelete('work_sites', id); showToast('サイトを削除しました'); await renderAll(); }
+      catch(e) { console.error(e); showToast('削除エラー'); }
     }
 
-    async function deleteSite(id) {
-      if (!id) id = editingSiteId;
-      const ok = await sbDelete('work_sites', id);
-      if (ok) {
-        clModal();
-        sites = await sbGet('work_sites', `company_id=eq.${company.id}`);
-        renderSites();
-      }
-    }
-
-    // === Members (T4) ===
+        // === Members (T4) ===
     function renderMembers() {
       let html = '<h2 style="margin-bottom: 16px;">メンバー管理</h2>';
       html += '<button class="btn btn-primary" style="width: 100%; margin-bottom: 16px;" onclick="openMemberModal()">+ 新規メンバー</button>';
@@ -1357,9 +1356,6 @@ function doLogout() {
       document.getElementById('invoiceOverlay').classList.add('show');
     }
 
-    function closeInvoice() {
-      document.getElementById('invoiceOverlay').classList.remove('show');
-    }
 
     // === Receipt ===
     function showReceipt(amount, description) {
@@ -1407,9 +1403,6 @@ function doLogout() {
       document.getElementById('receiptOverlay').classList.add('show');
     }
 
-    function closeReceipt() {
-      document.getElementById('receiptOverlay').classList.remove('show');
-    }
 
     // === Settings (T6) ===
     function renderSettings() {
@@ -1507,6 +1500,57 @@ function doLogout() {
         console.error('Reset error:', e);
       }
     }
-  </script>
+  
+    // === Toast Notification ===
+    function showToast(msg) {
+      let c = document.getElementById('toastContainer');
+      if (!c) { c = document.createElement('div'); c.id = 'toastContainer'; c.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:10000;display:flex;flex-direction:column;gap:10px;'; document.body.appendChild(c); }
+      const t = document.createElement('div');
+      t.textContent = msg;
+      t.style.cssText = 'background:#333;color:#fff;padding:12px 20px;border-radius:4px;animation:fadeIn .3s;';
+      c.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 2000);
+    }
+
+    // === Permission Helpers ===
+    function canSeeRevenue() { return currentUser && currentUser.role === 'master'; }
+    function canManageSites() { return currentUser && (currentUser.role === 'master' || currentUser.role === 'admin'); }
+
+    // === Client Company CRUD ===
+    function openClientCompanyModal(ccId) {
+      const cc = ccId ? clientCompanies.find(c => c.id === ccId) : null;
+      let modal = document.getElementById('ccModal');
+      if (!modal) { modal = document.createElement('div'); modal.id = 'ccModal'; modal.style.cssText = 'display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);'; document.body.appendChild(modal); }
+      modal.innerHTML = '<div style="position:relative;background:#fff;margin:15% auto;padding:20px;width:80%;max-width:400px;border-radius:4px;box-shadow:0 4px 8px rgba(0,0,0,0.2);">'
+        + '<h2 style="margin-top:0;">' + (cc ? '取引先企業を編集' : '取引先企業を追加') + '</h2>'
+        + '<input type="hidden" id="ccEditId" value="' + (cc ? cc.id : '') + '" />'
+        + '<div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:bold;">企業名</label>'
+        + '<input type="text" id="ccEditName" value="' + (cc ? cc.name : '') + '" placeholder="例: 株式会社○○" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;" /></div>'
+        + '<div style="display:flex;gap:10px;">'
+        + '<button onclick="saveClientCompany()" style="flex:1;padding:10px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;">保存</button>'
+        + '<button onclick="document.getElementById(\x27ccModal\x27).style.display=\x27none\x27" style="flex:1;padding:10px;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;">キャンセル</button>'
+        + '</div></div>';
+      modal.style.display = 'block';
+    }
+
+    async function saveClientCompany() {
+      const id = document.getElementById('ccEditId').value;
+      const name = document.getElementById('ccEditName').value.trim();
+      if (!name) { showToast('企業名を入力してください'); return; }
+      try {
+        if (id) { await sbPatch('client_companies', id, { name }); showToast('取引先企業を更新しました'); }
+        else { await sbPost('client_companies', { company_id: company.id, name, created_by: currentUser.id }); showToast('取引先企業を追加しました'); }
+        document.getElementById('ccModal').style.display = 'none';
+        await renderAll();
+      } catch(e) { console.error(e); showToast('エラーが発生しました'); }
+    }
+
+    async function deleteClientCompany(ccId) {
+      if (!confirm('この取引先企業を削除しますか？\n関連サイトは「未分類」に移動します。')) return;
+      try { await sbDelete('client_companies', ccId); showToast('取引先企業を削除しました'); await renderAll(); }
+      catch(e) { console.error(e); showToast('削除エラー'); }
+    }
+
+    </script>
 </body>
 </html>
