@@ -1576,7 +1576,7 @@ function doLogout() {
       modal.style.display = 'block';
     }
 
-    async function saveClientCompany() {
+    async async function saveClientCompany() {
       const id = document.getElementById('ccEditId').value;
       const name = document.getElementById('ccEditName').value.trim();
       if (!name) { showToast('企業名を入力してください'); return; }
@@ -1584,9 +1584,9 @@ function doLogout() {
       try {
         let result;
         if (id) {
-          result = await sbPatch('client_companies', id, { name });
+          result = await await sbPatch('client_companies', id, { name });
         } else {
-          result = await sbPost('client_companies', { company_id: company.id, name });
+          result = await await sbPost('client_companies', { company_id: company.id, name });
         }
         if (!result) { showToast('保存に失敗しました（API応答なし）'); return; }
         showToast(id ? '取引先企業を更新しました' : '取引先企業を追加しました');
