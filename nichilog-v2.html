@@ -1459,7 +1459,7 @@ function doLogout() {
       html += '<p><strong>名前:</strong> ' + (currentUser.name || '-') + '</p>';
       html += '<p><strong>ロール:</strong> ' + (currentUser.role || '-') + '</p>';
       html += '<p><strong>チーム:</strong> ' + (currentUser.team || '-') + '</p>';
-      html += '<button onclick="logout()" style="width:100%;padding:10px;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;">ログアウト</button>';
+      html += '<button onclick="doLogout()" style="width:100%;padding:10px;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;">ログアウト</button>';
       html += '</div>';
 
       // === 危険ゾーン（master only）===
