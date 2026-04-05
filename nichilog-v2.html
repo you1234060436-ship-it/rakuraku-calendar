@@ -285,7 +285,7 @@
       <span style="flex:1"></span>
       <span style="font-size:13px">請求書プレビュー</span>
     </div>
-    <div class="inv-form" id="invForm">
+    <div class="inv-form" oninput="renderInvoicePreview()" id="invForm">
       <div class="form-row">
         <div class="form-group"><label>請求書No.</label><input id="invNo" value=""></div>
         <div class="form-group"><label>発行日</label><input id="invDate" type="date"></div>
@@ -342,6 +342,7 @@
     function addInvRow(){
       invRows.push({name:'',spec:'',qty:1,unit:'人工',price:0,taxRate:10});
       renderInvForm();
+      renderInvoicePreview();
     }
     function removeInvRow(i){
       invRows.splice(i,1);
@@ -349,7 +350,7 @@
     }
     function updInvRow(i,key,val){
       invRows[i][key] = (key==='qty'||key==='price'||key==='taxRate') ? Number(val) : val;
-    }
+     renderInvoicePreview(); }
     function renderInvForm(){
       const tb = document.getElementById('invDetailBody');
       tb.innerHTML = invRows.map((r,i) =>
