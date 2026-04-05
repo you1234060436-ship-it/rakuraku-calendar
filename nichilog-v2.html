@@ -144,7 +144,27 @@
         </div>
         <button class="btn btn-primary" onclick="doLogin()">ログイン</button>
         <div id="loginError" class="text-center text-muted mt-16" style="color: #dc2626; display: none;"></div>
+      
+      <div style="text-align:center;margin-top:12px;">
+        <a href="#" id="toggleReg" onclick="event.preventDefault();document.getElementById('regForm').style.display='block';this.parentElement.style.display='none';" style="color:#4a90d9;font-size:14px;">アカウント新規登録はこちら</a>
       </div>
+      <div id="regForm" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #ddd;">
+        <h3 style="text-align:center;margin-bottom:12px;font-size:16px;">新規アカウント登録</h3>
+        <input type="text" id="regCompany" placeholder="会社名" style="width:100%;padding:10px;margin-bottom:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+        <input type="text" id="regName" placeholder="名前" style="width:100%;padding:10px;margin-bottom:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+        <input type="text" id="regEmail" placeholder="メールアドレス" style="width:100%;padding:10px;margin-bottom:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+        <input type="password" id="regPassword" placeholder="パスワード" style="width:100%;padding:10px;margin-bottom:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+        <select id="regRole" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+          <option value="master">master（管理者）</option>
+          <option value="foreman">foreman（職長）</option>
+          <option value="worker">worker（作業員）</option>
+        </select>
+        <button onclick="doRegister()" style="width:100%;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:6px;font-size:16px;cursor:pointer;">登録</button>
+        <div id="regError" style="color:#e74c3c;text-align:center;margin-top:8px;font-size:13px;"></div>
+        <div style="text-align:center;margin-top:12px;">
+          <a href="#" onclick="event.preventDefault();document.getElementById('regForm').style.display='none';document.getElementById('toggleReg').parentElement.style.display='block';" style="color:#4a90d9;font-size:14px;">ログインに戻る</a>
+        </div>
+      </div></div>
     </div>
 
     <!-- App Header -->
@@ -432,7 +452,34 @@
       switchTab(1);
     }
 
-    function doLogout() {
+    
+    async function doRegister() {
+      const company = document.getElementById('regCompany').value.trim();
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const pwd = document.getElementById('regPassword').value;
+      const role = document.getElementById('regRole').value;
+      const errEl = document.getElementById('regError');
+      errEl.textContent = ''; errEl.style.color = '#e74c3c';
+      if (!company || !name || !email || !pwd) { errEl.textContent = '全項目を入力してください'; return; }
+      try {
+        const ex = await sbGet('accounts', 'email=eq.' + encodeURIComponent(email));
+        if (ex && ex.length > 0) { errEl.textContent = 'このメールアドレスは既に登録されています'; return; }
+        let companyId;
+        const ec = await sbGet('companies', 'name=eq.' + encodeURIComponent(company));
+        if (ec && ec.length > 0) { companyId = ec[0].id; } else {
+          const nc = await sbPost('companies', { name: company });
+          if (nc && nc.length > 0) { companyId = nc[0].id; } else { errEl.textContent = '会社登録に失敗しました'; return; }
+        }
+        const hash = await sha256(pwd);
+        const na = await sbPost('accounts', { company_id: companyId, name: name, email: email, password: hash, role: role });
+        if (na && na.length > 0) {
+          errEl.style.color = '#27ae60'; errEl.textContent = '登録完了！ログインしてください';
+          setTimeout(() => { document.getElementById('regForm').style.display = 'none'; document.getElementById('toggleReg').parentElement.style.display = 'block'; document.getElementById('loginEmail').value = email; errEl.textContent = ''; }, 1500);
+        } else { errEl.textContent = 'アカウント登録に失敗しました'; }
+      } catch(e) { errEl.textContent = 'エラー: ' + e.message; }
+    }
+function doLogout() {
       if (!confirm('ログアウトしますか？')) return;
       currentUser = null;
       company = null;
