@@ -1014,7 +1014,7 @@ function doLogout() {
       const ccId = document.getElementById('siteClientCompanyId').value;
       if (!name) { showToast('サイト名を入力してください'); return; }
       if (!siteId && (!company || !company.id)) { showToast('ログインしてください'); return; }
-      const body = { name, rate: price ? parseInt(price) : 0, rate_type: rateType || 'daily', memo: memo || null, color, client_company_id: ccId ? parseInt(ccId) : null };
+      const body = { name, price: price ? parseInt(price) : 0, rate_type: rateType || 'daily', memo: memo || null, color, client_company_id: ccId ? parseInt(ccId) : null };
       try {
         if (siteId) { await sbPatch('work_sites', siteId, body); showToast('サイトを更新しました'); }
         else { await sbPost('work_sites', { company_id: company.id, ...body }); showToast('サイトを追加しました'); }
