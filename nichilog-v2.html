@@ -1576,7 +1576,7 @@ function doLogout() {
       modal.style.display = 'block';
     }
 
-    async async function saveClientCompany() {
+    async function saveClientCompany() {
       const id = document.getElementById('ccEditId').value;
       const name = document.getElementById('ccEditName').value.trim();
       if (!name) { showToast('企業名を入力してください'); return; }
