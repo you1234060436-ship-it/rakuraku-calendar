@@ -561,7 +561,7 @@
       switchTab(1)
     }
     async function doRegister() {
-      const company = document.getElementById('regCompany').value.trim();
+      company = document.getElementById('regCompany').value.trim();
       const name = document.getElementById('regName').value.trim();
       const pwd = document.getElementById('regPassword').value;
       const role = document.getElementById('regRole').value;
@@ -569,7 +569,7 @@
       errEl.textContent = ''; errEl.style.color = '#e74c3c';
       if (!company || !name || !pwd) { errEl.textContent = '全項目を入力してください'; return; }
       try {
-        let companyId;
+        companyId;
         const ec = await sbGet('companies', 'name=eq.' + encodeURIComponent(company));
         if (ec && ec.length > 0) { companyId = ec[0].id; } else {
           const nc = await sbPost('companies', { name: company });
