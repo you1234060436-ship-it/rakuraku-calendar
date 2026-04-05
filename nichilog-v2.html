@@ -119,6 +119,7 @@
 .receipt-page{width:128mm;min-height:182mm;background:#fff;margin:20px auto;padding:8mm 10mm;font-family:'Hiragino Mincho ProN','Yu Mincho','MS PMincho',serif;font-size:9pt;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15);position:relative}
 @media print{body>*{display:none!important}.invoice-overlay{display:block!important;position:static;background:#fff}.invoice-overlay .toolbar,.invoice-overlay .inv-form{display:none!important}.invoice-page,.receipt-page{box-shadow:none;margin:0;page-break-after:always}}
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -283,6 +284,7 @@
     <div class="toolbar">
       <button class="btn-close" onclick="closeInvoice()">閉じる</button>
       <button class="btn-print" onclick="window.print()">印刷 / PDF</button>
+      <button class="btn-print" onclick="downloadInvoiceExcel()" style="background:#217346;border-color:#217346;">Excel</button>
       <span style="flex:1"></span>
       <span style="font-size:13px">請求書プレビュー</span>
     </div>
@@ -492,6 +494,150 @@
     function closeInvoice(){
       document.getElementById('invoiceOverlay').style.display = 'none';
     }
+    function downloadInvoiceExcel(){
+      const no = document.getElementById('invNo').value;
+      const date = document.getElementById('invDate').value;
+      const due = document.getElementById('invDue').value || '';
+      const to = document.getElementById('invTo').value;
+      const tanto = document.getElementById('invTanto') ? document.getElementById('invTanto').value : '';
+      const from = document.getElementById('invFrom').value;
+      const addr = document.getElementById('invAddr').value;
+      const tel = document.getElementById('invTel').value;
+      const fax = document.getElementById('invFax').value;
+      const regNo = document.getElementById('invRegNo').value;
+      const remarks = document.getElementById('invRemarks').value;
+      const siteName = document.getElementById('invSiteName') ? document.getElementById('invSiteName').value : '';
+      const bankName = document.getElementById('invBankName').value;
+      const bankBranch = document.getElementById('invBankBranch').value;
+      const bankType = document.getElementById('invBankType').value;
+      const bankNo = document.getElementById('invBankNo').value;
+      const bankHolder = document.getElementById('invBankHolder').value;
+
+      function fmtDate(ds){
+        if(!ds) return '';
+        const p = ds.split('-');
+        return p[0]+'年'+parseInt(p[1])+'月'+parseInt(p[2])+'日';
+      }
+
+      const wb = XLSX.utils.book_new();
+      const wsData = [];
+      for(let i=0;i<40;i++) wsData.push(new Array(7).fill(''));
+
+      wsData[0][0] = '1/1 ページ';
+      wsData[2][0] = '御　請　求　書';
+      wsData[3][0] = 'No. ' + no;
+      wsData[4][0] = to + '　御中';
+      wsData[4][4] = from;
+      wsData[5][0] = '担当：' + tanto;
+      wsData[5][4] = addr;
+      wsData[6][0] = '平素は格別のお引き立てを賜り厚く御礼申し上げます。';
+      wsData[6][4] = 'TEL: ' + tel + (fax ? '　FAX: ' + fax : '');
+      wsData[7][0] = '下記の通りご請求申し上げます。';
+      if(regNo) wsData[7][4] = '登録番号: ' + regNo;
+      wsData[8][4] = '請求日：' + fmtDate(date);
+      if(due) wsData[9][4] = '振込期限：' + fmtDate(due);
+      if(siteName) wsData[10][0] = '工事名：' + siteName;
+
+      wsData[13] = ['名称','','仕様','数量','単位','単価','金額'];
+
+      let subtotal = 0, tax8 = 0, tax10 = 0;
+      for(let i=0; i<8; i++){
+        const row = invRows[i];
+        if(row && (row.name || row.price)){
+          const amt = (row.qty||0) * (row.price||0);
+          subtotal += amt;
+          if(row.taxRate === 8) tax8 += Math.floor(amt * 0.08);
+          else tax10 += Math.floor(amt * 0.10);
+          wsData[14+i][0] = row.name || '';
+          wsData[14+i][2] = row.spec || '';
+          wsData[14+i][3] = row.qty || 0;
+          wsData[14+i][4] = row.unit || '';
+          wsData[14+i][5] = row.price || 0;
+          wsData[14+i][6] = amt;
+        }
+      }
+
+      const totalTax = tax8 + tax10;
+      const grandTotal = subtotal + totalTax;
+      wsData[11][0] = '御請求金額（税込）　¥' + grandTotal.toLocaleString();
+
+      wsData[23][3] = '小計 ①';
+      wsData[23][6] = subtotal;
+      wsData[24][3] = '消費税等 ② (④+⑤)';
+      wsData[24][6] = totalTax;
+      wsData[25][3] = '合計金額 ③ (①+②)';
+      wsData[25][6] = grandTotal;
+      wsData[26][3] = '(8%) 消費税合計 ④';
+      wsData[26][6] = tax8 > 0 ? tax8 : 0;
+      wsData[27][3] = '(10%) 消費税合計 ⑤';
+      wsData[27][6] = tax10 > 0 ? tax10 : 0;
+
+      wsData[29][0] = '備考';
+      wsData[30][0] = remarks || '';
+      wsData[32][0] = 'お振込先';
+      wsData[33][0] = bankName + '　' + bankBranch + '　' + bankType + '　' + bankNo;
+      wsData[34][0] = '口座名義：' + bankHolder;
+      wsData[36][0] = from;
+      wsData[36][6] = '印';
+      wsData[37][0] = addr;
+      wsData[38][0] = 'TEL: ' + tel + (fax ? '　FAX: ' + fax : '');
+      if(regNo) wsData[39][0] = '登録番号: ' + regNo;
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      ws['!merges'] = [
+        {s:{r:0,c:0},e:{r:0,c:6}},
+        {s:{r:2,c:0},e:{r:2,c:6}},
+        {s:{r:3,c:0},e:{r:3,c:6}},
+        {s:{r:4,c:0},e:{r:4,c:2}},{s:{r:4,c:4},e:{r:4,c:6}},
+        {s:{r:5,c:0},e:{r:5,c:2}},{s:{r:5,c:4},e:{r:5,c:6}},
+        {s:{r:6,c:0},e:{r:6,c:2}},{s:{r:6,c:4},e:{r:6,c:6}},
+        {s:{r:7,c:0},e:{r:7,c:2}},{s:{r:7,c:4},e:{r:7,c:6}},
+        {s:{r:8,c:4},e:{r:8,c:5}},
+        {s:{r:9,c:4},e:{r:9,c:6}},
+        {s:{r:10,c:0},e:{r:10,c:6}},
+        {s:{r:11,c:0},e:{r:11,c:6}},
+        {s:{r:13,c:0},e:{r:13,c:1}},
+      ];
+      for(let i=0;i<8;i++) ws['!merges'].push({s:{r:14+i,c:0},e:{r:14+i,c:1}});
+      ws['!merges'].push(
+        {s:{r:23,c:3},e:{r:23,c:5}},
+        {s:{r:24,c:3},e:{r:24,c:5}},
+        {s:{r:25,c:3},e:{r:25,c:5}},
+        {s:{r:26,c:3},e:{r:26,c:5}},
+        {s:{r:27,c:3},e:{r:27,c:5}},
+        {s:{r:29,c:0},e:{r:29,c:6}},
+        {s:{r:30,c:0},e:{r:30,c:6}},
+        {s:{r:32,c:0},e:{r:32,c:6}},
+        {s:{r:33,c:0},e:{r:33,c:6}},
+        {s:{r:34,c:0},e:{r:34,c:6}},
+        {s:{r:36,c:0},e:{r:36,c:5}},
+        {s:{r:37,c:0},e:{r:37,c:5}},
+        {s:{r:38,c:0},e:{r:38,c:5}},
+        {s:{r:39,c:0},e:{r:39,c:5}}
+      );
+
+      ws['!cols'] = [{wch:5},{wch:20},{wch:16},{wch:8},{wch:7},{wch:12},{wch:14}];
+
+      const heights = {0:15,1:7.5,2:37.5,3:19.5,4:24.75,5:18,6:15.75,7:15.75,8:15.75,9:15.75,10:19.5,11:34.5,12:7.5,13:21.75,22:6,23:19.5,24:19.5,25:19.5,26:15.75,27:15.75,28:6,29:18,30:30,32:18,33:15.75,34:15.75,36:18,37:15,38:15,39:15};
+      for(let i=14;i<=21;i++) heights[i]=19.5;
+      ws['!rows'] = [];
+      for(let i=0;i<40;i++) ws['!rows'][i] = {hpt: heights[i] || 15};
+
+      // Number formats for currency cells
+      const fmt = '¥#,##0';
+      for(let i=14;i<=21;i++){
+        const fRef = XLSX.utils.encode_cell({r:i,c:5});
+        const gRef = XLSX.utils.encode_cell({r:i,c:6});
+        if(ws[fRef]) ws[fRef].z = fmt;
+        if(ws[gRef]) ws[gRef].z = fmt;
+      }
+      ['G24','G25','G26','G27','G28'].forEach(ref => { if(ws[ref]) ws[ref].z = fmt; });
+
+      XLSX.utils.book_append_sheet(wb, ws, '請求書');
+      XLSX.writeFile(wb, '請求書_' + no + '.xlsx');
+    }
+
     function closeReceipt(){
       document.getElementById('receiptOverlay').style.display = 'none';
     }
