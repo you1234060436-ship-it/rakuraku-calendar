@@ -384,59 +384,92 @@
       const bankType = document.getElementById('invBankType').value;
       const bankNo = document.getElementById('invBankNo').value;
       const bankHolder = document.getElementById('invBankHolder').value;
+      const showDue = document.getElementById('invDueShow').checked;
+      const rows = document.getElementById('invRows');
+      const trs = rows ? rows.querySelectorAll('tr') : [];
+      let detailRows = '';
       let subtotal = 0;
-      let tax10 = 0, tax8 = 0, base10 = 0, base8 = 0;
-      invRows.forEach(r => {
-        const amt = r.qty * r.price;
+      let tax8 = 0;
+      let tax10 = 0;
+      trs.forEach(tr => {
+        const inputs = tr.querySelectorAll('input');
+        const selects = tr.querySelectorAll('select');
+        const nm = inputs[0] ? inputs[0].value : '';
+        const spec = inputs[1] ? inputs[1].value : '';
+        const qty = inputs[2] ? parseFloat(inputs[2].value) || 0 : 0;
+        const unit = inputs[3] ? inputs[3].value : '';
+        const price = inputs[4] ? parseFloat(inputs[4].value) || 0 : 0;
+        const taxRate = selects[0] ? parseFloat(selects[0].value) || 0.10 : 0.10;
+        const amt = qty * price;
         subtotal += amt;
-        if(r.taxRate == 10){ base10 += amt; tax10 += Math.floor(amt * 0.1); }
-        else { base8 += amt; tax8 += Math.floor(amt * 0.08); }
+        if(taxRate === 0.08) tax8 += amt * 0.08;
+        else tax10 += amt * 0.10;
+        detailRows += '<tr style="border-bottom:1px solid #ccc;">'
+          + '<td style="padding:6px 8px;border-right:1px solid #eee;">' + nm + '<\/td>'
+          + '<td style="padding:6px 8px;border-right:1px solid #eee;">' + spec + '<\/td>'
+          + '<td style="padding:6px 8px;text-align:center;border-right:1px solid #eee;">' + (qty || '') + '<\/td>'
+          + '<td style="padding:6px 8px;text-align:center;border-right:1px solid #eee;">' + unit + '<\/td>'
+          + '<td style="padding:6px 8px;text-align:right;border-right:1px solid #eee;">' + (price ? price.toLocaleString() : '') + '<\/td>'
+          + '<td style="padding:6px 8px;text-align:right;">' + (amt ? amt.toLocaleString() : '') + '<\/td>'
+          + '<\/tr>';
       });
-      const totalTax = tax10 + tax8;
+      const totalTax = Math.floor(tax8) + Math.floor(tax10);
       const total = subtotal + totalTax;
-      const detailRows = invRows.map(r =>
-        '<tr><td>' + r.name + '</td><td>' + r.spec + '</td><td class="right">' + r.qty + '</td><td>' + r.unit + '</td><td class="right">' + r.price.toLocaleString() + '</td><td class="right">' + r.taxRate + '%</td><td class="right">' + (r.qty*r.price).toLocaleString() + '</td></tr>'
-      ).join('');
-      const fmtDate = date ? new Date(date).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}) : '';
-      const dueLine = (due && document.getElementById('invDueShow').checked) ? '<div style="font-size:9pt;margin-top:2mm">お支払期限: ' + new Date(due).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}) + '</div>' : '';
+      const siteName = document.getElementById('invSiteName') ? document.getElementById('invSiteName').value : '';
+      const dateF = date ? date.replace(/-/g, '/') : '';
+      const dueF = due ? due.replace(/-/g, '/') : '';
+      const dueLine = (due && showDue) ? '<div style="margin-bottom:4px;"><b>\u632F\u8FBC\u671F\u9650<\/b>\u3000' + dueF + '<\/div>' : '';
       document.getElementById('invoicePage').innerHTML =
-        '<div class="doc-title">御 請 求 書</div>' +
-        '<div class="doc-no">No. ' + no + '</div>' +
-        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4mm;gap:6mm">' +
-          '<div style="flex:1">' +
-            '<div class="doc-to">' + to + '　御中</div>' +
-            (tanto ? '<div style="font-size:9pt;margin-bottom:3mm">担当：' + tanto + '</div>' : '') +
-            dueLine +
-            '<div class="total-band">ご請求金額　￥' + total.toLocaleString() + '-(税込)</div>' +
-          '</div>' +
-          '<div style="text-align:right">' +
-            '<div class="doc-date">' + fmtDate + '</div>' +
-            '<div class="issuer-area">' +
-              '<div class="company">' + from + '</div>' +
-              '<div>' + addr + '</div>' +
-              (tel ? '<div>TEL: ' + tel + '</div>' : '') +
-              (fax ? '<div>FAX: ' + fax + '</div>' : '') +
-              (regNo ? '<div>登録番号: ' + regNo + '</div>' : '') +
-              '<div class="seal-space"></div>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-        '<table class="detail-table"><thead><tr><th>名称</th><th>仕様</th><th>数量</th><th>単位</th><th>単価</th><th>税率</th><th>金額</th></tr></thead><tbody>' +
-        detailRows +
-        '</tbody></table>' +
-        '<div class="subtotal-area">' +
-          '<div class="row"><span class="label">小計</span><span class="val">' + subtotal.toLocaleString() + '</span></div>' +
-          (base10 > 0 ? '<div class="row"><span class="label">消費税(10%)</span><span class="val">' + tax10.toLocaleString() + '</span></div>' : '') +
-          (base8 > 0 ? '<div class="row"><span class="label">消費税(8%)</span><span class="val">' + tax8.toLocaleString() + '</span></div>' : '') +
-          '<div class="row total-row"><span class="label">合計</span><span class="val">￥' + total.toLocaleString() + '</span></div>' +
-        '</div>' +
-        '<div class="remarks"><strong>備考</strong><br>' + remarks + '</div>' +
-        '<div class="bank-info"><div class="bank-label">お振込先</div><div>' + bankName + '　' + bankBranch + '　' + bankType + '　' + bankNo + '<br>口座名義：' + bankHolder + '</div></div>' +
-        '<div class="issuer-area" style="margin-top:6mm">' +
-          '<div class="company">' + from + '</div>' +
-          '<div>' + addr + '</div>' +
-          (tel ? '<div>TEL: ' + tel + '</div>' : '') +
-        '</div>';
+        '<div style="width:794px;min-height:1123px;margin:0 auto;padding:40px 50px;font-family:Noto Sans JP,sans-serif;font-size:13px;color:#222;background:#fff;position:relative;box-sizing:border-box;">'
+        + '<div style="text-align:right;font-size:11px;color:#666;margin-bottom:2px;">1/1 \u30DA\u30FC\u30B8<\/div>'
+        + '<div style="text-align:right;font-size:12px;color:#444;margin-bottom:8px;">No. ' + no + '<\/div>'
+        + '<div style="background:#1a56db;color:#fff;padding:10px 18px;font-size:20px;font-weight:bold;margin-bottom:16px;">\u5FA1\u8ACB\u6C42\u66F8<\/div>'
+        + '<div style="text-align:center;font-size:18px;font-weight:bold;margin-bottom:4px;">' + to + ' \u5FA1\u4E2D<\/div>'
+        + '<hr style="border:none;border-top:1px solid #999;margin:8px 0 12px;">'
+        + '<div style="text-align:right;font-size:12px;margin-bottom:16px;">\u62C5\u5F53\uFF1A' + tanto + '<\/div>'
+        + '<div style="font-size:12px;line-height:1.6;margin-bottom:18px;">\u5E73\u7D20\u306F\u683C\u5225\u306E\u304A\u5F15\u304D\u7ACB\u3066\u3092\u8CDC\u308A\u539A\u304F\u5FA1\u793C\u7533\u3057\u4E0A\u3052\u307E\u3059\u3002\u4E0B\u8A18\u306E\u901A\u308A\u3054\u8ACB\u6C42\u7533\u3057\u4E0A\u3052\u307E\u3059\u3002<\/div>'
+        + '<div style="margin-bottom:18px;font-size:13px;line-height:1.8;">'
+        + '<div>\u8ACB\u6C42\u65E5\u3000' + dateF + '<\/div>'
+        + dueLine
+        + (siteName ? '<div>\u5DE5\u4E8B\u540D\u3000' + siteName + '<\/div>' : '')
+        + '<div style="font-size:16px;font-weight:bold;margin-top:6px;">\u5FA1\u8ACB\u6C42\u91D1\u984D\uFF08\u7A0E\u8FBC\uFF09\u3000\u00A5' + total.toLocaleString() + '<\/div>'
+        + '<\/div>'
+        + '<table style="width:100%;border-collapse:collapse;margin-bottom:0;font-size:12px;">'
+        + '<thead><tr style="background:#e5e7eb;">'
+        + '<th style="padding:7px 8px;text-align:left;font-weight:bold;border-bottom:2px solid #999;">\u540D\u79F0<\/th>'
+        + '<th style="padding:7px 8px;text-align:left;font-weight:bold;border-bottom:2px solid #999;">\u4ED5\u69D8<\/th>'
+        + '<th style="padding:7px 8px;text-align:center;font-weight:bold;border-bottom:2px solid #999;">\u6570\u91CF<\/th>'
+        + '<th style="padding:7px 8px;text-align:center;font-weight:bold;border-bottom:2px solid #999;">\u5358\u4F4D<\/th>'
+        + '<th style="padding:7px 8px;text-align:right;font-weight:bold;border-bottom:2px solid #999;">\u5358\u4FA1<\/th>'
+        + '<th style="padding:7px 8px;text-align:right;font-weight:bold;border-bottom:2px solid #999;">\u91D1\u984D<\/th>'
+        + '<\/tr><\/thead>'
+        + '<tbody>' + detailRows + '<\/tbody>'
+        + '<\/table>'
+        + '<div style="display:flex;justify-content:space-between;margin-top:0;border-top:2px solid #999;padding-top:10px;">'
+        + '<div style="width:55%;font-size:11px;">'
+        + '<div style="font-weight:bold;margin-bottom:4px;">\u5099\u8003<\/div>'
+        + '<div style="white-space:pre-wrap;line-height:1.5;">' + (remarks || '') + '<\/div>'
+        + (bankName ? '<div style="margin-top:8px;font-size:11px;line-height:1.5;">\u304A\u632F\u8FBC\u5148\uFF1A' + bankName + ' ' + bankBranch + ' ' + bankType + ' ' + bankNo + ' ' + bankHolder + '<\/div>' : '')
+        + '<\/div>'
+        + '<div style="width:40%;font-size:12px;">'
+        + '<table style="width:100%;border-collapse:collapse;">'
+        + '<tr><td style="padding:4px 8px;">\u5C0F\u8A08<\/td><td style="padding:4px 8px;text-align:right;">\u00A5' + subtotal.toLocaleString() + '<\/td><\/tr>'
+        + '<tr><td style="padding:4px 8px;">\u6D88\u8CBB\u7A0E\u7B49<\/td><td style="padding:4px 8px;text-align:right;">\u00A5' + totalTax.toLocaleString() + '<\/td><\/tr>'
+        + '<tr style="font-weight:bold;border-top:2px solid #333;border-bottom:2px solid #333;"><td style="padding:6px 8px;">\u5408\u8A08\u91D1\u984D<\/td><td style="padding:6px 8px;text-align:right;">\u00A5' + total.toLocaleString() + '<\/td><\/tr>'
+        + '<tr><td style="padding:4px 8px;font-size:11px;">(8%)\u6D88\u8CBB\u7A0E\u5408\u8A08<\/td><td style="padding:4px 8px;text-align:right;font-size:11px;">\u00A5' + Math.floor(tax8).toLocaleString() + '<\/td><\/tr>'
+        + '<tr><td style="padding:4px 8px;font-size:11px;">(10%)\u6D88\u8CBB\u7A0E\u5408\u8A08<\/td><td style="padding:4px 8px;text-align:right;font-size:11px;">\u00A5' + Math.floor(tax10).toLocaleString() + '<\/td><\/tr>'
+        + '<\/table>'
+        + '<\/div>'
+        + '<\/div>'
+        + '<div style="margin-top:30px;text-align:right;font-size:12px;line-height:1.6;">'
+        + '<div style="font-weight:bold;font-size:14px;">' + from + '<\/div>'
+        + (addr ? '<div>' + addr + '<\/div>' : '')
+        + (tel ? '<div>TEL: ' + tel + '<\/div>' : '')
+        + (fax ? '<div>FAX: ' + fax + '<\/div>' : '')
+        + (regNo ? '<div style="font-size:11px;color:#666;">\u767B\u9332\u756A\u53F7: ' + regNo + '<\/div>' : '')
+        + '<div style="display:inline-block;width:70px;height:70px;border:2px solid #c00;margin-top:8px;margin-left:10px;text-align:center;line-height:70px;color:#c00;font-size:11px;">\u5370<\/div>'
+        + '<\/div>'
+        + '<\/div>';
     }
     function openInvoice(prefill){
       const d = new Date();
