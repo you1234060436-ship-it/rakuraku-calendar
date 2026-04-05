@@ -583,7 +583,16 @@
           errEl.style.color = '#27ae60'; errEl.textContent = '登録完了！ログインしてください';
           setTimeout(() => { document.getElementById('regPanel').style.display = 'none'; document.getElementById('loginPanel').style.display = 'block'; document.getElementById('loginCompany').value = company; document.getElementById('loginName').value = name; errEl.textContent = ''; }, 1500);
         } else { errEl.textContent = 'アカウント登録に失敗'; }
-      } catch(e) { errEl.textContent = 'エラー: ' + e.message; }
+      } catch(e) { errEl.textContent = 'エラー: ' + e.message;
+      // Set currentUser from the newly created account
+      const newAccounts = await sbGet('accounts', `company_id=eq.${company.id}&name=eq.${encodeURIComponent(document.getElementById('regName').value)}`);
+      if (newAccounts.length > 0) {
+        currentUser = newAccounts[newAccounts.length - 1];
+        companyName = company.name;
+        document.getElementById('loginScreen').style.display = 'none';
+        await renderAll();
+        switchTab(1);
+      } }
     }
 function doLogout() {
       if (!confirm('ログアウトしますか？')) return;
