@@ -1027,7 +1027,7 @@ function doLogout() {
       if (clientCompanies && clientCompanies.length > 0) { clientCompanies.forEach(cc => { ccOpts += '<option value="' + cc.id + '">' + cc.name + '</option>'; }); }
       modal.innerHTML = '<div style="position:relative;background:#fff;margin:8% auto;padding:20px;width:90%;max-width:600px;border-radius:4px;box-shadow:0 4px 8px rgba(0,0,0,0.2);max-height:80vh;overflow-y:auto;">'
         + '<span style="position:absolute;color:#aaa;font-size:28px;font-weight:bold;cursor:pointer;top:10px;right:15px;" onclick="document.getElementById(\x27siteModal\x27).style.display=\x27none\x27">&times;</span>'
-        + '<h2 style="margin-top:0;">' + (isEdit ? 'サイトを編集' : 'サイトを追加') + '</h2>'
+        + '<h2 style="margin-top:0;">' + (isEdit ? '現場を編集' : '現場を追加') + '</h2>'
         + '<input type="hidden" id="siteId" value="' + (site ? site.id : '') + '" />'
         + '<div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:bold;">取引先企業</label><select id="siteClientCompanyId" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;">' + ccOpts + '</select></div>'
         + '<div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:bold;">現場名 *</label><input type="text" id="siteName" value="' + (site ? site.name : '') + '" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;" /></div>'
@@ -1053,16 +1053,16 @@ function doLogout() {
       if (!siteId && (!company || !company.id)) { showToast('ログインしてください'); return; }
       const body = { name, price: price ? parseInt(price) : 0, rate_type: rateType || 'daily', memo: memo || null, color, client_company_id: ccId ? parseInt(ccId) : null };
       try {
-        if (siteId) { await sbPatch('work_sites', siteId, body); showToast('サイトを更新しました'); }
-        else { await sbPost('work_sites', { company_id: company.id, ...body }); showToast('サイトを追加しました'); }
+        if (siteId) { await sbPatch('work_sites', siteId, body); showToast('現場を更新しました'); }
+        else { await sbPost('work_sites', { company_id: company.id, ...body }); showToast('現場を追加しました'); }
         document.getElementById('siteModal').style.display = 'none';
         await renderAll();
       } catch(e) { console.error('saveSite error:', e); showToast('エラー: ' + e.message); }
     }
 
     async function confirmDeleteSite(id) {
-      if (!confirm('このサイトを削除しますか？')) return;
-      try { await sbDelete('work_sites', id); showToast('サイトを削除しました'); await renderAll(); }
+      if (!confirm('この現場を削除しますか？')) return;
+      try { await sbDelete('work_sites', id); showToast('現場を削除しました'); await renderAll(); }
       catch(e) { console.error('deleteSite error:', e); showToast('削除エラー: ' + e.message); }
     }
 
