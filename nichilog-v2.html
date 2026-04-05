@@ -406,11 +406,11 @@
 
     // === Auth ===
     async function doLogin() {
-      const company = document.getElementById('loginCompany').value.trim();
+      const compName = document.getElementById('loginCompany').value.trim();
       const name = document.getElementById('loginName').value.trim();
       const pwd = document.getElementById('loginPassword').value;
-      if (!company || !name || !pwd) { showLoginError('全項目を入力してください'); return; }
-      const companies = await sbGet('companies', 'name=eq.' + encodeURIComponent(company));
+      if (!compName || !name || !pwd) { showLoginError('全項目を入力してください'); return; }
+      const companies = await sbGet('companies', 'name=eq.' + encodeURIComponent(compName));
       if (!companies || companies.length === 0) { showLoginError('会社が見つかりません'); return; }
       const compId = companies[0].id;
       const accounts = await sbGet('accounts', 'company_id=eq.' + compId + '&name=eq.' + encodeURIComponent(name));
