@@ -746,7 +746,9 @@ function doLogout() {
       const mo = viewMonth.getMonth();
       const start = new Date(yr, mo, 1).toISOString().split('T')[0];
       const end = new Date(yr, mo + 1, 0).toISOString().split('T')[0];
-      entries = await sbGet('attendance', `company_id=eq.${company.id}&work_date=gte.${start}&work_date=lte.${end}`);
+      let aq = `company_id=eq.${company.id}&work_date=gte.${start}&work_date=lte.${end}`;
+      if (isWorker()) aq += `&account_id=eq.${currentUser.id}`;
+      entries = await sbGet('attendance', aq);
     }
 
     function gSN(d) {
