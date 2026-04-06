@@ -887,7 +887,7 @@ async function changeUserPassword(userId) {
                 <span>${site ? ((clientCompanies.find(c => c.id === site.client_company_id) || {}).name || '') + '　' + site.name : 'N/A'}</span>
               </div>
               ${e.note ? `<div class="card-row"><span class="text-muted">${e.note}</span></div>` : ''}
-              <button class="btn btn-danger" style="width: 100%; margin-top: 8px;" onclick="delE(${e.id})">削除</button>
+              <div style="display:flex;gap:8px;margin-top:8px;"><button class="btn" style="flex:1;background:#1976d2;color:#fff;border:none;padding:8px;border-radius:6px;" onclick="editE(${e.id})">変更</button><button class="btn btn-danger" style="flex:1;" onclick="delE(${e.id})">削除</button></div>
             </div>
           `;
         });
@@ -954,6 +954,77 @@ async function changeUserPassword(userId) {
         clModal();
         await ldMo();
         renderCalendar();
+      }
+    }
+
+    async function editE(id) {
+      const entry = entries.find(e => e.id === id);
+      if (!entry) return;
+      const site = sites.find(s => s.id === entry.site_id);
+      
+      // Build edit modal HTML
+      let companyOpts = '<option value="">-- 選択 --</option>';
+      clientCompanies.forEach(c => {
+        const sel = site && site.client_company_id === c.id ? ' selected' : '';
+        companyOpts += '<option value="' + c.id + '"' + sel + '>' + c.name + '</option>';
+      });
+      
+      let siteOpts = '<option value="">-- 選択 --</option>';
+      if (site) {
+        sites.filter(s => s.client_company_id === site.client_company_id).forEach(s => {
+          const sel = s.id === entry.site_id ? ' selected' : '';
+          siteOpts += '<option value="' + s.id + '"' + sel + '>' + s.name + '</option>';
+        });
+      }
+      
+      let memberOpts = '<option value="">-- 選択 --</option>';
+      members.forEach(mb => {
+        const sel = mb.id === entry.account_id ? ' selected' : '';
+        memberOpts += '<option value="' + mb.id + '"' + sel + '>' + mb.name + '</option>';
+      });
+      
+      document.getElementById('dayDetailList').innerHTML = `
+        <div style="padding:10px;">
+          <div class="form-group"><label>会社</label><select id="editCompany" onchange="filterEditSites()">${companyOpts}</select></div>
+          <div class="form-group"><label>現場</label><select id="editSite">${siteOpts}</select></div>
+          <div class="form-group"><label>勤務区分</label><select id="editWorkType"><option value="full"${entry.work_type !== 'half' ? ' selected' : ''}>1日</option><option value="half"${entry.work_type === 'half' ? ' selected' : ''}>半日</option></select></div>
+          <div class="form-group"><label>メンバー</label><select id="editMember">${memberOpts}</select></div>
+          <div class="form-group"><label>備考</label><input type="text" id="editNote" value="${entry.note || ''}"></div>
+          <div style="display:flex;gap:8px;margin-top:12px;">
+            <button class="btn" style="flex:1;background:#999;color:#fff;border:none;padding:10px;border-radius:6px;" onclick="dayDetail(selectedDate)">戻る</button>
+            <button class="btn-primary" style="flex:1;padding:10px;" onclick="saveEditE(${id})">保存</button>
+          </div>
+        </div>`;
+    }
+
+    function filterEditSites() {
+      const cid = document.getElementById('editCompany').value;
+      let opts = '<option value="">-- 選択 --</option>';
+      if (cid) {
+        sites.filter(s => String(s.client_company_id) === cid).forEach(s => {
+          opts += '<option value="' + s.id + '">' + s.name + '</option>';
+        });
+      }
+      document.getElementById('editSite').innerHTML = opts;
+    }
+
+    async function saveEditE(id) {
+      const siteId = parseInt(document.getElementById('editSite').value);
+      const memberId = parseInt(document.getElementById('editMember').value);
+      const workType = document.getElementById('editWorkType').value;
+      const note = document.getElementById('editNote').value;
+      if (!siteId || !memberId) { alert('現場とメンバーを選択してください'); return; }
+      const res = await fetch(SB + '/attendance?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ site_id: siteId, account_id: memberId, work_type: workType, note: note })
+      });
+      if (res.ok) {
+        await ldMo();
+        dayDetail(selectedDate);
+        renderCalendar();
+      } else {
+        alert('変更に失敗しました');
       }
     }
 
