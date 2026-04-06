@@ -887,7 +887,7 @@ async function changeUserPassword(userId) {
                 <span>${site ? ((clientCompanies.find(c => c.id === site.client_company_id) || {}).name || '') + '　' + site.name : 'N/A'}</span>
               </div>
               ${e.note ? `<div class="card-row"><span class="text-muted">${e.note}</span></div>` : ''}
-              <div style="display:flex;gap:8px;margin-top:8px;"><button class="btn" style="flex:1;background:#1976d2;color:#fff;border:none;padding:8px;border-radius:6px;" onclick="editE(${e.id})">変更</button><button class="btn btn-danger" style="flex:1;" onclick="delE(${e.id})">削除</button></div>
+              <div style="display:flex;gap:8px;margin-top:8px;"><button class="btn" style="flex:1;background:#1976d2;color:#fff;border:none;padding:8px;border-radius:6px;" onclick="editE(${e.id})">編集</button><button class="btn btn-danger" style="flex:1;" onclick="delE(${e.id})">削除</button></div>
             </div>
           `;
         });
