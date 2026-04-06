@@ -184,6 +184,13 @@
         <select id="addEntrySite"></select>
       </div>
       <div class="form-group">
+        <label>勤務区分</label>
+        <select id="addEntryWorkType">
+          <option value="full">1日</option>
+          <option value="half">半日</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label>メンバー</label>
         <select id="addEntryMember"></select>
       </div>
@@ -855,7 +862,7 @@ function doLogout() {
           html += `
             <div class="card">
               <div class="card-row">
-                <span>${member ? member.name : 'N/A'}</span>
+                <span>${member ? member.name : 'N/A'} <span style="font-size:11px;padding:2px 6px;border-radius:4px;background:${e.work_type==='half'?'#ff9800':'#4caf50'};color:#fff;margin-left:4px;">${e.work_type==='half'?'半日':'1日'}</span></span>
                 <span>${site ? ((clientCompanies.find(c => c.id === site.client_company_id) || {}).name || '') + '　' + site.name : 'N/A'}</span>
               </div>
               ${e.note ? `<div class="card-row"><span class="text-muted">${e.note}</span></div>` : ''}
@@ -906,6 +913,7 @@ function doLogout() {
       const siteId = parseInt(document.getElementById('addEntrySite').value);
       const memberId = parseInt(document.getElementById('addEntryMember').value);
       const note = document.getElementById('addEntryNote').value;
+      const workType = document.getElementById('addEntryWorkType').value;
 
       if (!siteId || !memberId) {
         alert('現場とメンバーを選択してください');
@@ -917,7 +925,8 @@ function doLogout() {
         account_id: memberId,
         site_id: siteId,
         work_date: date,
-        note: note
+        note: note,
+        work_type: workType
       });
 
       if (result) {
