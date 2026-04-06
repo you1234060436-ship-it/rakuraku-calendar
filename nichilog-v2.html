@@ -1042,17 +1042,8 @@ async function changeUserPassword(userId) {
     // === Summary month state ===
       let summaryYear = new Date().getFullYear();
       let summaryMonthNum = new Date().getMonth() + 1;
-
-      function prevSummaryMonth() {
-        summaryMonthNum--;
-        if (summaryMonthNum < 1) { summaryMonthNum = 12; summaryYear--; }
-        renderSummary();
-      }
-      function nextSummaryMonth() {
-        summaryMonthNum++;
-        if (summaryMonthNum > 12) { summaryMonthNum = 1; summaryYear++; }
-        renderSummary();
-      }
+      function prevSummaryMonth() { summaryMonthNum--; if(summaryMonthNum<1){summaryMonthNum=12;summaryYear--;} renderSummary(); }
+      function nextSummaryMonth() { summaryMonthNum++; if(summaryMonthNum>12){summaryMonthNum=1;summaryYear++;} renderSummary(); }
 
       async function renderSummary() {
         const ym = summaryYear + '-' + String(summaryMonthNum).padStart(2, '0');
@@ -1060,108 +1051,120 @@ async function changeUserPassword(userId) {
         const masterName = currentUser.name;
 
         // Fetch entries for this month directly from Supabase
-        const startDate = ym + '-01';
-        const endDay = new Date(summaryYear, summaryMonthNum, 0).getDate();
-        const endDate = ym + '-' + String(endDay).padStart(2, '0');
-        let mEntries;
+        let mEntries = [];
         try {
-          const aq = 'company_id=eq.' + company.id + '&work_date=gte.' + startDate + '&work_date=lte.' + endDate;
+          const nextM = summaryMonthNum < 12 ? summaryYear + '-' + String(summaryMonthNum + 1).padStart(2, '0') + '-01' : (summaryYear + 1) + '-01-01';
+          const aq = 'company_id=eq.' + company.id + '&work_date=gte.' + ym + '-01&work_date=lt.' + nextM + '&select=*';
+          const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK };
           const res = await fetch(SB + '/attendance?' + aq, { headers: H });
-          mEntries = await res.json();
-        } catch(e) {
+          if (res.ok) {
+            mEntries = await res.json();
+          }
+        } catch(err) {
           mEntries = entries.filter(e => e.work_date.startsWith(ym));
         }
 
-        const companyData = {};
-        clientCompanies.forEach(c => { companyData[c.id] = { name: c.name, rows: [] }; });
-        const siteDateMap = {};
+        // Build date-based rows: { date -> [ {site_name, site_id, members: [{name, type}], note} ] }
+        const dateMap = {};
         mEntries.forEach(e => {
           const site = sites.find(s => s.id === e.site_id);
           if (!site) return;
-          const cid = site.client_company_id;
-          if (!cid) return;
-          const key = cid + '|' + e.site_id + '|' + e.work_date;
-          if (!siteDateMap[key]) {
-            siteDateMap[key] = { cid: cid, site_id: e.site_id, site_name: site.name, price: site.price || 0, work_date: e.work_date, note: e.note || '', members: [], memberTypes: [] };
-          }
+          const d = e.work_date;
           const member = members.find(m => m.id === e.account_id);
-          if (member) { siteDateMap[key].members.push(member.name); siteDateMap[key].memberTypes.push(e.work_type); }
-          if (e.note) siteDateMap[key].note = e.note;
+          const mName = member ? member.name : '\u4e0d\u660e';
+          const wt = e.work_type || 'full';
+          if (!dateMap[d]) dateMap[d] = {};
+          const sKey = e.site_id;
+          if (!dateMap[d][sKey]) dateMap[d][sKey] = { site_name: site.name, members: [], types: [], note: e.note || '' };
+          dateMap[d][sKey].members.push(mName);
+          dateMap[d][sKey].types.push(wt);
+          if (e.note && !dateMap[d][sKey].note) dateMap[d][sKey].note = e.note;
         });
-        Object.values(siteDateMap).forEach(row => { if (companyData[row.cid]) companyData[row.cid].rows.push(row); });
-        Object.values(companyData).forEach(cd => { cd.rows.sort((a, b) => a.work_date.localeCompare(b.work_date) || a.site_name.localeCompare(b.site_name)); });
-        let html = '';
-        html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">';
-        html += '<button class="btn" onclick="prevSummaryMonth()" style="padding:8px 16px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:16px;">&lt; \u524d\u6708</button>';
-        html += '<h2 style="margin:0;">' + summaryYear + '\u5e74' + summaryMonthNum + '\u6708</h2>';
-        html += '<button class="btn" onclick="nextSummaryMonth()" style="padding:8px 16px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:16px;">\u7fcc\u6708 &gt;</button>';
-        html += '</div>';
-        let grandTotalDays = 0, grandTotalAmount = 0;
-        clientCompanies.forEach(c => {
-          const cd = companyData[c.id];
-          if (!cd || cd.rows.length === 0) return;
-          html += '<div style="margin-bottom:24px;border:1px solid #ccc;border-radius:10px;overflow:hidden;background:#fff;">';
-          html += '<div style="background:#1976d2;color:#fff;padding:12px 16px;font-weight:bold;font-size:15px;">\u2500\u2500 ' + c.name + ' \u2500\u2500</div>';
-          html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:#f8f9fa;border-bottom:1px solid #e0e0e0;">';
-          html += '<span style="font-weight:bold;font-size:14px;">\u5de5\u4e8b\u65e5\u5831\uff08' + summaryMonthNum + '\u6708\uff09</span>';
-          html += '<span style="font-size:13px;color:#555;">\u62c5\u5f53\u3000\u7530\u5c71\u3000' + masterName + '</span>';
-          html += '</div>';
-          html += '<div style="overflow-x:auto;">';
-          html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
-          html += '<thead><tr style="background:#e3f2fd;">';
-          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:center;white-space:nowrap;width:36px;">\u65e5</th>';
-          html += '<th style="padding:8px 4px;border-bottom:2px solid #1976d2;text-align:center;white-space:nowrap;width:30px;">\u66dc\u65e5</th>';
-          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:center;white-space:nowrap;width:90px;">\u6642\u9593</th>';
-          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:left;">\u73fe\u5834\u540d</th>';
-          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:left;">\u4f5c\u696d\u5185\u5bb9</th>';
-          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:left;">\u4eba\u54e1</th>';
-          html += '</tr></thead><tbody>';
-          let companyDays = 0, companyAmount = 0;
-          cd.rows.forEach(row => {
-            const d = new Date(row.work_date + 'T00:00:00');
-            const dayNum = d.getDate();
-            const dow = dayNames[d.getDay()];
-            const dayColor = d.getDay() === 0 ? '#e53935' : (d.getDay() === 6 ? '#1565c0' : '#333');
-            const allHalf = row.memberTypes.every(t => t === 'half');
+
+        // Sort dates
+        const sortedDates = Object.keys(dateMap).sort();
+
+        // Count total days for personnel calc
+        let totalPersonnel = 0;
+
+        // Build table rows
+        let rows = '';
+        sortedDates.forEach(d => {
+          const dt = new Date(d + 'T00:00:00');
+          const dayNum = dt.getDate();
+          const dow = dayNames[dt.getDay()];
+          const isDowSun = dt.getDay() === 0;
+          const isDowSat = dt.getDay() === 6;
+          const dowColor = isDowSun ? '#e55' : isDowSat ? '#36c' : '#333';
+          const siteEntries = Object.values(dateMap[d]);
+          siteEntries.forEach((se, idx) => {
+            const allHalf = se.types.every(t => t === 'half');
+            const hasHalf = se.types.some(t => t === 'half');
             const timeStr = allHalf ? '8:00\u301c12:00' : '8:00\u301c17:00';
-            const personnel = row.members.map((name, idx) => name + (row.memberTypes[idx] === 'half' ? '(\u534a\u65e5)' : '')).join('\u3001');
-            row.members.forEach((name, idx) => {
-              const isH = row.memberTypes[idx] === 'half';
-              companyDays += isH ? 0.5 : 1;
-              companyAmount += (isH ? 0.5 : 1) * row.price;
+            const personnelParts = se.members.map((name, i) => {
+              return name + (se.types[i] === 'half' ? '(\u534a\u65e5)' : '');
             });
-            html += '<tr style="border-bottom:1px solid #eee;">';
-            html += '<td style="padding:8px 6px;text-align:center;color:' + dayColor + ';font-weight:bold;">' + dayNum + '</td>';
-            html += '<td style="padding:8px 4px;text-align:center;color:' + dayColor + ';">' + dow + '</td>';
-            html += '<td style="padding:8px 6px;text-align:center;white-space:nowrap;">' + timeStr + '</td>';
-            html += '<td style="padding:8px 6px;">' + row.site_name + '</td>';
-            html += '<td style="padding:8px 6px;color:#666;">' + (row.note || '-') + '</td>';
-            html += '<td style="padding:8px 6px;">' + personnel + '</td>';
-            html += '</tr>';
+            const personnel = personnelParts.join('\u3001');
+            // Count: full=1, half=0.5
+            let dayCount = 0;
+            se.types.forEach(t => { dayCount += t === 'half' ? 0.5 : 1; });
+            totalPersonnel += dayCount;
+
+            rows += '<tr>';
+            if (idx === 0) {
+              rows += '<td style="border:1px solid #333;padding:6px 4px;text-align:center;width:30px;" rowspan="' + siteEntries.length + '">' + dayNum + '</td>';
+              rows += '<td style="border:1px solid #333;padding:6px 4px;text-align:center;width:30px;color:' + dowColor + ';" rowspan="' + siteEntries.length + '">' + dow + '</td>';
+            }
+            rows += '<td style="border:1px solid #333;padding:6px 8px;text-align:center;width:90px;">' + timeStr + '</td>';
+            rows += '<td style="border:1px solid #333;padding:6px 8px;">' + se.site_name + '</td>';
+            rows += '<td style="border:1px solid #333;padding:6px 8px;color:#666;">' + (se.note || '-') + '</td>';
+            rows += '<td style="border:1px solid #333;padding:6px 8px;">' + personnel + '</td>';
+            rows += '</tr>';
           });
-          html += '<tr style="background:#f5f5f5;font-weight:bold;border-top:2px solid #1976d2;">';
-          html += '<td colspan="3" style="padding:10px 6px;text-align:center;">\u5408\u8a08</td>';
-          html += '<td style="padding:10px 6px;">' + companyDays + '\u4eba\u65e5</td>';
-          html += '<td colspan="2" style="padding:10px 6px;text-align:right;">&yen;' + companyAmount.toLocaleString() + '</td>';
-          html += '</tr></tbody></table></div>';
-          html += '<div style="padding:12px 16px;border-top:1px solid #eee;text-align:right;">';
-          html += '<button class="btn" onclick="alert(&#39;\u8acb\u6c42\u66f8\u4f5c\u6210\u6a5f\u80fd\u306f\u6e96\u5099\u4e2d\u3067\u3059&#39;)" style="background:#ff9800;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;">\u3053\u306e\u4f1a\u793e\u306e\u8acb\u6c42\u66f8\u3092\u4f5c\u6210</button>';
-          html += '</div></div>';
-          grandTotalDays += companyDays;
-          grandTotalAmount += companyAmount;
         });
-        html += '<div style="background:#fff;border:1px solid #ccc;border-radius:10px;overflow:hidden;margin-bottom:20px;">';
-        html += '<table style="width:100%;border-collapse:collapse;font-size:14px;">';
-        html += '<tr style="background:#f0f0f0;font-weight:bold;">';
-        html += '<td style="padding:12px 16px;">\u5168\u4f53\u5408\u8a08</td>';
-        html += '<td style="padding:12px 16px;text-align:right;">' + grandTotalDays + '\u4eba\u65e5</td>';
-        html += '<td style="padding:12px 16px;text-align:right;">&yen;' + grandTotalAmount.toLocaleString() + '</td>';
-        html += '</tr></table></div>';
+
+        // If no data
+        if (sortedDates.length === 0) {
+          rows = '<tr><td colspan="6" style="border:1px solid #333;padding:20px;text-align:center;color:#999;">\u3053\u306e\u6708\u306e\u30c7\u30fc\u30bf\u306f\u3042\u308a\u307e\u305b\u3093</td></tr>';
+        }
+
+        let html = '';
+        // Month nav
+        html += '<div style="display:flex;align-items:center;justify-content:center;margin:16px 0 8px;gap:16px;">';
+        html += '<button onclick="prevSummaryMonth()" style="background:none;border:1px solid #999;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:16px;">\u25c0</button>';
+        html += '<span style="font-size:20px;font-weight:bold;">' + summaryYear + '\u5e74' + summaryMonthNum + '\u6708</span>';
+        html += '<button onclick="nextSummaryMonth()" style="background:none;border:1px solid #999;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:16px;">\u25b6</button>';
+        html += '</div>';
+
+        // Title
+        html += '<div style="text-align:center;font-size:22px;font-weight:bold;margin:12px 0 4px;">\u5de5\u4e8b\u65e5\u5831\uff08' + summaryMonthNum + '\u6708\uff09</div>';
+        // 担当
+        html += '<div style="text-align:right;padding:4px 8px;font-size:14px;margin-bottom:8px;">\u62c5\u5f53\u3000' + (company.name || '') + '\u3000' + masterName + '</div>';
+
+        // Table
+        html += '<div style="overflow-x:auto;padding:0 4px;">';
+        html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+        html += '<thead><tr style="background:#f0f0f0;">';
+        html += '<th style="border:1px solid #333;padding:8px 4px;text-align:center;width:30px;">\u65e5</th>';
+        html += '<th style="border:1px solid #333;padding:8px 4px;text-align:center;width:30px;">\u66dc\u65e5</th>';
+        html += '<th style="border:1px solid #333;padding:8px 4px;text-align:center;width:90px;">\u6642\u9593</th>';
+        html += '<th style="border:1px solid #333;padding:8px 8px;text-align:center;">\u73fe\u5834\u540d</th>';
+        html += '<th style="border:1px solid #333;padding:8px 8px;text-align:center;">\u4f5c\u696d\u5185\u5bb9</th>';
+        html += '<th style="border:1px solid #333;padding:8px 8px;text-align:center;width:120px;">\u4eba\u54e1</th>';
+        html += '</tr></thead>';
+        html += '<tbody>' + rows + '</tbody>';
+        // Total row
+        if (sortedDates.length > 0) {
+          html += '<tfoot><tr style="background:#f0f0f0;font-weight:bold;">';
+          html += '<td colspan="5" style="border:1px solid #333;padding:8px;text-align:right;">\u5408\u8a08\u4eba\u5de5</td>';
+          html += '<td style="border:1px solid #333;padding:8px;text-align:center;">' + totalPersonnel + ' \u4eba\u5de5</td>';
+          html += '</tr></tfoot>';
+        }
+        html += '</table></div>';
+
         document.getElementById('t2').innerHTML = html;
       }
-
-
-    // === Sites (T3) ===
+// === Sites (T3) ===
     function renderSites() {
       if (!sites) return;
       const grouped = {};
