@@ -691,6 +691,7 @@ function doLogout() {
       document.getElementById('loginScreen').style.display = 'flex';
       document.getElementById('appHeader').style.display = 'none';
       document.getElementById('navBar').style.display = 'none';
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.getElementById('loginCompany').value = '';
       document.getElementById('loginName').value = '';
       document.getElementById('loginPassword').value = '';
