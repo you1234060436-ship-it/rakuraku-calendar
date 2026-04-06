@@ -1095,7 +1095,7 @@ async function changeUserPassword(userId) {
         // Render each client company
         const cids = Object.keys(companyMap);
         cids.forEach(cid => {
-          const c = clientCompanies.find(cc => cc.id === cid);
+          const c = clientCompanies.find(cc => cc.id == cid);
           const cName = c ? c.name : '\u4e0d\u660e';
           const cEntries = companyMap[cid];
 
@@ -1214,7 +1214,7 @@ async function changeUserPassword(userId) {
         }
 
         // Filter by client company
-        const cSites = sites.filter(s => s.client_company_id === clientCompanyId);
+        const cSites = sites.filter(s => s.client_company_id == clientCompanyId);
         const cSiteIds = cSites.map(s => s.id);
         const cEntries = mEntries.filter(e => cSiteIds.includes(e.site_id));
 
