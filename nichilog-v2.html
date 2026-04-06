@@ -1039,7 +1039,8 @@ async function changeUserPassword(userId) {
     }
 
     // === Summary (T2) ===
-    // === Summary month state ===
+    // v10 fix
+// === Summary month state ===
       let summaryYear = new Date().getFullYear();
       let summaryMonthNum = new Date().getMonth() + 1;
       function prevSummaryMonth() { summaryMonthNum--; if(summaryMonthNum<1){summaryMonthNum=12;summaryYear--;} renderSummary(); }
