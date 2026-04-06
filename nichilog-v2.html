@@ -988,32 +988,58 @@ function doLogout() {
       });
       html += '</div>';
 
-      // Site breakdown
+      // Site breakdown grouped by company
       const siteStats = {};
       sites.forEach(s => {
-        siteStats[s.id] = { name: s.name, days: 0, amount: 0 };
+        siteStats[s.id] = { name: s.name, days: 0, amount: 0, client_company_id: s.client_company_id };
       });
       entries.forEach(e => {
         const s = sites.find(x => x.id === e.site_id);
         if (s) {
           siteStats[s.id].days += 1;
-          siteStats[s.id].amount += s.price || 0;
+          siteStats[s.id].amount += (s.price || 0);
         }
       });
 
-      html += '<h3 style="margin: 20px 0 10px; font-size: 16px;">現場別</h3>';
-      html += '<table class="table"><thead><tr><th>現場</th><th style="text-align: right;">日数</th><th style="text-align: right;">金額</th></tr></thead><tbody>';
-
+      // Group sites by company
       let totalDays = 0, totalAmount = 0;
-      Object.values(siteStats).forEach(s => {
-        if (s.days > 0) {
-          html += `<tr><td>${s.name}</td><td style="text-align: right;">${s.days}</td><td style="text-align: right;">¥${s.amount.toLocaleString()}</td></tr>`;
-          totalDays += s.days;
-          totalAmount += s.amount;
-        }
+      const companyGroups = {};
+      Object.entries(siteStats).forEach(([sid, data]) => {
+        if (data.days === 0) return;
+        const cid = data.client_company_id || 'none';
+        if (!companyGroups[cid]) companyGroups[cid] = [];
+        companyGroups[cid].push({ sid, ...data });
+        totalDays += data.days;
+        totalAmount += data.amount;
       });
 
-      html += `<tr style="font-weight: 600; background: #f3f4f6;"><td>合計</td><td style="text-align: right;">${totalDays}</td><td style="text-align: right;">¥${totalAmount.toLocaleString()}</td></tr>`;
+      html += '<h3 style="margin: 20px 0 10px; font-size: 16px;">会社別・現場別</h3>';
+      clientCompanies.forEach(c => {
+        const group = companyGroups[c.id];
+        if (!group) return;
+        let cDays = 0, cAmount = 0;
+        html += '<div style="margin-bottom:16px;border:1px solid #ddd;border-radius:8px;overflow:hidden;">';
+        html += '<div style="background:#f5f5f5;padding:10px 12px;font-weight:bold;font-size:14px;">' + c.name + '</div>';
+        html += '<table class="table" style="margin:0;"><tbody>';
+        group.forEach(s => {
+          html += '<tr><td style="padding-left:16px;">' + s.name + '</td><td style="text-align:right;">' + s.days + '</td><td style="text-align:right;">&yen;' + s.amount.toLocaleString() + '</td></tr>';
+          cDays += s.days; cAmount += s.amount;
+        });
+        html += '<tr style="background:#fafafa;font-weight:bold;"><td style="padding-left:16px;">小計</td><td style="text-align:right;">' + cDays + '</td><td style="text-align:right;">&yen;' + cAmount.toLocaleString() + '</td></tr>';
+        html += '</tbody></table></div>';
+      });
+      // Ungrouped sites
+      if (companyGroups['none']) {
+        html += '<div style="margin-bottom:16px;border:1px solid #ddd;border-radius:8px;overflow:hidden;">';
+        html += '<div style="background:#f5f5f5;padding:10px 12px;font-weight:bold;font-size:14px;">その他</div>';
+        html += '<table class="table" style="margin:0;"><tbody>';
+        companyGroups['none'].forEach(s => {
+          html += '<tr><td style="padding-left:16px;">' + s.name + '</td><td style="text-align:right;">' + s.days + '</td><td style="text-align:right;">&yen;' + s.amount.toLocaleString() + '</td></tr>';
+        });
+        html += '</tbody></table></div>';
+      }
+      html += '<table class="table"><tbody>';
+      html += '<tr style="background: #f0f0f0; font-weight: bold;"><td>合計</td><td style="text-align: right;">' + totalDays + '</td><td style="text-align: right;">&yen;' + totalAmount.toLocaleString() + '</td></tr>';
       html += '</tbody></table>';
 
       document.getElementById('t2').innerHTML = html;
