@@ -1039,120 +1039,114 @@ async function changeUserPassword(userId) {
     }
 
     // === Summary (T2) ===
-    function renderSummary() {
-      let html = '<h2 style="margin-bottom: 20px;">月別サマリー</h2>';
+    // === Summary month state ===
+      let summaryYear = new Date().getFullYear();
+      let summaryMonthNum = new Date().getMonth() + 1;
 
-      // Get last 7 months of data
-      const months = [];
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setMonth(d.getMonth() - i);
-        months.push({
-          year: d.getFullYear(),
-          month: d.getMonth(),
-          name: gMN(d.getMonth())
-        });
+      function prevSummaryMonth() {
+        summaryMonthNum--;
+        if (summaryMonthNum < 1) { summaryMonthNum = 12; summaryYear--; }
+        renderSummary();
+      }
+      function nextSummaryMonth() {
+        summaryMonthNum++;
+        if (summaryMonthNum > 12) { summaryMonthNum = 1; summaryYear++; }
+        renderSummary();
       }
 
-      const monthData = [];
-      months.forEach(m => {
-        const monthEntries = entries.filter(e => {
-          const d = new Date(e.work_date);
-          return d.getFullYear() === m.year && d.getMonth() === m.month;
+      function renderSummary() {
+        const ym = summaryYear + '-' + String(summaryMonthNum).padStart(2, '0');
+        const dayNames = ['æ¥','æ','ç«','æ°´','æ¨','é','å'];
+        const masterName = currentUser.name;
+        const mEntries = entries.filter(e => e.work_date.startsWith(ym));
+        const companyData = {};
+        clientCompanies.forEach(c => { companyData[c.id] = { name: c.name, rows: [] }; });
+        const siteDateMap = {};
+        mEntries.forEach(e => {
+          const site = sites.find(s => s.id === e.site_id);
+          if (!site) return;
+          const cid = site.client_company_id;
+          if (!cid) return;
+          const key = cid + '|' + e.site_id + '|' + e.work_date;
+          if (!siteDateMap[key]) {
+            siteDateMap[key] = { cid: cid, site_id: e.site_id, site_name: site.name, price: site.price || 0, work_date: e.work_date, note: e.note || '', members: [], memberTypes: [] };
+          }
+          const member = members.find(m => m.id === e.account_id);
+          if (member) { siteDateMap[key].members.push(member.name); siteDateMap[key].memberTypes.push(e.work_type); }
+          if (e.note) siteDateMap[key].note = e.note;
         });
-        let amount = 0;
-        monthEntries.forEach(e => {
-          const s = sites.find(x => x.id === e.site_id);
-          if (s) amount += s.price || 0;
+        Object.values(siteDateMap).forEach(row => { if (companyData[row.cid]) companyData[row.cid].rows.push(row); });
+        Object.values(companyData).forEach(cd => { cd.rows.sort((a, b) => a.work_date.localeCompare(b.work_date) || a.site_name.localeCompare(b.site_name)); });
+        let html = '';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">';
+        html += '<button class="btn" onclick="prevSummaryMonth()" style="padding:8px 16px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:16px;">&lt; åæ</button>';
+        html += '<h2 style="margin:0;">' + summaryYear + 'å¹´' + summaryMonthNum + 'æ</h2>';
+        html += '<button class="btn" onclick="nextSummaryMonth()" style="padding:8px 16px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:16px;">ç¿æ &gt;</button>';
+        html += '</div>';
+        let grandTotalDays = 0, grandTotalAmount = 0;
+        clientCompanies.forEach(c => {
+          const cd = companyData[c.id];
+          if (!cd || cd.rows.length === 0) return;
+          html += '<div style="margin-bottom:24px;border:1px solid #ccc;border-radius:10px;overflow:hidden;background:#fff;">';
+          html += '<div style="background:#1976d2;color:#fff;padding:12px 16px;font-weight:bold;font-size:15px;">ââ ' + c.name + ' ââ</div>';
+          html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:#f8f9fa;border-bottom:1px solid #e0e0e0;">';
+          html += '<span style="font-weight:bold;font-size:14px;">å·¥äºæ¥å ±ï¼' + summaryMonthNum + 'æï¼</span>';
+          html += '<span style="font-size:13px;color:#555;">æå½ãç°å±±ã' + masterName + '</span>';
+          html += '</div>';
+          html += '<div style="overflow-x:auto;">';
+          html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+          html += '<thead><tr style="background:#e3f2fd;">';
+          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:center;white-space:nowrap;width:36px;">æ¥</th>';
+          html += '<th style="padding:8px 4px;border-bottom:2px solid #1976d2;text-align:center;white-space:nowrap;width:30px;">ææ¥</th>';
+          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:center;white-space:nowrap;width:90px;">æé</th>';
+          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:left;">ç¾å ´å</th>';
+          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:left;">ä½æ¥­åå®¹</th>';
+          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:left;">äººå¡</th>';
+          html += '</tr></thead><tbody>';
+          let companyDays = 0, companyAmount = 0;
+          cd.rows.forEach(row => {
+            const d = new Date(row.work_date + 'T00:00:00');
+            const dayNum = d.getDate();
+            const dow = dayNames[d.getDay()];
+            const dayColor = d.getDay() === 0 ? '#e53935' : (d.getDay() === 6 ? '#1565c0' : '#333');
+            const allHalf = row.memberTypes.every(t => t === 'half');
+            const timeStr = allHalf ? '8:00ã12:00' : '8:00ã17:00';
+            const personnel = row.members.map((name, idx) => name + (row.memberTypes[idx] === 'half' ? '(åæ¥)' : '')).join('ã');
+            row.members.forEach((name, idx) => {
+              const isH = row.memberTypes[idx] === 'half';
+              companyDays += isH ? 0.5 : 1;
+              companyAmount += (isH ? 0.5 : 1) * row.price;
+            });
+            html += '<tr style="border-bottom:1px solid #eee;">';
+            html += '<td style="padding:8px 6px;text-align:center;color:' + dayColor + ';font-weight:bold;">' + dayNum + '</td>';
+            html += '<td style="padding:8px 4px;text-align:center;color:' + dayColor + ';">' + dow + '</td>';
+            html += '<td style="padding:8px 6px;text-align:center;white-space:nowrap;">' + timeStr + '</td>';
+            html += '<td style="padding:8px 6px;">' + row.site_name + '</td>';
+            html += '<td style="padding:8px 6px;color:#666;">' + (row.note || '-') + '</td>';
+            html += '<td style="padding:8px 6px;">' + personnel + '</td>';
+            html += '</tr>';
+          });
+          html += '<tr style="background:#f5f5f5;font-weight:bold;border-top:2px solid #1976d2;">';
+          html += '<td colspan="3" style="padding:10px 6px;text-align:center;">åè¨</td>';
+          html += '<td style="padding:10px 6px;">' + companyDays + 'äººæ¥</td>';
+          html += '<td colspan="2" style="padding:10px 6px;text-align:right;">&yen;' + companyAmount.toLocaleString() + '</td>';
+          html += '</tr></tbody></table></div>';
+          html += '<div style="padding:12px 16px;border-top:1px solid #eee;text-align:right;">';
+          html += '<button class="btn" onclick="alert(' + "'" + 'è«æ±æ¸ä½ææ©è½ã¯æºåä¸­ã§ã' + "'" + ')" style="background:#ff9800;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;">ãã®ä¼ç¤¾ã®è«æ±æ¸ãä½æ</button>';
+          html += '</div></div>';
+          grandTotalDays += companyDays;
+          grandTotalAmount += companyAmount;
         });
-        monthData.push({
-          name: m.name,
-          days: monthEntries.length,
-          amount: amount,
-          maxDays: 30
-        });
-      });
-
-      const maxDays = Math.max(...monthData.map(m => m.days), 1);
-
-      // Chart
-      html += '<div class="chart-bar">';
-      monthData.forEach(m => {
-        const barHeight = (m.days / maxDays) * 120;
-        html += `
-          <div class="bar">
-            <div class="bar-value" style="height: ${barHeight}px;"></div>
-            <div class="bar-label">${m.name}</div>
-            <div class="bar-amount">${m.days}日</div>
-          </div>
-        `;
-      });
-      html += '</div>';
-
-      // Site breakdown grouped by company
-      const siteStats = {};
-      sites.forEach(s => {
-        siteStats[s.id] = { name: s.name, days: 0, amount: 0, client_company_id: s.client_company_id };
-      });
-      entries.forEach(e => {
-        const s = sites.find(x => x.id === e.site_id);
-        if (s) {
-          siteStats[s.id].days += 1;
-          siteStats[s.id].amount += (s.price || 0);
-        }
-      });
-
-      // Group sites by company
-      let totalDays = 0, totalAmount = 0;
-      const companyGroups = {};
-      Object.entries(siteStats).forEach(([sid, data]) => {
-        if (data.days === 0) return;
-        const cid = data.client_company_id || 'none';
-        if (!companyGroups[cid]) companyGroups[cid] = [];
-        companyGroups[cid].push({ sid, ...data });
-        totalDays += data.days;
-        totalAmount += data.amount;
-      });
-
-      html += '<h3 style="margin: 20px 0 10px; font-size: 16px;">会社別・現場別</h3>';
-      clientCompanies.forEach(c => {
-        const group = companyGroups[c.id];
-        if (!group) return;
-        let cDays = 0, cAmount = 0;
-        html += '<div style="margin-bottom:16px;border:1px solid #ddd;border-radius:8px;overflow:hidden;">';
-        html += '<div style="background:#f5f5f5;padding:10px 12px;font-weight:bold;font-size:14px;">' + c.name + '</div>';
-        html += '<table class="table" style="margin:0;"><tbody>';
-        group.forEach(s => {
-          html += '<tr><td style="padding-left:16px;">' + s.name + '</td><td style="text-align:right;">' + s.days + '</td><td style="text-align:right;">&yen;' + s.amount.toLocaleString() + '</td></tr>';
-          cDays += s.days; cAmount += s.amount;
-        });
-        html += '<tr style="background:#fafafa;font-weight:bold;"><td style="padding-left:16px;">小計</td><td style="text-align:right;">' + cDays + '</td><td style="text-align:right;">&yen;' + cAmount.toLocaleString() + '</td></tr>';
-        html += '</tbody></table></div>';
-      });
-      // Ungrouped sites
-      if (companyGroups['none']) {
-        html += '<div style="margin-bottom:16px;border:1px solid #ddd;border-radius:8px;overflow:hidden;">';
-        html += '<div style="background:#f5f5f5;padding:10px 12px;font-weight:bold;font-size:14px;">その他</div>';
-        html += '<table class="table" style="margin:0;"><tbody>';
-        companyGroups['none'].forEach(s => {
-          html += '<tr><td style="padding-left:16px;">' + s.name + '</td><td style="text-align:right;">' + s.days + '</td><td style="text-align:right;">&yen;' + s.amount.toLocaleString() + '</td></tr>';
-        });
-        html += '</tbody></table></div>';
+        html += '<div style="background:#fff;border:1px solid #ccc;border-radius:10px;overflow:hidden;margin-bottom:20px;">';
+        html += '<table style="width:100%;border-collapse:collapse;font-size:14px;">';
+        html += '<tr style="background:#f0f0f0;font-weight:bold;">';
+        html += '<td style="padding:12px 16px;">å¨ä½åè¨</td>';
+        html += '<td style="padding:12px 16px;text-align:right;">' + grandTotalDays + 'äººæ¥</td>';
+        html += '<td style="padding:12px 16px;text-align:right;">&yen;' + grandTotalAmount.toLocaleString() + '</td>';
+        html += '</tr></table></div>';
+        document.getElementById('summaryView').innerHTML = html;
       }
-      html += '<table class="table"><tbody>';
-      html += '<tr style="background: #f0f0f0; font-weight: bold;"><td>合計</td><td style="text-align: right;">' + totalDays + '</td><td style="text-align: right;">&yen;' + totalAmount.toLocaleString() + '</td></tr>';
-      html += '</tbody></table>';
 
-      document.getElementById('t2').innerHTML = html;
-    
-      // Hide price column for workers
-      if(isWorker()) {
-        document.querySelectorAll('#t2 table tr').forEach(tr => {
-          const cells = tr.querySelectorAll('th, td');
-          if(cells[2]) cells[2].style.display = 'none';
-        });
-      }
-    }
 
     // === Sites (T3) ===
     function renderSites() {
