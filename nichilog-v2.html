@@ -1181,7 +1181,7 @@ async function changeUserPassword(userId) {
         // Grand total
         if (cids.length > 0 || noCompanyEntries.length > 0) {
           html += '<div style="margin:12px 0;padding:12px 16px;background:#f5f5f5;border-radius:8px;display:flex;justify-content:space-between;font-weight:bold;">';
-          html += '<span>\u6708\u9593\u5408\u8a08: ' + grandTotalDays + '\u65e5\u7a3c\u50cd</span>';
+          html += '<span>\u6708\u9593\u5408\u8a08: ' + grandTotalDayq + '\u65e5\u7a3c\u50cd</span>';
           html += '<span>\u00a5' + grandTotalAmount.toLocaleString() + '</span>';
           html += '</div>';
         }
@@ -1195,10 +1195,15 @@ async function changeUserPassword(userId) {
 
       // === Generate Kouji Nippo PDF ===
       async function generateKoujiNippo(clientCompanyId) {
+        // Open window BEFORE any await (to avoid popup blocker)
+        const w = window.open('', '_blank');
+        if (!w) { alert('\u30dd\u30c3\u30d7\u30a2\u30c3\u30d7\u304c\u30d6\u30ed\u30c3\u30af\u3055\u308c\u307e\u3057\u305f\u3002\u30dd\u30c3\u30d7\u30a2\u30c3\u30d7\u3092\u8a31\u53ef\u3057\u3066\u304f\u3060\u3055\u3044\u3002'); return; }
+        w.document.write('<html><body style="font-family:sans-serif;padding:40px;text-align:center;color:#666;">\u8aad\u307f\u8fbc\u307f\u4e2d...</body></html>');
+
         const ym = summaryYear + '-' + String(summaryMonthNum).padStart(2, '0');
         const dayNames = ['\u65e5','\u6708','\u706b','\u6c34','\u6728','\u91d1','\u571f'];
         const masterName = currentUser.name;
-        const c = clientCompanies.find(cc => cc.id === clientCompanyId);
+        const c = clientCompanies.find(cc => cc.id == clientCompanyId);
         const cName = c ? c.name : '';
 
         // Fetch entries
@@ -1214,98 +1219,14 @@ async function changeUserPassword(userId) {
         }
 
         // Filter by client company
-        const cSites = sites.filter(s => s.client_company_id == clientCompanyId);
-        const cSiteIds = cSites.map(s => s.id);
-        const cEntries = mEntries.filter(e => cSiteIds.includes(e.site_id));
-
-        // Build date-based rows
-        const dateMap = {};
-        cEntries.forEach(e => {
-          const site = sites.find(s => s.id === e.site_id);
-          if (!site) return;
-          const d = e.work_date;
-          const member = members.find(m => m.id === e.account_id);
-          const mName = member ? member.name : '\u4e0d\u660e';
-          const wt = e.work_type || 'full';
-          if (!dateMap[d]) dateMap[d] = {};
-          const sKey = e.site_id;
-          if (!dateMap[d][sKey]) dateMap[d][sKey] = { site_name: site.name, members: [], types: [], note: e.note || '' };
-          dateMap[d][sKey].members.push(mName);
-          dateMap[d][sKey].types.push(wt);
-          if (e.note && !dateMap[d][sKey].note) dateMap[d][sKey].note = e.note;
-        });
-
-        const sortedDates = Object.keys(dateMap).sort();
-        let totalPersonnel = 0;
-
-        let rows = '';
-        sortedDates.forEach(d => {
-          const dt = new Date(d + 'T00:00:00');
-          const dayNum = dt.getDate();
-          const dow = dayNames[dt.getDay()];
-          const isDowSun = dt.getDay() === 0;
-          const isDowSat = dt.getDay() === 6;
-          const dowColor = isDowSun ? '#e55' : isDowSat ? '#36c' : '#333';
-          const siteEntries = Object.values(dateMap[d]);
-          siteEntries.forEach((se, idx) => {
-            const allHalf = se.types.every(t => t === 'half');
-            const timeStr = allHalf ? '8:00\u301c12:00' : '8:00\u301c17:00';
-            const personnelParts = se.members.map((name, i) => {
-              return name + (se.types[i] === 'half' ? '(\u534a\u65e5)' : '');
-            });
-            const personnel = personnelParts.join('\u3001');
-            let dayCount = 0;
-            se.types.forEach(t => { dayCount += t === 'half' ? 0.5 : 1; });
-            totalPersonnel += dayCount;
-
-            rows += '<tr>';
-            if (idx === 0) {
-              rows += '<td style="border:1px solid #333;padding:6px 4px;text-align:center;" rowspan="' + siteEntries.length + '">' + dayNum + '</td>';
-              rows += '<td style="border:1px solid #333;padding:6px 4px;text-align:center;color:' + dowColor + ';" rowspan="' + siteEntries.length + '">' + dow + '</td>';
-            }
-            rows += '<td style="border:1px solid #333;padding:6px 8px;text-align:center;">' + timeStr + '</td>';
-            rows += '<td style="border:1px solid #333;padding:6px 8px;">' + se.site_name + '</td>';
-            rows += '<td style="border:1px solid #333;padding:6px 8px;color:#666;">' + (se.note || '-') + '</td>';
-            rows += '<td style="border:1px solid #333;padding:6px 8px;">' + personnel + '</td>';
-            rows += '</tr>';
-          });
-        });
-
-        if (sortedDates.length === 0) {
-          rows = '<tr><td colspan="6" style="border:1px solid #333;padding:20px;text-align:center;color:#999;">\u30c7\u30fc\u30bf\u306a\u3057</td></tr>';
-        }
-
-        // Build full HTML for print
-        let phtml = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>\u5de5\u4e8b\u65e5\u5831 ' + cName + ' ' + summaryMonthNum + '\u6708</title>';
-        phtml += '<style>body{font-family:sans-serif;padding:20px;margin:0;} table{width:100%;border-collapse:collapse;font-size:13px;} @media print{body{padding:10px;}}</style></head><body>';
-        phtml += '<div style="text-align:center;font-size:22px;font-weight:bold;margin:0 0 4px;">\u5de5\u4e8b\u65e5\u5831\uff08' + summaryMonthNum + '\u6708\uff09</div>';
-        phtml += '<div style="text-align:right;padding:4px 8px;font-size:14px;margin-bottom:8px;">\u62c5\u5f53\u3000' + (company.name || '') + '\u3000' + masterName + '</div>';
-        phtml += '<div style="text-align:left;padding:4px 8px;font-size:14px;margin-bottom:8px;">\u5b9b\u5148: ' + cName + '</div>';
-        phtml += '<table>';
-        phtml += '<thead><tr style="background:#f0f0f0;">';
-        phtml += '<th style="border:1px solid #333;padding:8px 4px;text-align:center;width:30px;">\u65e5</th>';
-        phtml += '<th style="border:1px solid #333;padding:8px 4px;text-align:center;width:30px;">\u66dc\u65e5</th>';
-        phtml += '<th style="border:1px solid #333;padding:8px 4px;text-align:center;width:90px;">\u6642\u9593</th>';
-        phtml += '<th style="border:1px solid #333;padding:8px 8px;text-align:center;">\u73fe\u5834\u540d</th>';
-        phtml += '<th style="border:1px solid #333;padding:8px 8px;text-align:center;">\u4f5c\u696d\u5185\u5bb9</th>';
-        phtml += '<th style="border:1px solid #333;padding:8px 8px;text-align:center;width:120px;">\u4eba\u54e1</th>';
-        phtml += '</tr></thead>';
-        phtml += '<tbody>' + rows + '</tbody>';
-        if (sortedDates.length > 0) {
-          phtml += '<tfoot><tr style="background:#f0f0f0;font-weight:bold;">';
-          phtml += '<td colspan="5" style="border:1px solid #333;padding:8px;text-align:right;">\u5408\u8a08\u4eba\u5de5</td>';
-          phtml += '<td style="border:1px solid #333;padding:8px;text-align:center;">' + totalPersonnel + ' \u4eba\u5de5</td>';
-          phtml += '</tr></tfoot>';
-        }
-        phtml += '</table></body></html>';
-
-        // Open in new window for print
-        const w = window.open('', '_blank');
-        w.document.write(phtml);
-        w.document.close();
-        setTimeout(function() { w.print(); }, 500);
-      }
-// === Sites (T3) ===
+        const cSites = sites.filter(s => s.client_comqÁ¹å}¥ôô±¥¹Ñ
+½µÁ¹å%¤ì(½¹ÍÐM¥Ñ%ÌôM¥ÑÌ¹µÀ¡ÌôøÌ¹¥¤ì(½¹ÍÐ¹ÑÉ¥Ìôµ¹ÑÉ¥Ì¹¥±ÑÈ¡ôøM¥Ñ%Ì¹¥¹±ÕÌ¡¹Í¥Ñ}¥¤¤ì((¼¼	Õ¥±ÑµÍÉ½ÝÌ(½¹ÍÐÑ5Àôíôì(¹ÑÉ¥Ì¹½É ¡ôøì(½¹ÍÐÍ¥ÑôÍ¥ÑÌ¹¥¹¡ÌôøÌ¹¥ôôô¹Í¥Ñ}¥¤ì(¥ Í¥Ñ¤ÉÑÕÉ¸ì(½¹ÍÐô¹Ý½É­}Ñì(½¹ÍÐµµÈôµµÉÌ¹¥¹¡´ôø´¹¥ôôô¹½Õ¹Ñ}¥¤ì(½¹ÍÐµ9µôµµÈüµµÈ¹¹µèqÔÑÁqÔØØÁì(½¹ÍÐÝÐô¹Ý½É­}ÑåÁñðÕ±°ì(¥ Ñ5Ámt¤Ñ5Ámtôíôì(½¹ÍÐÍ-äô¹Í¥Ñ}¥ì(¥ Ñ5ÁmumÍ-åt¤Ñ5ÁmumÍ-åtôìÍ¥Ñ}¹µèÍ¥Ñ¹¹µ°µµÉÌèmt°ÑåÁÌèmt°¹½Ñè¹¹½Ññðôì(Ñ5ÁmumÍ-åt¹µµÉÌ¹ÁÕÍ ¡µ9µ¤ì(Ñ5ÁmumÍ-åt¹ÑåÁÌ¹ÁÕÍ ¡ÝÐ¤ì(¥¡¹¹½ÑÑ5ÁmumÍ-åt¹¹½Ñ¤Ñ5ÁmumÍ-åt¹¹½Ñô¹¹½Ñì(ô¤ì((½¹ÍÐÍ½ÉÑÑÌô=©Ð¹­åÌ¡Ñ5À¤¹Í½ÉÐ ¤ì(±ÐÑ½Ñ±AÉÍ½¹¹°ôÀì((±ÐÉ½ÝÌôì(Í½ÉÑÑÌ¹½É ¡ôøì(½¹ÍÐÐô¹ÜÑ¡¬PÀÀèÀÀèÀÀ¤ì(½¹ÍÐå9Õ´ôÐ¹ÑÑ ¤ì(½¹ÍÐ½Üôå9µÍmÐ¹Ñä ¥tì(½¹ÍÐ¥Í½ÝMÕ¸ôÐ¹Ñä ¤ôôôÀì(½¹ÍÐ¥Í½ÝMÐôÐ¹Ñä ¤ôôôØì(½¹ÍÐ½Ý
+½±½Èô¥Í½ÝMÕ¸üÔÔè¥Í½ÝMÐüÌÙèÌÌÌì(½¹ÍÐÍ¥Ñ¹ÑÉ¥Ìô=©Ð¹Ù±ÕÌ¡Ñ5Ámt¤ì(Í¥Ñ¹ÑÉ¥Ì¹½É  ¡Í°¥à¤ôøì(½¹ÍÐ±±!±ôÍ¹ÑåÁÌ¹ÙÉä¡ÐôøÐôôô¡±¤ì(½¹ÍÐÑ¥µMÑÈô±±!±üàèÀÁqÔÌÀÅÄÈèÀÀèàèÀÁqÔÌÀÅÄÜèÀÀì(½¹ÍÐÁÉÍ½¹¹±AÉÑÌôÍ¹µµÉÌ¹µÀ ¡¹µ°¤¤ôøì(ÉÑÕÉ¸¹µ¬¡Í¹ÑåÁÍm¥tôôô¡±ü¡qÔÔÌÑqÔØÕÔ¤è¤ì(ô¤ì(½¹ÍÐÁÉÍ½¹¹°ôÁÉÍ½¹¹±AÉÑÌ¹©½¥¸ qÔÌÀÀÄ¤ì(±Ðå
+½Õ¹ÐôÀì(Í¹ÑåÁÌ¹½É ¡Ðôøìå
+½Õ¹Ð¬ôÐôôô¡±üÀ¸ÔèÄìô¤ì(Ñ½Ñ±AÉÍ½¹¹°¬ôå
+½Õ¹Ðì((É½ÝÌ¬ôñÑÈøì(¥¡¥àôôôÀ¤ì(É½ÝÌ¬ôñÑÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èÙÁàÑÁàíÑáÐµ±¥¸é¹ÑÈìÉ½ÝMÁ¸ô¬Í¥Ñ¹ÑÉ¥Ì¹±¹Ñ ¬ø¬å9Õ´¬ð½Ñøì(É½ÝÌ¬ôñÑÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èÙÁàÑÁàíÑáÐµ±¥¸é¹ÑÈí½±½Èè¬½Ý
+½±½È¬ìÉ½ÝMÁ¸ô¬Í¥Ñ¹ÑÉ¥Ì¹±¹Ñ ¬ø¬½Ü¬ð½Ñøì(ô(É½ÝÌ¬ôñÑÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èÙÁàáÁàíÑáÐµ±¥¸é¹ÑÈìø¬Ñ¥µMÑÈ¬ð½Ñøì(É½ÝÌ¬ôñÑÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èÙÁàáÁàìø¬Í¹Í¥Ñ}¹µ¬ð½Ñøì(É½ÝÌ¬ôñÑÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èÙÁàáÁàí½±½ÈèØØØìø¬¡Í¹¹½Ññð´¤¬ð½Ñøì(É½ÝÌ¬ôñÑÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èÙÁàáÁàìø¬ÁÉÍ½¹¹°¬ð½Ñøì(É½ÝÌ¬ôð½ÑÈøì(ô¤ì(ô¤ì((¥¡Í½ÉÑÑÌ¹±¹Ñ ôôôÀ¤ì(É½ÝÌôñÑÈøñÑ½±ÍÁ¸ôØÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èÈÁÁàíÑáÐµ±¥¸é¹ÑÈí½±½ÈèäääìùqÔÌÁÝqÔÌÁqÔÌÁqÔÌÀÙqÔÌÀÔÜð½Ñøð½ÑÈøì(ô((¼¼	Õ¥±Õ±°!Q50½ÈÁÉ¥¹Ð(±ÐÁ¡Ñµ°ôð=
+QeA¡Ñµ°øñ¡Ñµ°øñ¡øñµÑ¡ÉÍÐôÕÑ´àøñÑ¥Ñ±ùqÔÕÕqÔÑáqÔØÕÕqÔÔàÌÄ¬9µ¬¬ÍÕµµÉå5½¹Ñ¡9Õ´¬qÔØÜÀàð½Ñ¥Ñ±øì(Á¡Ñµ°¬ôñÍÑå±ù½åí½¹Ðµµ¥±äéÍ¹ÌµÍÉ¥íÁ¥¹èÈÁÁàíµÉ¥¸èÀíôÑ±íÝ¥Ñ èÄÀÀí½ÉÈµ½±±ÁÍé½±±ÁÍí½¹ÐµÍ¥éèÄÍÁàíôµ¥ÁÉ¥¹Ñí½åíÁ¥¹èÄÁÁàíuôð½ÍÑå±øð½¡øñ½äøì(Á¡Ñµ°¬ôñ¥ØÍÑå±ôÑáÐµ±¥¸é¹ÑÈí½¹ÐµÍ¥éèÈÉÁàí½¹ÐµÝ¥¡Ðé½±íµÉ¥¸èÀÀÑÁàìùqÔÕÕqÔÑáqÔØÕÕqÔÔàÌÅqÕÀà¬ÍÕµµÉå5½¹Ñ¡9Õ´¬qÔØÜÀáqÕÀäð½¥Øøì(Á¡Ñµ°¬ôñ¥ØÍÑå±ôÑáÐµ±¥¸éÉ¥¡ÐíÁ¥¹èÑÁàáÁàí½¹ÐµÍ¥éèÄÑÁàíµÉ¥¸µ½ÑÑ½´èáÁàìùqÔØÉÕqÔÕÔÍqÔÌÀÀÀ¬¡½µÁ¹ä¹¹µñð¤¬qÔÌÀÀÀ¬µÍÑÉ9µ¬ð½¥Øøì(Á¡Ñµ°¬ôñ¥ØÍÑå±ôÑáÐµ±¥¸é±ÐíÁ¥¹èÑÁàáÁàí½¹ÐµÍ¥éèÄÑÁàíµÉ¥¸µ½ÑÑ½´èáÁàìùqÔÕåqÔÔÄÐàè¬9µ¬ð½¥Øøì(Á¡Ñµ°¬ôñÑ±øì(Á¡Ñµ°¬ôñÑ¡øñÑÈÍÑå±ô­É½Õ¹èÁÁÀìøì(Á¡Ñµ°¬ôñÑ ÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èáÁàÑÁàíÑáÐµ±¥¸é¹ÑÈíÝ¥Ñ èÌÁÁàìùqÔØÕÔð½Ñ øì(Á¡Ñµ°¬ôñÑ ÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èáÁàÑÁàíÑáÐµ±¥¸é¹ÑÈíÝ¥Ñ èÌÁÁàìùqÔØÙqÔØÕÔð½Ñ øì(Á¡Ñµ°¬ôñÑ ÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èáÁàÑÁàíÑáÐµ±¥¸é¹ÑÈíÝ¥Ñ èäÁÁàìùqÔØØÐÉqÔäÔäÌð½Ñ øì(Á¡Ñµ°¬ôñÑ ÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èáÁàáÁàíÑáÐµ±¥¸é¹ÑÈìùqÔÜÍqÔÔàÌÑqÔÔÐÁð½Ñ øì(Á¡Ñµ°¬ôñÑ ÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èáÁàáÁàíÑáÐµ±¥¸é¹ÑÈìùqÔÑÕqÔØäÙqÔÔÄàÕqÔÕäð½Ñ øì(Á¡µ°¬ôñÑ ÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èáÁàáÁàíÑáÐµ±¥¸é¹ÑÈíÝ¥Ñ èÄÈÁÁàìùqÔÑqÔÔÑÄð½Ñ øì(Á¡Ñµ°¬ôð½ÑÈøð½Ñ¡øì(Á¡Ñµ°¬ôñÑ½äø¬É½ÝÌ¬ð½Ñ½äøì(¥¡Í½ÉÑÑÌ¹±¹Ñ øÀ¤ì(Á¡Ñµ°¬ôñÑ½½ÐøñÑÈÍÑå±ô­É½Õ¹èÁÁÀí½¹ÐµÝ¥¡Ðé½±ìøì(Á¡Ñµ°¬ôñÑ½±ÍÁ¸ôÔÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èáÁàíÑáÐµ±¥¸éÉ¥¡ÐìùqÔÔÐÀáqÔáÀáqÔÑqÔÕÔð½Ñøì(Á¡Ñµ°¬ôñÑÍÑå±ô½ÉÈèÅÁàÍ½±¥ÌÌÌíÁ¥¹èáÁàíÑáÐµ±¥¸é¹ÑÈìø¬Ñ½Ñ±AÉÍ½¹¹°¬qÔÑqÔÕÔð½Ñøì(Á¡µ°¬ôð½ÑÈøð½Ñ½½Ðøì(ô(Á¡Ñµ°¬ôð½Ñ±øð½½äøð½¡Ñµ°øì((¼¼]É¥ÑÑ¼±Éäµ½Á¹Ý¥¹½Ü(Ü¹½Õµ¹Ð¹½Á¸ ¤ì(Ü¹½Õµ¹Ð¹ÝÉ¥Ñ¡Á¡µ°¤ì(Ü¹½Õµ¹Ð¹±½Í ¤ì(ÍÑQ¥µ½ÕÐ¡Õ¹Ñ¥½¸ ¤ìÜ¹ÁÉ¥¹Ð ¤ìô°ÔÀÀ¤ì(ô(// === Sites (T3) ===
     function renderSites() {
       if (!sites) return;
       const grouped = {};
