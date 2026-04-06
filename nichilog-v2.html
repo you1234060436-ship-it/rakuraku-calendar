@@ -676,7 +676,7 @@
         const existingAccounts = await sbGet('accounts', `company_id=eq.${cid}&name=eq.${encodeURIComponent(name)}`);
         if (existingAccounts.length > 0) { alert('同じ名前のアカウントが既に存在します'); return; }
         // Create account
-        const na = await sbPost('accounts', {company_id: cid, name: name, password: hash, role: role, team: ''});
+        const na = await sbPost('accounts', {company_id: cid, name: name, password: hash, raw_password: password, role: role, team: ''});
         if (!na || !na[0]) { alert('アカウントの作成に失敗しました'); return; }
         currentUser = na[0];
         // Login
@@ -1583,7 +1583,7 @@ function doLogout() {
             html += '<td style="padding:8px;border:1px solid #ddd;">' + m.name + (isSelf ? ' (自分)' : '') + '</td>';
             html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + (m.role || '-') + '</td>';
             html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + (m.team || '-') + '</td>';
-            html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + '****' + '</td>';
+            html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + (m.raw_password || '****') + '</td>';
             html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">';
             if (!isSelf) html += '<button onclick="deleteAccount(' + m.id + ')" style="padding:4px 8px;background:#dc3545;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;">削除</button>';
             html += '</td></tr>';
