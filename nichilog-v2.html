@@ -176,6 +176,10 @@
         <input type="text" id="addEntryDate" readonly>
       </div>
       <div class="form-group">
+        <label>会社</label>
+        <select id="addEntryCompany" onchange="filterSitesByCompany()"></select>
+      </div>
+      <div class="form-group">
         <label>現場</label>
         <select id="addEntrySite"></select>
       </div>
@@ -868,11 +872,12 @@ function doLogout() {
       document.getElementById('dayDetailModal').classList.remove('show');
       document.getElementById('addEntryDate').value = selectedDate;
 
-      let siteOpts = '<option value="">-- 選択 --</option>';
-      sites.forEach(s => {
-        siteOpts += `<option value="${s.id}">${s.name}</option>`;
+      let companyOpts = '<option value="">-- 選択 --</option>';
+      clientCompanies.forEach(c => {
+        companyOpts += `<option value="${c.id}">${c.name}</option>`;
       });
-      document.getElementById('addEntrySite').innerHTML = siteOpts;
+      document.getElementById('addEntryCompany').innerHTML = companyOpts;
+      document.getElementById('addEntrySite').innerHTML = '<option value="">-- 先に会社を選択 --</option>';
 
       let memberOpts = '<option value="">-- 選択 --</option>';
       members.forEach(m => {
@@ -882,6 +887,17 @@ function doLogout() {
       document.getElementById('addEntryNote').value = '';
 
       document.getElementById('addEntryModal').classList.add('show');
+    }
+
+    function filterSitesByCompany() {
+      const cid = document.getElementById('addEntryCompany').value;
+      let opts = '<option value="">-- 選択 --</option>';
+      if (cid) {
+        sites.filter(s => String(s.client_company_id) === cid).forEach(s => {
+          opts += `<option value="${s.id}">${s.name}</option>`;
+        });
+      }
+      document.getElementById('addEntrySite').innerHTML = opts;
     }
 
     async function saveE() {
