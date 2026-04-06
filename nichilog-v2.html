@@ -687,7 +687,25 @@
         alert('登録エラー: ' + e.message);
       }
     }
-function doLogout() {
+async function changeMyPassword() {
+      const newPwd = document.getElementById('newPasswordInput').value.trim();
+      if (!newPwd || newPwd.length < 4) { alert('パスワードは4文字以上で入力してください'); return; }
+      const hash = await sha256(newPwd);
+      const res = await fetch(SB + '/accounts?id=eq.' + currentUser.id, {
+        method: 'PATCH',
+        headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ password: hash, raw_password: newPwd })
+      });
+      if (res.ok) {
+        alert('パスワードを変更しました');
+        document.getElementById('newPasswordInput').value = '';
+        renderSettings();
+      } else {
+        alert('パスワードの変更に失敗しました');
+      }
+    }
+
+    function doLogout() {
       if (!confirm('ログアウトしますか？')) return;
       localStorage.removeItem('nichilog_session');
       currentUser = null;
@@ -1596,7 +1614,15 @@ function doLogout() {
       }
 
       
-      // === ログアウト・アカウント削除 ===
+      
+      // === パスワード変更 ===
+      html += '<div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">';
+      html += '<h3 style="margin:0 0 16px;font-size:16px;">パスワード変更</h3>';
+      html += '<div class="form-group"><label>新しいパスワード</label><input type="text" id="newPasswordInput" placeholder="新しいパスワードを入力" style="font-size:16px;"></div>';
+      html += '<button class="btn-primary" style="width:100%;padding:12px;" onclick="changeMyPassword()">パスワードを変更</button>';
+      html += '</div>';
+
+// === ログアウト・アカウント削除 ===
       html += '<div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;margin-bottom:20px;">';
       html += '<button onclick="doLogout()" style="width:100%;padding:12px;background:#666;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer;margin-bottom:16px;">\u30ED\u30B0\u30A2\u30A6\u30C8</button>';
       html += '<div style="border-top:2px solid #dc3545;padding-top:16px;">';
