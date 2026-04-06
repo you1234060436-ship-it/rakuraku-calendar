@@ -1044,7 +1044,7 @@ function doLogout() {
           const bg = site.color || '#f0f0f0';
           html += '<div style="border:1px solid #ddd;border-radius:4px;padding:12px;background:' + bg + ';">';
           html += '<div style="font-weight:bold;margin-bottom:5px;">' + site.name + '</div>';
-          if (!isWorker() && site.rate_type || site.price) { html += '<div style="font-size:12px;color:#666;margin-bottom:8px;">'; if (site.rate_type) html += site.rate_type; if (site.price) html += ' / \u00a5' + Number(site.price).toLocaleString(); html += '</div>'; }
+          if (!isWorker() && (site.rate_type || site.price)) { html += '<div style="font-size:12px;color:#666;margin-bottom:8px;">'; if (site.rate_type) html += site.rate_type; if (site.price) html += ' / \u00a5' + Number(site.price).toLocaleString(); html += '</div>'; }
           if (site.memo) html += '<div style="font-size:11px;color:#999;margin-bottom:8px;border-top:1px solid #ddd;padding-top:5px;">' + site.memo + '</div>';
           html += '<div style="display:flex;gap:5px;">';
           html += '<button onclick="openSiteModal(' + site.id + ')" style="flex:1;padding:5px;background:#28a745;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;">編集</button>';
