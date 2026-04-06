@@ -1054,11 +1054,24 @@ async function changeUserPassword(userId) {
         renderSummary();
       }
 
-      function renderSummary() {
+      async function renderSummary() {
         const ym = summaryYear + '-' + String(summaryMonthNum).padStart(2, '0');
-        const dayNames = ['日','月','火','水','木','金','土'];
+        const dayNames = ['\u65e5','\u6708','\u706b','\u6c34','\u6728','\u91d1','\u571f'];
         const masterName = currentUser.name;
-        const mEntries = entries.filter(e => e.work_date.startsWith(ym));
+
+        // Fetch entries for this month directly from Supabase
+        const startDate = ym + '-01';
+        const endDay = new Date(summaryYear, summaryMonthNum, 0).getDate();
+        const endDate = ym + '-' + String(endDay).padStart(2, '0');
+        let mEntries;
+        try {
+          const aq = 'company_id=eq.' + company.id + '&work_date=gte.' + startDate + '&work_date=lte.' + endDate;
+          const res = await fetch(SB + '/attendance?' + aq, { headers: H });
+          mEntries = await res.json();
+        } catch(e) {
+          mEntries = entries.filter(e => e.work_date.startsWith(ym));
+        }
+
         const companyData = {};
         clientCompanies.forEach(c => { companyData[c.id] = { name: c.name, rows: [] }; });
         const siteDateMap = {};
@@ -1079,29 +1092,29 @@ async function changeUserPassword(userId) {
         Object.values(companyData).forEach(cd => { cd.rows.sort((a, b) => a.work_date.localeCompare(b.work_date) || a.site_name.localeCompare(b.site_name)); });
         let html = '';
         html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">';
-        html += '<button class="btn" onclick="prevSummaryMonth()" style="padding:8px 16px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:16px;">&lt; 前月</button>';
-        html += '<h2 style="margin:0;">' + summaryYear + '年' + summaryMonthNum + '月</h2>';
-        html += '<button class="btn" onclick="nextSummaryMonth()" style="padding:8px 16px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:16px;">翌月 &gt;</button>';
+        html += '<button class="btn" onclick="prevSummaryMonth()" style="padding:8px 16px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:16px;">&lt; \u524d\u6708</button>';
+        html += '<h2 style="margin:0;">' + summaryYear + '\u5e74' + summaryMonthNum + '\u6708</h2>';
+        html += '<button class="btn" onclick="nextSummaryMonth()" style="padding:8px 16px;border-radius:8px;border:1px solid #ddd;background:#fff;font-size:16px;">\u7fcc\u6708 &gt;</button>';
         html += '</div>';
         let grandTotalDays = 0, grandTotalAmount = 0;
         clientCompanies.forEach(c => {
           const cd = companyData[c.id];
           if (!cd || cd.rows.length === 0) return;
           html += '<div style="margin-bottom:24px;border:1px solid #ccc;border-radius:10px;overflow:hidden;background:#fff;">';
-          html += '<div style="background:#1976d2;color:#fff;padding:12px 16px;font-weight:bold;font-size:15px;">── ' + c.name + ' ──</div>';
+          html += '<div style="background:#1976d2;color:#fff;padding:12px 16px;font-weight:bold;font-size:15px;">\u2500\u2500 ' + c.name + ' \u2500\u2500</div>';
           html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:#f8f9fa;border-bottom:1px solid #e0e0e0;">';
-          html += '<span style="font-weight:bold;font-size:14px;">工事日報（' + summaryMonthNum + '月）</span>';
-          html += '<span style="font-size:13px;color:#555;">担当　田山　' + masterName + '</span>';
+          html += '<span style="font-weight:bold;font-size:14px;">\u5de5\u4e8b\u65e5\u5831\uff08' + summaryMonthNum + '\u6708\uff09</span>';
+          html += '<span style="font-size:13px;color:#555;">\u62c5\u5f53\u3000\u7530\u5c71\u3000' + masterName + '</span>';
           html += '</div>';
           html += '<div style="overflow-x:auto;">';
           html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
           html += '<thead><tr style="background:#e3f2fd;">';
-          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:center;white-space:nowrap;width:36px;">日</th>';
-          html += '<th style="padding:8px 4px;border-bottom:2px solid #1976d2;text-align:center;white-space:nowrap;width:30px;">曜日</th>';
-          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:center;white-space:nowrap;width:90px;">時間</th>';
-          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:left;">現場名</th>';
-          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:left;">作業内容</th>';
-          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:left;">人員</th>';
+          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:center;white-space:nowrap;width:36px;">\u65e5</th>';
+          html += '<th style="padding:8px 4px;border-bottom:2px solid #1976d2;text-align:center;white-space:nowrap;width:30px;">\u66dc\u65e5</th>';
+          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:center;white-space:nowrap;width:90px;">\u6642\u9593</th>';
+          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:left;">\u73fe\u5834\u540d</th>';
+          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:left;">\u4f5c\u696d\u5185\u5bb9</th>';
+          html += '<th style="padding:8px 6px;border-bottom:2px solid #1976d2;text-align:left;">\u4eba\u54e1</th>';
           html += '</tr></thead><tbody>';
           let companyDays = 0, companyAmount = 0;
           cd.rows.forEach(row => {
@@ -1110,8 +1123,8 @@ async function changeUserPassword(userId) {
             const dow = dayNames[d.getDay()];
             const dayColor = d.getDay() === 0 ? '#e53935' : (d.getDay() === 6 ? '#1565c0' : '#333');
             const allHalf = row.memberTypes.every(t => t === 'half');
-            const timeStr = allHalf ? '8:00〜12:00' : '8:00〜17:00';
-            const personnel = row.members.map((name, idx) => name + (row.memberTypes[idx] === 'half' ? '(半日)' : '')).join('、');
+            const timeStr = allHalf ? '8:00\u301c12:00' : '8:00\u301c17:00';
+            const personnel = row.members.map((name, idx) => name + (row.memberTypes[idx] === 'half' ? '(\u534a\u65e5)' : '')).join('\u3001');
             row.members.forEach((name, idx) => {
               const isH = row.memberTypes[idx] === 'half';
               companyDays += isH ? 0.5 : 1;
@@ -1127,12 +1140,12 @@ async function changeUserPassword(userId) {
             html += '</tr>';
           });
           html += '<tr style="background:#f5f5f5;font-weight:bold;border-top:2px solid #1976d2;">';
-          html += '<td colspan="3" style="padding:10px 6px;text-align:center;">合計</td>';
-          html += '<td style="padding:10px 6px;">' + companyDays + '人日</td>';
+          html += '<td colspan="3" style="padding:10px 6px;text-align:center;">\u5408\u8a08</td>';
+          html += '<td style="padding:10px 6px;">' + companyDays + '\u4eba\u65e5</td>';
           html += '<td colspan="2" style="padding:10px 6px;text-align:right;">&yen;' + companyAmount.toLocaleString() + '</td>';
           html += '</tr></tbody></table></div>';
           html += '<div style="padding:12px 16px;border-top:1px solid #eee;text-align:right;">';
-          html += '<button class="btn" onclick="alert(&#39;請求書作成機能は準備中です&#39;)" style="background:#ff9800;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;">この会社の請求書を作成</button>';
+          html += '<button class="btn" onclick="alert(&#39;\u8acb\u6c42\u66f8\u4f5c\u6210\u6a5f\u80fd\u306f\u6e96\u5099\u4e2d\u3067\u3059&#39;)" style="background:#ff9800;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;">\u3053\u306e\u4f1a\u793e\u306e\u8acb\u6c42\u66f8\u3092\u4f5c\u6210</button>';
           html += '</div></div>';
           grandTotalDays += companyDays;
           grandTotalAmount += companyAmount;
@@ -1140,8 +1153,8 @@ async function changeUserPassword(userId) {
         html += '<div style="background:#fff;border:1px solid #ccc;border-radius:10px;overflow:hidden;margin-bottom:20px;">';
         html += '<table style="width:100%;border-collapse:collapse;font-size:14px;">';
         html += '<tr style="background:#f0f0f0;font-weight:bold;">';
-        html += '<td style="padding:12px 16px;">全体合計</td>';
-        html += '<td style="padding:12px 16px;text-align:right;">' + grandTotalDays + '人日</td>';
+        html += '<td style="padding:12px 16px;">\u5168\u4f53\u5408\u8a08</td>';
+        html += '<td style="padding:12px 16px;text-align:right;">' + grandTotalDays + '\u4eba\u65e5</td>';
         html += '<td style="padding:12px 16px;text-align:right;">&yen;' + grandTotalAmount.toLocaleString() + '</td>';
         html += '</tr></table></div>';
         document.getElementById('t2').innerHTML = html;
