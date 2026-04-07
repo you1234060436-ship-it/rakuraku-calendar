@@ -295,7 +295,7 @@
   <div id="invoiceOverlay" class="invoice-overlay">
     <div class="toolbar">
       <button class="btn-close" onclick="closeInvoice()">閉じる</button>
-      <button class="btn-print" onclick="window.print()">印刷 / PDF</button>
+      <button class="btn-print" onclick="document.getElementById('invoiceOverlay').scrollTop=0;setTimeout(function(){window.print()},100)">印刷 / PDF</button>
       <span style="flex:1"></span>
       <span style="font-size:13px">請求書プレビュー</span>
     </div>
@@ -544,6 +544,8 @@
     function closeInvoice(){
       document.getElementById('invoiceOverlay').style.display = 'none';
     }
+window.addEventListener("beforeprint",function(){var o=document.getElementById("invoiceOverlay");if(o)o.scrollTop=0;});
+
 
     function closeReceipt(){
       document.getElementById('receiptOverlay').style.display = 'none';
