@@ -295,7 +295,7 @@
   <div id="invoiceOverlay" class="invoice-overlay invoice-print-area">
     <div class="toolbar no-print">
       <button class="btn-close" onclick="closeInvoice()">閉じる</button>
-      <button class="btn-print" onclick="document.getElementById('invoiceOverlay').scrollTop=0;setTimeout(function(){window.print()},100)">印刷 / PDF</button>
+      <button class="btn-print" onclick="printInvoice()">印刷 / PDF</button>
       <span style="flex:1"></span>
       <span style="font-size:13px">請求書プレビュー</span>
     </div>
@@ -541,6 +541,7 @@
       renderInvForm();
       document.getElementById('invoiceOverlay').style.display = 'block';
     }
+    function printInvoice(){var el=document.getElementById('invoicePage');if(!el)return;var content=el.innerHTML;var win=window.open('','_blank');if(!win){alert('\u30dd\u30c3\u30d7\u30a2\u30c3\u30d7\u304c\u30d6\u30ed\u30c3\u30af\u3055\u308c\u307e\u3057\u305f');return;}win.document.write('<html><head><title>\u5fa1\u8acb\u6c42\u66f8</title>');win.document.write('<style>');win.document.write('@page{size:A4;margin:8mm}');win.document.write('body{margin:0;padding:0;font-family:serif;font-size:10pt}');win.document.write('table{width:100%;border-collapse:collapse;font-size:9pt}');win.document.write('table th,table td{border:1px solid #333;padding:4px 6px}');win.document.write('table th{background:#e8e8e8;-webkit-print-color-adjust:exact;print-color-adjust:exact}');win.document.write('</style></head><body>');win.document.write(content);win.document.write('</body></html>');win.document.close();setTimeout(function(){win.print();},300);}
     function closeInvoice(){
       document.getElementById('invoiceOverlay').style.display = 'none';
     }
