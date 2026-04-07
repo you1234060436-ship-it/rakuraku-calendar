@@ -525,7 +525,7 @@
       const d = new Date();
       const y = d.getFullYear();
       const m = String(d.getMonth()+1).padStart(2,'0');
-      document.getElementById('invDate').value = d.toISOString().slice(0,10);
+      document.getElementById('invDate').value = localDateStr(d));
       document.getElementById('invNo').value = y + '-' + m + '-001';
       if(prefill){
         if(prefill.invNo) document.getElementById('invNo').value = prefill.invNo;
@@ -570,11 +570,12 @@
     // === Global State ===
     let currentUser = null;
     let company = null;
+    function localDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
     let entries = [];
     let sites = [];
     let clientCompanies = [];
     let members = [];
-    let selectedDate = new Date().toISOString().split('T')[0];
+    let selectedDate = localDateStr(new Date());
     let viewMonth = new Date();
     let currentTab = 1;
     let editingSiteId = null;
@@ -777,8 +778,8 @@ async function changeUserPassword(userId) {
     async function ldMo() {
       const yr = viewMonth.getFullYear();
       const mo = viewMonth.getMonth();
-      const start = new Date(yr, mo, 1).toISOString().split('T')[0];
-      const end = new Date(yr, mo + 1, 0).toISOString().split('T')[0];
+      const start = localDateStr(new Date(yr, mo, 1));
+      const end = localDateStr(new Date(yr, mo + 1, 0));
       let aq = `company_id=eq.${company.id}&work_date=gte.${start}&work_date=lte.${end}`;
       if (isWorker()) aq += `&account_id=eq.${currentUser.id}`;
       entries = await sbGet('attendance', aq);
@@ -827,10 +828,10 @@ async function changeUserPassword(userId) {
 
       // Days
       for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(yr, mo, day).toISOString().split('T')[0];
+        const date = localDateStr(new Date(yr, mo, day));
         const hasEntry = entries.some(e => e.work_date === date);
         const isSunday = new Date(yr, mo, day).getDay() === 0;
-        const isToday = date === new Date().toISOString().split('T')[0];
+        const isToday = date === localDateStr(new Date());
         html += `
           <div class="calendar-day ${isSunday ? 'sunday' : ''} ${isToday ? 'today' : ''}" onclick="dayDetail('${date}')">
             ${day}
@@ -1601,7 +1602,7 @@ async function changeUserPassword(userId) {
       const cc = clientCompanies.find(c => c.id == clientCompanyId);
       const ccName = cc ? cc.name : '';
       const invNo = moStr.replace('-','') + '-' + String(clientCompanyId||0).padStart(3,'0');
-      const today = new Date().toISOString().split('T')[0];
+      const today = localDateStr(new Date());
       openInvoice({
         invNo: invNo,
         invDate: today,
