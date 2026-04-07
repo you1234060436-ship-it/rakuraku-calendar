@@ -525,7 +525,7 @@
       const d = new Date();
       const y = d.getFullYear();
       const m = String(d.getMonth()+1).padStart(2,'0');
-      document.getElementById('invDate').value = localDateStr(d));
+      document.getElementById('invDate').value = localDateStr(d);
       document.getElementById('invNo').value = y + '-' + m + '-001';
       if(prefill){
         if(prefill.invNo) document.getElementById('invNo').value = prefill.invNo;
