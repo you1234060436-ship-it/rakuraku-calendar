@@ -117,7 +117,7 @@
 .invoice-page .issuer-area .company{font-size:11pt;font-weight:bold}
 .invoice-page .seal-space{display:inline-block;width:20mm;height:20mm;border:2px solid #c00;margin-left:5mm;vertical-align:middle}
 .receipt-page{width:128mm;min-height:182mm;background:#fff;margin:20px auto;padding:8mm 10mm;font-family:'Hiragino Mincho ProN','Yu Mincho','MS PMincho',serif;font-size:9pt;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15);position:relative}
-@media print{@page{size:A4 portrait;margin:8mm}html,body{margin:0!important;padding:0!important;height:auto!important;min-height:0!important;overflow:visible!important}body>*:not(.invoice-print-area){display:none!important}.invoice-print-area{display:block!important;position:static!important;width:194mm!important;max-height:277mm!important;margin:0!important;padding:0!important;overflow:hidden!important;font-size:10pt!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.invoice-print-area *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.no-print{display:none!important}table{width:100%!important;border-collapse:collapse!important;font-size:9pt!important}table th{background-color:#e8e8e8!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+@media print{@page{size:A4;margin:10mm 15mm}body *{visibility:hidden}#invoiceOverlay{display:block!important;overflow:visible!important;height:auto!important;position:static!important}#invoiceOverlay .toolbar{display:none!important}#invoiceOverlay .inv-form{display:none!important}#invoicePage,#invoicePage *{visibility:visible;-webkit-print-color-adjust:exact;print-color-adjust:exact}#invoicePage{position:absolute;left:0;top:0;width:100%;box-shadow:none}}
 @media screen and (max-width:800px){.invoice-page,.receipt-page{width:auto!important;min-height:auto!important;margin:8px!important;padding:8px 10px!important;font-size:11px}.invoice-page table,.receipt-page table{font-size:10px;word-break:break-all}.invoice-page h2{font-size:18px}.invoice-overlay .toolbar{padding:6px 10px;font-size:12px}}
 
     </style>
@@ -388,140 +388,124 @@
       const date = document.getElementById('invDate').value;
       const due = document.getElementById('invDue').value;
       const to = document.getElementById('invTo').value;
-      const tanto = document.getElementById('invTanto') ? document.getElementById('invTanto').value : '';
+      const tanto = document.getElementById('invTanto').value;
       const from = document.getElementById('invFrom').value;
       const addr = document.getElementById('invAddr').value;
       const tel = document.getElementById('invTel').value;
       const fax = document.getElementById('invFax').value;
       const regNo = document.getElementById('invRegNo').value;
       const remarks = document.getElementById('invRemarks').value;
-      const siteName = document.getElementById('invSiteName') ? document.getElementById('invSiteName').value : '';
-      const dueShow = document.getElementById('invDueShow')?.checked;
       const bankName = document.getElementById('invBankName').value;
       const bankBranch = document.getElementById('invBankBranch').value;
       const bankType = document.getElementById('invBankType').value;
       const bankNo = document.getElementById('invBankNo').value;
       const bankHolder = document.getElementById('invBankHolder').value;
-
-      function fmtDate(ds){
-        if(!ds) return '';
-        const p = ds.split('-');
-        return p[0]+'\u5E74'+parseInt(p[1])+'\u6708'+parseInt(p[2])+'\u65E5';
-      }
-
-      let subtotal = 0, tax8 = 0, tax10 = 0;
+      const showDue = document.getElementById('invDueShow').checked;
+      const rows = document.getElementById('invRows');
+      const trs = rows ? rows.querySelectorAll('tr') : [];
       let detailRows = '';
-      invRows.forEach((r,i) => {
-        const nm = r.name || '';
-        const spec = r.spec || '';
-        const qty = r.qty || 0;
-        const unit = r.unit || '';
-        const price = r.price || 0;
+      let subtotal = 0;
+      let tax8 = 0;
+      let tax10 = 0;
+      let rowIndex = 0;
+      trs.forEach(tr => {
+        const inputs = tr.querySelectorAll('input');
+        const selects = tr.querySelectorAll('select');
+        const name = inputs[0] ? inputs[0].value : '';
+        const spec = inputs[1] ? inputs[1].value : '';
+        const qty = inputs[2] ? parseFloat(inputs[2].value) || 0 : 0;
+        const unit = inputs[3] ? inputs[3].value : '';
+        const price = inputs[4] ? parseFloat(inputs[4].value) || 0 : 0;
+        const taxRate = selects[0] ? parseFloat(selects[0].value) || 0.10 : 0.10;
         const amt = qty * price;
         subtotal += amt;
-        if(r.taxRate === 8) tax8 += amt * 0.08;
+        if(taxRate === 0.08) tax8 += amt * 0.08;
         else tax10 += amt * 0.10;
+        rowIndex++;
         detailRows += '<tr>'
-          + '<td colspan="2" style="padding:6px 4px;border-bottom:1px solid #ccc;">' + nm + '<\/td>'
-          + '<td style="padding:6px 4px;border-bottom:1px solid #ccc;">' + spec + '<\/td>'
-          + '<td style="padding:6px 4px;text-align:center;border-bottom:1px solid #ccc;">' + qty + '<\/td>'
-          + '<td style="padding:6px 4px;text-align:center;border-bottom:1px solid #ccc;">' + unit + '<\/td>'
-          + '<td style="padding:6px 4px;text-align:right;border-bottom:1px solid #ccc;">\u00A5' + price.toLocaleString() + '<\/td>'
-          + '<td style="padding:6px 4px;text-align:right;border-bottom:1px solid #ccc;">\u00A5' + amt.toLocaleString() + '<\/td>'
-          + '<\/tr>';
+          + '<td style="padding:5px 8px;text-align:center;border:1px solid #333;">' + rowIndex + '</td>'
+          + '<td style="padding:5px 8px;border:1px solid #333;">' + name + '</td>'
+          + '<td style="padding:5px 8px;border:1px solid #333;">' + spec + '</td>'
+          + '<td style="padding:5px 8px;text-align:center;border:1px solid #333;">' + (qty || '') + '</td>'
+          + '<td style="padding:5px 8px;text-align:center;border:1px solid #333;">' + unit + '</td>'
+          + '<td style="padding:5px 8px;text-align:right;border:1px solid #333;">' + (price ? price.toLocaleString() : '') + '</td>'
+          + '<td style="padding:5px 8px;text-align:right;border:1px solid #333;">' + (amt ? amt.toLocaleString() : '') + '</td>'
+          + '</tr>';
       });
-
       const totalTax = Math.floor(tax8) + Math.floor(tax10);
-      const grandTotal = subtotal + totalTax;
-      const bankLine = bankName ? (bankName + '\u3000' + bankBranch + '\u3000' + bankType + '\u3000' + bankNo) : '';
-
-      let h = '<div style="padding:32px 36px;font-family:\'Yu Mincho\',\'Hiragino Mincho Pro\',serif;color:#111;font-size:9pt;line-height:1.4;">';
-
-      // Page number
-      h += '<div style="font-size:8pt;margin-bottom:4px;">1/1 \u30DA\u30FC\u30B8<\/div>';
-
-      // Spacer
-      h += '<div style="height:6px;"><\/div>';
-
-      // Title
-      h += '<div style="text-align:center;font-size:20pt;font-weight:bold;margin-bottom:6px;letter-spacing:12px;">\u5FA1\u3000\u8ACB\u3000\u6C42\u3000\u66F8<\/div>';
-
-      // Invoice No.
-      h += '<div style="text-align:center;font-size:9pt;margin-bottom:12px;">No. ' + no + '<\/div>';
-
-      // Row: Client (left) | Company (right)
-      h += '<div style="display:flex;justify-content:space-between;margin-bottom:2px;">';
-      h += '<div style="width:52%;">';
-      h += '<div style="font-size:13pt;margin-bottom:2px;">' + to + '\u3000\u5FA1\u4E2D<\/div>';
-      h += '<div style="font-size:9pt;">\u62C5\u5F53\uFF1A' + tanto + '<\/div>';
-      h += '<\/div>';      h += '<\/div>';
-
-      // Greeting + dates
-      h += '<div style="font-size:8pt;margin:4px 0 2px;">\u5E73\u7D20\u306F\u683C\u5225\u306E\u304A\u5F15\u304D\u7ACB\u3066\u3092\u8CDC\u308A\u539A\u304F\u5FA1\u793C\u7533\u3057\u4E0A\u3052\u307E\u3059\u3002<\/div>';
-      h += '<div style="font-size:8pt;margin-bottom:4px;">\u4E0B\u8A18\u306E\u901A\u308A\u3054\u8ACB\u6C42\u7533\u3057\u4E0A\u3052\u307E\u3059\u3002<\/div>';
-
-      // Dates (right)
-      h += '<div style="text-align:right;font-size:9pt;margin-bottom:2px;">\u8ACB\u6C42\u65E5\uFF1A' + fmtDate(date) + '<\/div>';
-      h += (dueShow && due ? '<div style="text-align:right;font-size:9pt;margin-bottom:2px;">\u632F\u8FBC\u671F\u9650\uFF1A' + fmtDate(due) + '<\/div>' : '');
-
-      // Site name
-      h += (siteName ? '<div style="font-size:10pt;margin:4px 0 6px;">\u5DE5\u4E8B\u540D\uFF1A' + siteName + '<\/div>' : '<div style="height:6px;"><\/div>');
-
-      // Grand total box
-      h += '<div style="text-align:center;font-size:14pt;font-weight:bold;padding:10px;margin-bottom:10px;border-top:2px solid #333;border-bottom:2px solid #333;">\u5FA1\u8ACB\u6C42\u91D1\u984D\uFF08\u7A0E\u8FBC\uFF09\u3000\u00A5' + grandTotal.toLocaleString() + '<\/div>';
-
-      // Detail table
-      h += '<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:4px;">';
-      h += '<thead><tr style="border-bottom:1px solid #333;">';
-      h += '<th colspan="2" style="padding:6px 4px;text-align:center;">\u540D\u79F0<\/th>';
-      h += '<th style="padding:6px 4px;text-align:center;">\u4ED5\u69D8<\/th>';
-      h += '<th style="padding:6px 4px;text-align:center;">\u6570\u91CF<\/th>';
-      h += '<th style="padding:6px 4px;text-align:center;">\u5358\u4F4D<\/th>';
-      h += '<th style="padding:6px 4px;text-align:center;">\u5358\u4FA1<\/th>';
-      h += '<th style="padding:6px 4px;text-align:center;">\u91D1\u984D<\/th>';
-      h += '<\/tr><\/thead><tbody>';
-      h += detailRows;
-      h += '<\/tbody><\/table>';
-
-      // Spacer
-      h += '<div style="height:4px;"><\/div>';
-
-      // Totals section
-      h += '<table style="width:100%;font-size:9pt;border-collapse:collapse;">';
-      h += '<tr><td colspan="4"><\/td><td colspan="2" style="padding:4px;text-align:center;border-bottom:1px solid #ccc;">\u5C0F\u8A08 \u2460<\/td><td style="padding:4px;text-align:right;border-bottom:1px solid #ccc;font-weight:bold;">\u00A5' + subtotal.toLocaleString() + '<\/td><\/tr>';
-      h += '<tr><td colspan="4"><\/td><td colspan="2" style="padding:4px;text-align:center;border-bottom:1px solid #ccc;">\u6D88\u8CBB\u7A0E\u7B49 \u2461 (\u2463+\u2464)<\/td><td style="padding:4px;text-align:right;border-bottom:1px solid #ccc;font-weight:bold;">\u00A5' + totalTax.toLocaleString() + '<\/td><\/tr>';
-      h += '<tr><td colspan="4"><\/td><td colspan="2" style="padding:4px;text-align:center;border-bottom:2px solid #333;">\u5408\u8A08\u91D1\u984D \u2462 (\u2460+\u2461)<\/td><td style="padding:4px;text-align:right;border-bottom:2px solid #333;font-weight:bold;">\u00A5' + grandTotal.toLocaleString() + '<\/td><\/tr>';
-      h += '<tr><td colspan="4"><\/td><td colspan="2" style="padding:3px;text-align:center;font-size:8pt;">(8%) \u6D88\u8CBB\u7A0E\u5408\u8A08 \u2463<\/td><td style="padding:3px;text-align:right;font-size:8pt;">\u00A5' + Math.floor(tax8).toLocaleString() + '<\/td><\/tr>';
-      h += '<tr><td colspan="4"><\/td><td colspan="2" style="padding:3px;text-align:center;font-size:8pt;">(10%) \u6D88\u8CBB\u7A0E\u5408\u8A08 \u2464<\/td><td style="padding:3px;text-align:right;font-size:8pt;">\u00A5' + Math.floor(tax10).toLocaleString() + '<\/td><\/tr>';
-      h += '<\/table>';
-
-      // Spacer
-      h += '<div style="height:6px;"><\/div>';
-
-      // Remarks
-      h += '<div style="font-size:9pt;font-weight:bold;margin-bottom:3px;">\u5099\u8003<\/div>';
-      h += '<div style="font-size:9pt;white-space:pre-wrap;line-height:1.5;min-height:24px;margin-bottom:8px;">' + (remarks || '') + '<\/div>';
-
-      // Bank info
-      h += '<div style="font-size:9pt;font-weight:bold;margin-bottom:3px;">\u304A\u632F\u8FBC\u5148<\/div>';
-      h += '<div style="font-size:9pt;margin-bottom:2px;">' + bankLine + '<\/div>';
-      h += (bankHolder ? '<div style="font-size:9pt;">\u53E3\u5EA7\u540D\u7FA9\uFF1A' + bankHolder + '<\/div>' : '');
-
-      // Spacer
-      h += '<div style="height:12px;"><\/div>';
-
-      // Company footer
-      h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;">';
-      h += '<div style="font-size:9pt;line-height:1.5;">';
-      h += '<div style="font-size:10pt;font-weight:bold;margin-bottom:2px;">' + from + '<\/div>';
-      h += '<div>' + addr + '<\/div>';
-      h += (tel || fax ? '<div>' + (tel ? 'TEL: ' + tel : '') + (tel && fax ? '\u3000' : '') + (fax ? 'FAX: ' + fax : '') + '<\/div>' : '');
-      h += (regNo ? '<div>\u767B\u9332\u756A\u53F7: ' + regNo + '<\/div>' : '');
-      h += '<\/div>';
-      h += '<\/div>';
-
-      h += '<\/div>';
-      document.getElementById('invoicePage').innerHTML = h;
+      const total = subtotal + totalTax;
+      const siteName = document.getElementById('invSiteName') ? document.getElementById('invSiteName').value : '';
+      const dateFormatted = date ? date.replace(/-/g, '/') : '';
+      const dueFormatted = due ? due.replace(/-/g, '/') : '';
+      var F = "'Yu Mincho','Hiragino Mincho Pro','MS Mincho',serif";
+      var pca = '-webkit-print-color-adjust:exact;print-color-adjust:exact;';
+      document.getElementById('invoicePage').innerHTML =
+        '<div style="max-width:190mm;margin:0 auto;padding:30px 0;font-family:' + F + ';font-size:10pt;color:#111;line-height:1.5;">'
+        // 1 Page number top-right
+        + '<div style="text-align:right;font-size:8pt;color:#666;margin-bottom:2px;">1/1 \u30DA\u30FC\u30B8</div>'
+        // 2 Invoice number right
+        + '<div style="text-align:right;font-size:9pt;color:#333;margin-bottom:10px;">No. ' + no + '</div>'
+        // 3 Title bar blue
+        + '<div style="background:#2563eb;color:#fff;padding:10px 16px;font-size:18pt;font-weight:bold;letter-spacing:0.3em;margin-bottom:18px;' + pca + '">\u5FA1\u8ACB\u6C42\u66F8</div>'
+        // 4 Recipient left-aligned
+        + '<div style="font-size:14pt;font-weight:bold;margin-bottom:4px;border-bottom:2px solid #333;padding-bottom:6px;">' + to + ' \u3000\u5FA1\u4E2D</div>'
+        // 5 Tanto right
+        + '<div style="text-align:right;font-size:9pt;margin:8px 0 14px;">\u62C5\u5F53\uFF1A' + tanto + '</div>'
+        // 6 Greeting
+        + '<div style="font-size:9pt;line-height:1.7;margin-bottom:14px;">\u5E73\u7D20\u306F\u683C\u5225\u306E\u304A\u5F15\u304D\u7ACB\u3066\u3092\u8CDC\u308A\u539A\u304F\u5FA1\u793C\u7533\u3057\u4E0A\u3052\u307E\u3059\u3002\u4E0B\u8A18\u306E\u901A\u308A\u3054\u8ACB\u6C42\u7533\u3057\u4E0A\u3052\u307E\u3059\u3002</div>'
+        // 7 Date / Due / Site
+        + '<div style="font-size:9pt;line-height:1.8;margin-bottom:10px;">'
+        + '<div>\u8ACB\u6C42\u65E5\u3000\u3000\u3000' + dateFormatted + '</div>'
+        + ((due && showDue) ? '<div>\u632F\u8FBC\u671F\u9650\u3000' + dueFormatted + '</div>' : '')
+        + (siteName ? '<div>\u5DE5\u4E8B\u540D\u3000\u3000\u3000' + siteName + '</div>' : '')
+        + '</div>'
+        // 8 Grand total prominent
+        + '<div style="border:2px solid #333;padding:8px 16px;margin-bottom:18px;font-size:13pt;font-weight:bold;display:inline-block;">\u5FA1\u8ACB\u6C42\u91D1\u984D\uFF08\u7A0E\u8FBC\uFF09\u3000\u00A5' + total.toLocaleString() + '</div>'
+        // 9 Detail table
+        + '<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:0;">'
+        + '<thead><tr>'
+        + '<th style="padding:6px 8px;text-align:center;font-weight:bold;border:1px solid #333;background:#e8e8e8;' + pca + '">No</th>'
+        + '<th style="padding:6px 8px;text-align:left;font-weight:bold;border:1px solid #333;background:#e8e8e8;' + pca + '">\u540D\u79F0</th>'
+        + '<th style="padding:6px 8px;text-align:left;font-weight:bold;border:1px solid #333;background:#e8e8e8;' + pca + '">\u4ED5\u69D8</th>'
+        + '<th style="padding:6px 8px;text-align:center;font-weight:bold;border:1px solid #333;background:#e8e8e8;' + pca + '">\u6570\u91CF</th>'
+        + '<th style="padding:6px 8px;text-align:center;font-weight:bold;border:1px solid #333;background:#e8e8e8;' + pca + '">\u5358\u4F4D</th>'
+        + '<th style="padding:6px 8px;text-align:right;font-weight:bold;border:1px solid #333;background:#e8e8e8;' + pca + '">\u5358\u4FA1</th>'
+        + '<th style="padding:6px 8px;text-align:right;font-weight:bold;border:1px solid #333;background:#e8e8e8;' + pca + '">\u91D1\u984D</th>'
+        + '</tr></thead>'
+        + '<tbody>' + detailRows + '</tbody>'
+        + '</table>'
+        // 10 Remarks left + Totals right
+        + '<div style="display:flex;justify-content:space-between;margin-top:12px;gap:16px;">'
+        // Remarks
+        + '<div style="flex:1;font-size:9pt;">'
+        + '<div style="font-weight:bold;margin-bottom:4px;border-bottom:1px solid #999;padding-bottom:2px;">\u5099\u8003</div>'
+        + '<div style="white-space:pre-wrap;line-height:1.6;font-size:8.5pt;">' + (remarks || '') + '</div>'
+        + (bankName ? '<div style="margin-top:10px;font-size:8.5pt;line-height:1.6;border-top:1px solid #ccc;padding-top:6px;">\u304A\u632F\u8FBC\u5148\uFF1A' + bankName + '\u3000' + bankBranch + '\u3000' + bankType + '\u3000' + bankNo + '<br>' + bankHolder + '</div>' : '')
+        + '</div>'
+        // Totals
+        + '<div style="width:220px;font-size:9pt;">'
+        + '<table style="width:100%;border-collapse:collapse;font-size:9pt;">'
+        + '<tr><td style="padding:5px 8px;border:1px solid #333;">\u2460\u5C0F\u8A08</td><td style="padding:5px 8px;text-align:right;border:1px solid #333;">\u00A5' + subtotal.toLocaleString() + '</td></tr>'
+        + '<tr><td style="padding:5px 8px;border:1px solid #333;">\u2461\u6D88\u8CBB\u7A0E(8%)</td><td style="padding:5px 8px;text-align:right;border:1px solid #333;">\u00A5' + Math.floor(tax8).toLocaleString() + '</td></tr>'
+        + '<tr><td style="padding:5px 8px;border:1px solid #333;">\u2462\u6D88\u8CBB\u7A0E(10%)</td><td style="padding:5px 8px;text-align:right;border:1px solid #333;">\u00A5' + Math.floor(tax10).toLocaleString() + '</td></tr>'
+        + '<tr><td style="padding:5px 8px;border:1px solid #333;">\u2463\u6D88\u8CBB\u7A0E\u7B49(\u2461+\u2462)</td><td style="padding:5px 8px;text-align:right;border:1px solid #333;">\u00A5' + totalTax.toLocaleString() + '</td></tr>'
+        + '<tr style="font-weight:bold;"><td style="padding:6px 8px;border:2px solid #333;background:#e8e8e8;' + pca + '">\u2464\u5408\u8A08(\u2460+\u2463)</td><td style="padding:6px 8px;text-align:right;border:2px solid #333;background:#e8e8e8;' + pca + '">\u00A5' + total.toLocaleString() + '</td></tr>'
+        + '</table>'
+        + '</div>'
+        + '</div>'
+        // 11 + 12 Issuer info right + stamp box
+        + '<div style="margin-top:24px;display:flex;justify-content:flex-end;align-items:flex-start;gap:16px;">'
+        + '<div style="text-align:right;font-size:9pt;line-height:1.7;">'
+        + '<div style="font-weight:bold;font-size:12pt;">' + from + '</div>'
+        + (addr ? '<div>' + addr + '</div>' : '')
+        + (tel ? '<div>TEL: ' + tel + '</div>' : '')
+        + (fax ? '<div>FAX: ' + fax + '</div>' : '')
+        + (regNo ? '<div style="font-size:8.5pt;margin-top:4px;">\u30A4\u30F3\u30DC\u30A4\u30B9\u767B\u9332\u756A\u53F7: ' + regNo + '</div>' : '')
+        + '</div>'
+        // 12 Stamp box - square red border 60x60
+        + '<div style="width:60px;height:60px;border:2px solid #c00;display:flex;align-items:center;justify-content:center;color:#c00;font-size:9pt;flex-shrink:0;">\u5370</div>'
+        + '</div>'
+        + '</div>';
     }
     function openInvoice(prefill){
       const d = new Date();
@@ -541,7 +525,26 @@
       renderInvForm();
       document.getElementById('invoiceOverlay').style.display = 'block';
     }
-    function printInvoice(){var el=document.getElementById('invoicePage');if(!el)return;var content=el.innerHTML;var win=window.open('','_blank');if(!win){alert('\u30dd\u30c3\u30d7\u30a2\u30c3\u30d7\u304c\u30d6\u30ed\u30c3\u30af\u3055\u308c\u307e\u3057\u305f');return;}win.document.write('<html><head><title>\u5fa1\u8acb\u6c42\u66f8</title>');win.document.write('<style>');win.document.write('@page{size:A4;margin:8mm}');win.document.write('body{margin:0;padding:0;font-family:serif;font-size:10pt}');win.document.write('table{width:100%;border-collapse:collapse;font-size:9pt}');win.document.write('table th,table td{border:1px solid #333;padding:4px 6px}');win.document.write('table th{background:#e8e8e8;-webkit-print-color-adjust:exact;print-color-adjust:exact}');win.document.write('</style></head><body>');win.document.write(content);win.document.write('</body></html>');win.document.close();setTimeout(function(){win.print();},300);}
+    function printInvoice(){
+        var el=document.getElementById('invoicePage');
+        if(!el)return;
+        var content=el.innerHTML;
+        var win=window.open('','_blank');
+        if(!win){alert('\u30dd\u30c3\u30d7\u30a2\u30c3\u30d7\u304c\u30d6\u30ed\u30c3\u30af\u3055\u308c\u307e\u3057\u305f');return;}
+        win.document.write('<html><head><title>\u5fa1\u8acb\u6c42\u66f8</title>');
+        win.document.write('<style>');
+        win.document.write("@page{size:A4;margin:10mm 15mm}");
+        win.document.write("body{margin:0;padding:0;font-family:'Yu Mincho','Hiragino Mincho Pro','MS Mincho',serif;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}");
+        win.document.write("*{-webkit-print-color-adjust:exact;print-color-adjust:exact}");
+        win.document.write("table{width:100%;border-collapse:collapse;font-size:9pt}");
+        win.document.write("table th,table td{border:1px solid #333;padding:5px 8px}");
+        win.document.write("table th{background:#e8e8e8;font-weight:bold}");
+        win.document.write('</style></head><body>');
+        win.document.write(content);
+        win.document.write('</body></html>');
+        win.document.close();
+        setTimeout(function(){win.print();},300);
+      }
     function closeInvoice(){
       document.getElementById('invoiceOverlay').style.display = 'none';
     }
