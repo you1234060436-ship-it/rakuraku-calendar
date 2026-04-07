@@ -117,7 +117,7 @@
 .invoice-page .issuer-area .company{font-size:11pt;font-weight:bold}
 .invoice-page .seal-space{display:inline-block;width:20mm;height:20mm;border:2px solid #c00;margin-left:5mm;vertical-align:middle}
 .receipt-page{width:128mm;min-height:182mm;background:#fff;margin:20px auto;padding:8mm 10mm;font-family:'Hiragino Mincho ProN','Yu Mincho','MS PMincho',serif;font-size:9pt;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15);position:relative}
-@media print{@page{size:A4;margin:10mm}html,body{margin:0!important;padding:0!important;width:100%!important}body *{visibility:hidden}#invoiceOverlay{display:block!important;overflow:visible!important;height:auto!important;position:static!important;margin:0!important;padding:0!important}#invoiceOverlay .toolbar{display:none!important}#invoiceOverlay .inv-form{display:none!important}#invoicePage,#invoicePage *{visibility:visible;-webkit-print-color-adjust:exact;print-color-adjust:exact}#invoicePage{position:absolute;left:0;top:0;width:190mm;max-width:190mm;margin:0 auto;padding:0!important;box-shadow:none;font-size:11px;page-break-inside:avoid}#invoicePage table{width:100%!important;table-layout:auto}#invoicePage div[style*="padding:32px 36px"]{padding:0!important}}
+@media print{@page{size:A4 portrait;margin:8mm}html,body{margin:0!important;padding:0!important;height:auto!important;min-height:0!important;overflow:visible!important}body>*:not(.invoice-print-area){display:none!important}.invoice-print-area{display:block!important;position:static!important;width:194mm!important;max-height:277mm!important;margin:0!important;padding:0!important;overflow:hidden!important;font-size:10pt!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.invoice-print-area *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.no-print{display:none!important}table{width:100%!important;border-collapse:collapse!important;font-size:9pt!important}table th{background-color:#e8e8e8!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 @media screen and (max-width:800px){.invoice-page,.receipt-page{width:auto!important;min-height:auto!important;margin:8px!important;padding:8px 10px!important;font-size:11px}.invoice-page table,.receipt-page table{font-size:10px;word-break:break-all}.invoice-page h2{font-size:18px}.invoice-overlay .toolbar{padding:6px 10px;font-size:12px}}
 
     </style>
@@ -292,14 +292,14 @@
     </div>
   </div>
 
-  <div id="invoiceOverlay" class="invoice-overlay">
-    <div class="toolbar">
+  <div id="invoiceOverlay" class="invoice-overlay invoice-print-area">
+    <div class="toolbar no-print">
       <button class="btn-close" onclick="closeInvoice()">閉じる</button>
       <button class="btn-print" onclick="document.getElementById('invoiceOverlay').scrollTop=0;setTimeout(function(){window.print()},100)">印刷 / PDF</button>
       <span style="flex:1"></span>
       <span style="font-size:13px">請求書プレビュー</span>
     </div>
-    <div class="inv-form" oninput="renderInvoicePreview()" id="invForm">
+    <div class="inv-form no-print" oninput="renderInvoicePreview()" id="invForm">
       <div class="form-row">
         <div class="form-group"><label>請求書No.</label><input id="invNo" value=""></div>
         <div class="form-group"><label>発行日</label><input id="invDate" type="date"></div>
