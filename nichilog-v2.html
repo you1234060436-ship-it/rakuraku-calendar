@@ -525,26 +525,44 @@
       renderInvForm();
       document.getElementById('invoiceOverlay').style.display = 'block';
     }
-    function printInvoice(){
-        var el=document.getElementById('invoicePage');
-        if(!el)return;
-        var content=el.innerHTML;
-        var win=window.open('','_blank');
-        if(!win){alert('\u30dd\u30c3\u30d7\u30a2\u30c3\u30d7\u304c\u30d6\u30ed\u30c3\u30af\u3055\u308c\u307e\u3057\u305f');return;}
-        win.document.write('<html><head><title>\u5fa1\u8acb\u6c42\u66f8</title>');
-        win.document.write('<style>');
-        win.document.write("@page{size:A4;margin:10mm 15mm}");
-        win.document.write("body{margin:0;padding:0;font-family:'Yu Mincho','Hiragino Mincho Pro','MS Mincho',serif;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}");
-        win.document.write("*{-webkit-print-color-adjust:exact;print-color-adjust:exact}");
-        win.document.write("table{width:100%;border-collapse:collapse;font-size:9pt}");
-        win.document.write("table th,table td{border:1px solid #333;padding:5px 8px}");
-        win.document.write("table th{background:#e8e8e8;font-weight:bold}");
-        win.document.write('</style></head><body>');
-        win.document.write(content);
-        win.document.write('</body></html>');
-        win.document.close();
-        setTimeout(function(){win.print();},300);
-      }
+    function printInvoice() {
+  var area = document.querySelector('.invoice-print-area');
+  var win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>御請求書</title>
+<style>
+  @page { size: A4; margin: 15mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Yu Mincho", "游明朝", "Hiragino Mincho ProN", serif;
+    font-size: 11pt;
+    color: #000;
+    width: 180mm;
+    margin: 0 auto;
+  }
+  h1.invoice-title {
+    background: #2563eb;
+    color: #fff;
+    padding: 8px 16px;
+    font-size: 16pt;
+    letter-spacing: 1em;
+    margin-bottom: 12px;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+  table th, table td { border: 1px solid #333; padding: 4px 8px; font-size: 9pt; }
+  table th { background: #e8e8e8; }
+  .right { text-align: right; }
+  .bold { font-weight: bold; }
+  .stamp { border: 2px solid red; width: 55px; height: 55px; display: inline-block; text-align: center; line-height: 55px; color: red; font-size: 9pt; }
+  .footer { display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 16px; }
+  .summary { margin-left: auto; }
+  .summary td { font-size: 9pt; }
+</style></head><body>`);
+  win.document.write(area.innerHTML);
+  win.document.write('</body></html>');
+  win.document.close();
+  setTimeout(function(){ win.print(); }, 300);
+}
     function closeInvoice(){
       document.getElementById('invoiceOverlay').style.display = 'none';
     }
