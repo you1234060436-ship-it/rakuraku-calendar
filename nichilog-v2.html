@@ -525,13 +525,17 @@
       renderInvForm();
       document.getElementById('invoiceOverlay').style.display = 'block';
     }
-    function printInvoice() {
+    var printWindow = null;
+function printInvoice() {
+  if (printWindow && !printWindow.closed) {
+    printWindow.close();
+  }
   var area = document.querySelector('.invoice-print-area');
-  var win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html>
+  printWindow = window.open('', 'invoicePrint');
+  printWindow.document.write(`<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>御請求書</title>
 <style>
-  @page { size: A4; margin: 15mm; }
+  @page { size: A4; margin: 8mm; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: "Yu Mincho", "游明朝", "Hiragino Mincho ProN", serif;
@@ -539,6 +543,7 @@
     color: #000;
     width: 180mm;
     margin: 0 auto;
+    overflow: hidden;
   }
   h1.invoice-title {
     background: #2563eb;
@@ -558,10 +563,10 @@
   .summary { margin-left: auto; }
   .summary td { font-size: 9pt; }
 </style></head><body>`);
-  win.document.write(area.innerHTML);
-  win.document.write('</body></html>');
-  win.document.close();
-  setTimeout(function(){ win.print(); }, 300);
+  printWindow.document.write(area.innerHTML);
+  printWindow.document.write('</body></html>');
+  printWindow.document.close();
+  setTimeout(function(){ printWindow.print(); }, 300);
 }
     function closeInvoice(){
       document.getElementById('invoiceOverlay').style.display = 'none';
