@@ -578,16 +578,19 @@
         if(emptyMsg)emptyMsg.style.display='none';
         data.forEach(function(inv){
           var tr=document.createElement('tr');
-          tr.style.cssText='cursor:pointer;border-bottom:1px solid #333;transition:background 0.2s';
-          tr.onmouseenter=function(){tr.style.background='#2a2a2a'};
-          tr.onmouseleave=function(){tr.style.background='transparent'};
-          tr.onclick=function(){previewInvoice(inv.id)};
+          tr.style.cssText='border-bottom:1px solid #333';
           var statusColor=inv.status==='\u78BA\u5B9A'?'#16a34a':inv.status==='\u9001\u4ED8\u6E08\u307F'?'#2563eb':'#888';
+          var btnStyle='padding:4px 10px;border:none;border-radius:4px;cursor:pointer;font-size:12px;margin:0 2px;';
           tr.innerHTML='<td style="padding:10px 12px;color:#fff">'+inv.invoice_no+'</td>'
             +'<td style="padding:10px 12px;color:#ccc">'+(inv.issue_date||'-')+'</td>'
             +'<td style="padding:10px 12px;color:#ccc">'+(inv.client_company||'-')+'</td>'
             +'<td style="padding:10px 12px;color:#fff;text-align:right">\u00A5'+(inv.total||0).toLocaleString()+'</td>'
-            +'<td style="padding:10px 12px;text-align:center"><span style="background:'+statusColor+';color:#fff;padding:2px 10px;border-radius:10px;font-size:12px">'+inv.status+'</span></td>';
+            +'<td style="padding:10px 12px;text-align:center"><span style="background:'+statusColor+';color:#fff;padding:2px 10px;border-radius:10px;font-size:12px">'+inv.status+'</span></td>'
+            +'<td style="padding:10px 12px;text-align:center;white-space:nowrap">'
+            +'<button onclick="previewInvoice(\''+inv.id+'\')" style="'+btnStyle+'background:#334155;color:#fff">\u78BA\u8A8D</button>'
+            +'<button onclick="editInvoice(\''+inv.id+'\')" style="'+btnStyle+'background:#2563eb;color:#fff">\u7DE8\u96C6</button>'
+            +'<button onclick="deleteInvoice(\''+inv.id+'\')" style="'+btnStyle+'background:#dc2626;color:#fff">\u524A\u9664</button>'
+            +'</td>';
           tb.appendChild(tr);
         });
       }catch(e){console.error('loadInvoiceList error:',e);}
@@ -623,6 +626,15 @@
       }catch(e){console.error('previewInvoice error:',e);}
     }
     async function editInvoice(invId){previewInvoice(invId);}
+    async function deleteInvoice(invId){
+      if(!confirm('\u3053\u306E\u8ACB\u6C42\u66F8\u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F'))return;
+      try{
+        var res=await fetch(SB+'/invoices?id=eq.'+invId,{method:'DELETE',headers:H});
+        if(!res.ok){var e=await res.text();throw new Error(e);}
+        showToast('\u524A\u9664\u3057\u307E\u3057\u305F');
+        loadInvoiceList();
+      }catch(e){console.error(e);showToast('\u524A\u9664\u5931\u6557: '+e.message);}
+    }
 
     function closeReceipt(){
       document.getElementById('receiptOverlay').style.display = 'none';
@@ -1604,6 +1616,7 @@ async function changeUserPassword(userId) {
       html += '<th style="text-align:left;padding:8px 12px">\u5B9B\u5148</th>';
       html += '<th style="text-align:right;padding:8px 12px">\u91D1\u984D</th>';
       html += '<th style="text-align:center;padding:8px 12px">\u30B9\u30C6\u30FC\u30BF\u30B9</th>';
+      html += '<th style="text-align:center;padding:8px 12px">\u64CD\u4F5C</th>';
       html += '</tr></thead>';
       html += '<tbody id="invoiceListBody"></tbody>';
       html += '</table>';
@@ -1612,6 +1625,7 @@ async function changeUserPassword(userId) {
       el.innerHTML = html;
       if(typeof loadInvoiceList==='function') loadInvoiceList();
     }
+
     function generateInvoiceFromReport(clientCompanyId) {
       const yr = viewMonth.getFullYear();
       const mo = viewMonth.getMonth();
