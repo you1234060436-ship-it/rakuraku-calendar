@@ -823,7 +823,7 @@ async function changeUserPassword(userId) {
     function isWorker() { return currentUser && currentUser.role === 'worker'; }
 
     function switchTab(n) {      if(n===5 && currentUser && currentUser.role==='worker') return;
-      if(n===5 && typeof loadInvoiceList==='function') loadInvoiceList();
+      if(n===5) renderReport();
 
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
