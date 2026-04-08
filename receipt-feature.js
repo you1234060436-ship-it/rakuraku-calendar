@@ -99,7 +99,15 @@ function openRcptForm() {
   const ymd = ym + '-' + String(today.getDate()).padStart(2,'0');
   document.getElementById('rcptIssuer').value = company ? company.name : '';
   document.getElementById('rcptDate').value = ymd;
-  document.getElementById('rcptNo').value = 'R-' + ym.replace('-','') + '-' + String(Math.floor(Math.random()*999)+1).padStart(3,'0');
+  const prefix = 'R-' + ym.replace('-','') + '-';
+  document.getElementById('rcptNo').value = prefix + '001';
+  sbGet('receipts', 'company_id=eq.' + company.id + '&receipt_no=like.' + prefix + '*&order=receipt_no.desc&limit=1').then(rows => {
+    if (rows && rows.length) {
+      const last = rows[0].receipt_no;
+      const num = parseInt(last.split('-').pop(), 10) || 0;
+      document.getElementById('rcptNo').value = prefix + String(num + 1).padStart(3, '0');
+    }
+  });
   document.getElementById('rcptRegNo').value = document.getElementById('invoiceRegNo') ? document.getElementById('invoiceRegNo').value : 'T0000000000000';
   document.getElementById('rcptTotal').value = '';
   document.getElementById('rcptDesc').value = '';
