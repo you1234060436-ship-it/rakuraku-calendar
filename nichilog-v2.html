@@ -537,7 +537,7 @@
         items:items,subtotal:subtotal,tax_8:0,tax_10:tax10,total:subtotal+tax10,
         memo:document.getElementById('invRemarks').value,
         bank_info:{name:document.getElementById('invBankName').value,branch:document.getElementById('invBankBranch').value,type:document.getElementById('invBankType').value,no:document.getElementById('invBankNo').value,holder:document.getElementById('invBankHolder').value},
-        status:'\u4E0B\u66F8\u304D'
+        status:(document.getElementById('invStatusSelect')?document.getElementById('invStatusSelect').value:'\u4E0B\u66F8\u304D')
       };
       try{
         var res;
@@ -565,33 +565,40 @@
     function closeInvoice(){
       document.getElementById('invoiceOverlay').style.display = 'none';
     }
+    var statusMap={'\u4E0B\u66F8\u304D':'\u672A\u78BA\u5B9A','\u78BA\u5B9A':'\u78BA\u5B9A\u6E08','\u9001\u4ED8\u6E08\u307F':'\u9001\u4ED8\u6E08'};
+    var statusDbMap={'\u672A\u78BA\u5B9A':'\u4E0B\u66F8\u304D','\u78BA\u5B9A\u6E08':'\u78BA\u5B9A','\u9001\u4ED8\u6E08':'\u9001\u4ED8\u6E08\u307F'};
+    function displayStatus(s){return statusMap[s]||s;}
     async function loadInvoiceList(){
       if(!currentUser)return;
       try{
         var res=await fetch(SB+'/invoices?account_id=eq.'+currentUser.id+'&order=created_at.desc',{headers:H});
         var data=await res.json();
-        var tb=document.getElementById('invoiceListBody');
+        var container=document.getElementById('invoiceListBody');
         var emptyMsg=document.getElementById('invoiceEmptyMsg');
-        if(!tb)return;
-        tb.innerHTML='';
+        if(!container)return;
+        container.innerHTML='';
         if(!data||data.length===0){if(emptyMsg)emptyMsg.style.display='block';return;}
         if(emptyMsg)emptyMsg.style.display='none';
         data.forEach(function(inv){
-          var tr=document.createElement('tr');
-          tr.style.cssText='border-bottom:1px solid #333';
-          var statusColor=inv.status==='\u78BA\u5B9A'?'#16a34a':inv.status==='\u9001\u4ED8\u6E08\u307F'?'#2563eb':'#888';
-          var btnStyle='padding:4px 10px;border:none;border-radius:4px;cursor:pointer;font-size:12px;margin:0 2px;';
-          tr.innerHTML='<td style="padding:10px 12px;color:#fff">'+inv.invoice_no+'</td>'
-            +'<td style="padding:10px 12px;color:#ccc">'+(inv.issue_date||'-')+'</td>'
-            +'<td style="padding:10px 12px;color:#ccc">'+(inv.client_company||'-')+'</td>'
-            +'<td style="padding:10px 12px;color:#fff;text-align:right">\u00A5'+(inv.total||0).toLocaleString()+'</td>'
-            +'<td style="padding:10px 12px;text-align:center"><span style="background:'+statusColor+';color:#fff;padding:2px 10px;border-radius:10px;font-size:12px">'+inv.status+'</span></td>'
-            +'<td style="padding:10px 12px;text-align:center;white-space:nowrap">'
-            +'<button onclick="previewInvoice(\''+inv.id+'\')" style="'+btnStyle+'background:#334155;color:#fff">\u78BA\u8A8D</button>'
-            +'<button onclick="editInvoice(\''+inv.id+'\')" style="'+btnStyle+'background:#2563eb;color:#fff">\u7DE8\u96C6</button>'
-            +'<button onclick="deleteInvoice(\''+inv.id+'\')" style="'+btnStyle+'background:#dc2626;color:#fff">\u524A\u9664</button>'
-            +'</td>';
-          tb.appendChild(tr);
+          var card=document.createElement('div');
+          card.style.cssText='background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:10px 12px;margin-bottom:8px';
+          var ds=displayStatus(inv.status);
+          var sc=ds==='\u78BA\u5B9A\u6E08'?'#16a34a':ds==='\u9001\u4ED8\u6E08'?'#2563eb':'#888';
+          var row1='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:13px">'
+            +'<span style="color:#fff;font-weight:bold">'+inv.invoice_no+'</span>'
+            +'<span style="color:#aaa">'+(inv.issue_date||'-')+'</span>'
+            +'<span style="color:#ccc;flex:1;min-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(inv.client_company||'-')+'</span>'
+            +'<span style="color:#fff;font-weight:bold">\u00A5'+(inv.total||0).toLocaleString()+'</span>'
+            +'<span style="background:'+sc+';color:#fff;padding:1px 8px;border-radius:10px;font-size:11px">'+ds+'</span>'
+            +'</div>';
+          var btnS='padding:6px 14px;border:none;border-radius:4px;cursor:pointer;font-size:12px;';
+          var row2='<div style="display:flex;gap:6px;margin-top:8px">'
+            +'<button onclick="previewInvoice(\''+inv.id+'\')" style="'+btnS+'background:#334155;color:#fff">\u78BA\u8A8D</button>'
+            +'<button onclick="editInvoice(\''+inv.id+'\')" style="'+btnS+'background:#2563eb;color:#fff">\u7DE8\u96C6</button>'
+            +'<button onclick="deleteInvoice(\''+inv.id+'\')" style="'+btnS+'background:#dc2626;color:#fff">\u524A\u9664</button>'
+            +'</div>';
+          card.innerHTML=row1+row2;
+          container.appendChild(card);
         });
       }catch(e){console.error('loadInvoiceList error:',e);}
     }
@@ -622,6 +629,18 @@
         var rows=document.getElementById('invDetailBody').querySelectorAll('tr');
         items.forEach(function(it,i){if(i<rows.length){var inp=rows[i].querySelectorAll('input,select');if(inp.length>=5){inp[0].value=it.name||'';inp[1].value=it.spec||'';inp[2].value=it.qty||0;inp[3].value=it.unit||'';inp[4].value=it.unitPrice||0;}}});
         if(typeof renderInvoicePreview==='function') renderInvoicePreview();
+        var toolbar=document.getElementById('invoiceFormContainer').querySelector('.toolbar-area,div');
+        var existingSel=document.getElementById('invStatusSelect');
+        if(!existingSel){
+          var wrap=document.createElement('div');
+          wrap.style.cssText='display:inline-block;margin-left:12px;vertical-align:middle';
+          wrap.innerHTML='<label style="color:#fff;font-size:13px;margin-right:4px">\u30B9\u30C6\u30FC\u30BF\u30B9:</label><select id="invStatusSelect" style="padding:4px 8px;border-radius:4px;border:1px solid #555;background:#222;color:#fff;font-size:13px"><option value="\u4E0B\u66F8\u304D">\u672A\u78BA\u5B9A</option><option value="\u78BA\u5B9A">\u78BA\u5B9A\u6E08</option><option value="\u9001\u4ED8\u6E08\u307F">\u9001\u4ED8\u6E08</option></select>';
+          var saveBtn=document.getElementById('invoiceFormContainer').querySelector('button[onclick*="saveInvoice"]');
+          if(saveBtn)saveBtn.parentNode.insertBefore(wrap,saveBtn);
+          else{var firstDiv=document.getElementById('invoiceFormContainer').querySelector('div');if(firstDiv)firstDiv.appendChild(wrap);}
+        }
+        var sel=document.getElementById('invStatusSelect');
+        if(sel)sel.value=inv.status||'\u4E0B\u66F8\u304D';
         document.getElementById('invoiceFormContainer').scrollTop=0;
       }catch(e){console.error('previewInvoice error:',e);}
     }
@@ -1607,19 +1626,9 @@ async function changeUserPassword(userId) {
     // === Report (T5) ===
     async function renderReport() {
       const el = document.getElementById('t5');
-      var html = '<div style="padding:16px">';
-      html += '<h3 style="color:#fff;margin:0 0 16px 0">\u8ACB\u6C42\u66F8\u4E00\u89A7</h3>';
-      html += '<table style="width:100%;border-collapse:collapse">';
-      html += '<thead><tr style="border-bottom:2px solid #555;color:#aaa;font-size:13px">';
-      html += '<th style="text-align:left;padding:8px 12px">No.</th>';
-      html += '<th style="text-align:left;padding:8px 12px">\u65E5\u4ED8</th>';
-      html += '<th style="text-align:left;padding:8px 12px">\u5B9B\u5148</th>';
-      html += '<th style="text-align:right;padding:8px 12px">\u91D1\u984D</th>';
-      html += '<th style="text-align:center;padding:8px 12px">\u30B9\u30C6\u30FC\u30BF\u30B9</th>';
-      html += '<th style="text-align:center;padding:8px 12px">\u64CD\u4F5C</th>';
-      html += '</tr></thead>';
-      html += '<tbody id="invoiceListBody"></tbody>';
-      html += '</table>';
+      var html = '<div style="padding:12px">';
+      html += '<h3 style="color:#fff;margin:0 0 12px 0">\u8ACB\u6C42\u66F8\u4E00\u89A7</h3>';
+      html += '<div id="invoiceListBody"></div>';
       html += '<div id="invoiceEmptyMsg" style="text-align:center;color:#888;padding:32px 0;display:none">\u4FDD\u5B58\u6E08\u307F\u306E\u8ACB\u6C42\u66F8\u306F\u3042\u308A\u307E\u305B\u3093</div>';
       html += '</div>';
       el.innerHTML = html;
