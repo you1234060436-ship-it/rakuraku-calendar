@@ -1254,12 +1254,14 @@ async function changeUserPassword(userId) {
           html += '<td style="padding:8px 6px;"></td>';
           html += '</tr></tbody></table>';
 
+          if (!isWorker()) {
           // PDF button
           html += '<div style="padding:10px 16px;text-align:right;">';
           html += '<button onclick="generateKoujiNippo(\'' + cid + '\')" style="background:#2e7d32;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;">\ud83d\udcc4 \u5de5\u4e8b\u65e5\u5831PDF</button>';
           html += ' <button onclick="generateInvoiceFromReport(\'' + cid + '\')" style="background:#2563eb;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;margin-left:8px;">\ud83d\udcdd \u8acb\u6c42\u66f8\u4f5c\u6210</button>';
           html += '</div>';
           html += '</div>';
+          }
 
           grandTotalDays += companyDays;
           grandTotalAmount += companyAmount;
