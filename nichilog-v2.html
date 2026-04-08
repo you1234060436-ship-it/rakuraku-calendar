@@ -1641,10 +1641,23 @@ async function changeUserPassword(userId) {
     async function renderReport() {
       const el = document.getElementById('t5');
       var html = '<div style="padding:12px">';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">';
+      html += '<div style="display:flex;gap:8px">';
+      html += '<button onclick="document.getElementById(\'invoiceSection\').style.display=\'block\';document.getElementById(\'receiptSection\').style.display=\'none\';this.style.background=\'#1a237e\';this.nextElementSibling.style.background=\'#555\'" style="padding:6px 16px;border:none;border-radius:6px;color:#fff;background:#1a237e;cursor:pointer;font-weight:600">\u8ACB\u6C42\u66F8\u4E00\u89A7</button>';
+      html += '<button onclick="document.getElementById(\'receiptSection\').style.display=\'block\';document.getElementById(\'invoiceSection\').style.display=\'none\';this.style.background=\'#1a237e\';this.previousElementSibling.style.background=\'#555\'" style="padding:6px 16px;border:none;border-radius:6px;color:#fff;background:#555;cursor:pointer;font-weight:600">\u9818\u53CE\u66F8\u4E00\u89A7</button>';
+      html += '</div>';
+      html += '<button onclick="openRcptForm()" style="padding:6px 16px;border:none;border-radius:6px;color:#fff;background:#4CAF50;cursor:pointer;font-weight:600">\u9818\u53CE\u66F8\u4F5C\u6210</button>';
+      html += '</div>';
+      html += '<div id="invoiceSection">';
       html += '<h3 style="color:#fff;margin:0 0 12px 0">\u8ACB\u6C42\u66F8\u4E00\u89A7</h3>';
       html += '<div id="invoiceListBody"></div>';
       html += '<div id="invoiceEmptyMsg" style="text-align:center;color:#888;padding:32px 0;display:none">\u4FDD\u5B58\u6E08\u307F\u306E\u8ACB\u6C42\u66F8\u306F\u3042\u308A\u307E\u305B\u3093</div>';
       html += '</div>';
+      html += '</div>'; // close invoiceSection
+      html += '<div id="receiptSection" style="display:none">';
+      html += '<h3 style="color:#fff;margin:0 0 12px 0">\u9818\u53CE\u66F8\u4E00\u89A7</h3>';
+      html += '<div id="receiptListBody" style="color:#ccc;text-align:center;padding:20px">\u9818\u53CE\u66F8\u6A5F\u80FD\u304C\u6709\u52B9\u3067\u3059\u3002\u300C\u9818\u53CE\u66F8\u4F5C\u6210\u300D\u30DC\u30BF\u30F3\u3092\u62BC\u3057\u3066\u304F\u3060\u3055\u3044\u3002</div>';
+      html += '</div>'; // close receiptSection
       el.innerHTML = html;
       if(typeof loadInvoiceList==='function') loadInvoiceList();
     }
@@ -2155,6 +2168,7 @@ async function changeUserPassword(userId) {
     })();
 
     </script>
+<script src="receipt-feature.js"></script>
 </body>
 </html>
 
