@@ -8,6 +8,13 @@ function initReceiptFeature() {
     s.textContent = `
       #receiptFormOverlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:1000}
       #receiptFormOverlay.show{display:flex}
+      #receiptPreviewOverlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1100;overflow:auto;padding:20px 0}
+      #receiptPreviewOverlay.show{display:flex}
+      .rcpt-preview-wrap{position:relative}
+      .rcpt-preview-bar{position:sticky;top:0;z-index:10;display:flex;justify-content:center;gap:10px;padding:10px 0 14px;background:linear-gradient(rgba(0,0,0,.7),transparent)}
+      .rcpt-preview-bar button{padding:8px 22px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+      .rcpt-preview-bar .bp{background:#1a237e;color:#fff}
+      .rcpt-preview-bar .bc{background:rgba(255,255,255,.9);color:#333}
       .rcpt-form{background:#fff;border-radius:12px;padding:24px;width:90%;max-width:500px;max-height:85vh;overflow-y:auto;position:relative}
       .rcpt-form h2{margin:0 0 18px;color:#1a237e;font-size:20px}
       .rcpt-fg{margin-bottom:14px}
@@ -24,6 +31,31 @@ function initReceiptFeature() {
       .rcpt-btn-cancel{background:#999;color:#fff}
       .rcpt-btn-preview{background:#FF9800;color:#fff}
       .rcpt-btn-save{background:#4CAF50;color:#fff}
+      .rp-a4{width:210mm;min-height:297mm;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 16px rgba(0,0,0,.15);margin:0 auto}
+      .rp-b5{width:182mm;border:1px solid #333;overflow:hidden;font-family:"Hiragino Sans","Yu Gothic",sans-serif}
+      .rp-b5 *{margin:0;padding:0;box-sizing:border-box}
+      .rp-head{display:flex;justify-content:space-between;align-items:center}
+      .rp-title{background:#1a237e;color:#fff;font-size:18px;font-weight:700;letter-spacing:8px;padding:10px 28px}
+      .rp-date{font-size:11px;color:#444;padding-right:16px;text-align:right;line-height:1.6}
+      .rp-date span{display:block}
+      .rp-to{text-align:center;padding:14px 20px 10px;border-bottom:1px solid #333;font-size:16px;font-weight:600;color:#222}
+      .rp-amt-row{display:flex;align-items:stretch;border-bottom:1px solid #333}
+      .rp-amt-box{flex:1;text-align:center;padding:14px 10px;border-right:1px solid #333}
+      .rp-amt-val{font-size:28px;font-weight:800;color:#1a237e;letter-spacing:1px}
+      .rp-stamp-box{width:72px;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:6px}
+      .rp-stamp-frame{width:56px;height:56px;border:2px dashed #aaa;display:flex;align-items:center;justify-content:center;font-size:9px;color:#999}
+      .rp-desc{padding:10px 20px;font-size:12px;color:#333;border-bottom:1px solid #ccc}
+      .rp-desc span{color:#888;margin-right:6px}
+      .rp-bottom{display:flex;padding:12px 16px 14px}
+      .rp-bd{flex:1;font-size:11px;color:#333}
+      .rp-bd table{width:100%;border-collapse:collapse}
+      .rp-bd th{text-align:left;font-weight:600;background:#f5f5f5;border:1px solid #ccc;padding:4px 8px;font-size:10px;color:#444}
+      .rp-bd td{border:1px solid #ccc;padding:4px 8px;font-size:11px}
+      .rp-bd td.n{text-align:right}
+      .rp-bd .tot{background:#f0f0f0;font-weight:700}
+      .rp-iss{width:200px;text-align:center;padding-left:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+      .rp-iss .nm{font-size:13px;font-weight:700;color:#1a237e}
+      .rp-iss .rg{font-size:9px;color:#888}
     `;
     document.head.appendChild(s);
   }
@@ -74,7 +106,6 @@ function openRcptForm() {
   document.getElementById('rcptExcl').textContent = '\u00a50';
   document.getElementById('rcptTaxAmt').textContent = '\u00a50';
   document.getElementById('rcptSubtotal').textContent = '\u00a50';
-  // load client companies
   const sel = document.getElementById('rcptClient');
   sel.innerHTML = '<option value="">-- \u9078\u629e --</option>';
   sbGet('client_companies', 'company_id=eq.' + company.id).then(data => {
@@ -119,93 +150,54 @@ function previewRcpt() {
   const tax8 = pct === '8' ? tax : 0;
   const tax10 = pct === '10' ? tax : 0;
 
-  const h = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>\u9818\u53CE\u66F8 ${no}</title>
-<style>
-@page{size:A4;margin:0}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:#e8e8e8;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:20px 0}
-.a4{width:210mm;height:297mm;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 16px rgba(0,0,0,.15);position:relative}
-.b5{width:182mm;border:1px solid #333;padding:0;position:relative;overflow:hidden}
-/* Header */
-.r-head{display:flex;justify-content:space-between;align-items:center;padding:0 0 0 0}
-.r-title{background:#1a237e;color:#fff;font-size:18px;font-weight:700;letter-spacing:8px;padding:10px 28px}
-.r-date{font-size:11px;color:#444;padding-right:16px;text-align:right;line-height:1.6}
-.r-date span{display:block}
-/* Addressee */
-.r-to{text-align:center;padding:14px 20px 10px;border-bottom:1px solid #333;font-size:16px;font-weight:600;color:#222}
-/* Amount row */
-.r-amt-row{display:flex;align-items:stretch;border-bottom:1px solid #333}
-.r-amt-box{flex:1;text-align:center;padding:14px 10px;border-right:1px solid #333}
-.r-amt-lbl{font-size:10px;color:#666;margin-bottom:4px}
-.r-amt-val{font-size:28px;font-weight:800;color:#1a237e;letter-spacing:1px}
-.r-stamp-box{width:72px;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:6px}
-.r-stamp-frame{width:56px;height:56px;border:2px dashed #aaa;display:flex;align-items:center;justify-content:center;font-size:9px;color:#999}
-/* Description */
-.r-desc{padding:10px 20px;font-size:12px;color:#333;border-bottom:1px solid #ccc}
-.r-desc span{color:#888;margin-right:6px}
-/* Bottom section */
-.r-bottom{display:flex;padding:12px 16px 14px;gap:0}
-/* Breakdown */
-.r-breakdown{flex:1;font-size:11px;color:#333}
-.r-breakdown table{width:100%;border-collapse:collapse}
-.r-breakdown th{text-align:left;font-weight:600;background:#f5f5f5;border:1px solid #ccc;padding:4px 8px;font-size:10px;color:#444}
-.r-breakdown td{border:1px solid #ccc;padding:4px 8px;font-size:11px}
-.r-breakdown td.num{text-align:right}
-.r-breakdown .totrow{background:#f0f0f0;font-weight:700}
-/* Issuer */
-.r-issuer{width:200px;text-align:center;padding-left:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
-.r-issuer .nm{font-size:13px;font-weight:700;color:#1a237e}
-.r-issuer .rg{font-size:9px;color:#888}
-.r-issuer .stamp{width:48px;height:48px;border:2px solid #d32f2f;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#d32f2f;font-size:12px;margin-top:4px}
-/* Print */
-.noprint{text-align:center;margin-bottom:16px}
-.noprint button{padding:8px 20px;background:#1a237e;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600}
-@media print{
-  body{background:#fff;padding:0;min-height:auto}
-  .a4{box-shadow:none;margin:0;width:210mm;height:297mm}
-  .noprint{display:none!important}
-}
-</style></head><body>
-<div class="noprint"><button onclick="window.print()">\u5370\u5237 / PDF</button></div>
-<div class="a4">
-<div class="b5">
-  <div class="r-head">
-    <div class="r-title">\u9818\u3000\u53CE\u3000\u66F8</div>
-    <div class="r-date"><span>No. ${no}</span><span>${fmtDate}</span></div>
-  </div>
-  <div class="r-to">${cname}\u3000\u69D8</div>
-  <div class="r-amt-row">
-    <div class="r-amt-box">
-      <div class="r-amt-val">${fmt(total)}-</div>
-    </div>
-    ${stamp ? '<div class="r-stamp-box"><div class="r-stamp-frame">\u53CE\u5165\u5370\u7D19</div></div>' : '<div class="r-stamp-box"></div>'}
-  </div>
-  <div class="r-desc"><span>\u4F46</span>${desc}\u3000\u4E0A\u8A18\u6B63\u306B\u9818\u53CE\u3044\u305F\u3057\u307E\u3057\u305F\u3002</div>
-  <div class="r-bottom">
-    <div class="r-breakdown">
-      <table>
-        <tr><th>\u5185\u8A33</th><th style="text-align:right">\u91D1\u984D</th></tr>
-        <tr><td>\u5C0F\u8A08\u3000\u2460</td><td class="num">${fmt(excl)}</td></tr>
-        <tr><td>\u6D88\u8CBB\u7A0E\u7B49\u3000\u2461\uFF08\u2463\uFF0B\u2464\uFF09</td><td class="num">${fmt(tax)}</td></tr>
-        <tr class="totrow"><td>\u5408\u8A08\u3000\u2462\uFF08\u2460\uFF0B\u2461\uFF09</td><td class="num">${fmt(total)}</td></tr>
-        <tr><td>(8%)\u6D88\u8CBB\u7A0E\u5408\u8A08\u3000\u2463</td><td class="num">${fmt(tax8)}</td></tr>
-        <tr><td>(10%)\u6D88\u8CBB\u7A0E\u5408\u8A08\u3000\u2464</td><td class="num">${fmt(tax10)}</td></tr>
-      </table>
-    </div>
-    <div class="r-issuer">
-      <div class="nm">${issuer}</div>
-      <div class="rg">\u30A4\u30F3\u30DC\u30A4\u30B9\u767B\u9332\u756A\u53F7</div>
-      <div class="rg">${regNo}</div>
-      <div class="stamp">\u5370</div>
-    </div>
-  </div>
-</div>
-</div>
-</body></html>`;
+  const body = `<div class="rp-a4"><div class="rp-b5">
+  <div class="rp-head"><div class="rp-title">\u9818\u3000\u53CE\u3000\u66F8</div><div class="rp-date"><span>No. ${no}</span><span>${fmtDate}</span></div></div>
+  <div class="rp-to">${cname}\u3000\u69D8</div>
+  <div class="rp-amt-row"><div class="rp-amt-box"><div class="rp-amt-val">${fmt(total)}-</div></div>${stamp ? '<div class="rp-stamp-box"><div class="rp-stamp-frame">\u53CE\u5165\u5370\u7D19</div></div>' : '<div class="rp-stamp-box"></div>'}</div>
+  <div class="rp-desc"><span>\u4F46</span>${desc}\u3000\u4E0A\u8A18\u6B63\u306B\u9818\u53CE\u3044\u305F\u3057\u307E\u3057\u305F\u3002</div>
+  <div class="rp-bottom"><div class="rp-bd"><table>
+    <tr><th>\u5185\u8A33</th><th style="text-align:right">\u91D1\u984D</th></tr>
+    <tr><td>\u5C0F\u8A08\u3000\u2460</td><td class="n">${fmt(excl)}</td></tr>
+    <tr><td>\u6D88\u8CBB\u7A0E\u7B49\u3000\u2461\uFF08\u2463\uFF0B\u2464\uFF09</td><td class="n">${fmt(tax)}</td></tr>
+    <tr class="tot"><td>\u5408\u8A08\u3000\u2462\uFF08\u2460\uFF0B\u2461\uFF09</td><td class="n">${fmt(total)}</td></tr>
+    <tr><td>(8%)\u6D88\u8CBB\u7A0E\u5408\u8A08\u3000\u2463</td><td class="n">${fmt(tax8)}</td></tr>
+    <tr><td>(10%)\u6D88\u8CBB\u7A0E\u5408\u8A08\u3000\u2464</td><td class="n">${fmt(tax10)}</td></tr>
+  </table></div><div class="rp-iss"><div class="nm">${issuer}</div><div class="rg">\u30A4\u30F3\u30DC\u30A4\u30B9\u767B\u9332\u756A\u53F7</div><div class="rg">${regNo}</div></div></div>
+</div></div>`;
 
+  // Store body HTML for print
+  window._rcptPrintBody = body;
+
+  let ov = document.getElementById('receiptPreviewOverlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'receiptPreviewOverlay';
+    ov.addEventListener('click', function(e) { if (e.target === ov) closeRcptPreview(); });
+    document.body.appendChild(ov);
+  }
+  ov.innerHTML = '<div class="rcpt-preview-wrap">'
+    + '<div class="rcpt-preview-bar"><button class="bp" onclick="printRcpt()">\u5370\u5237 / PDF</button><button class="bc" onclick="closeRcptPreview()">\u9589\u3058\u308B</button></div>'
+    + body + '</div>';
+  ov.classList.add('show');
+  // Hide the form overlay while preview is showing
+  document.getElementById('receiptFormOverlay').classList.remove('show');
+}
+
+function closeRcptPreview() {
+  const ov = document.getElementById('receiptPreviewOverlay');
+  if (ov) ov.classList.remove('show');
+  // Re-show the form
+  document.getElementById('receiptFormOverlay').classList.add('show');
+}
+
+function printRcpt() {
+  if (!window._rcptPrintBody) return;
+  const css = [...document.querySelectorAll('#receipt-feature-styles')].map(s => s.textContent).join('');
   const w = window.open('', '_blank');
-  if (w) { w.document.write(h); w.document.close(); }
-  else { alert('\u30DD\u30C3\u30D7\u30A2\u30C3\u30D7\u304C\u30D6\u30ED\u30C3\u30AF\u3055\u308C\u307E\u3057\u305F'); }
+  if (w) {
+    w.document.write('<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>\u9818\u53CE\u66F8</title><style>@page{size:A4;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{background:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh}' + css + '</style></head><body>' + window._rcptPrintBody + '<script>window.onload=function(){window.print()}<\/script></body></html>');
+    w.document.close();
+  }
 }
 
 function saveRcpt() {
