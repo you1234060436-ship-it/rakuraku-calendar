@@ -155,7 +155,26 @@
     <div id="t2" class="tab-content"><!-- Summary --></div>
     <div id="t3" class="tab-content"><!-- Sites --></div>
     <div id="t4" class="tab-content"><!-- Members --></div>
-    <div id="t5" class="tab-content"><!-- Report --></div>
+    <div id="t5" class="tab-content">
+      <div style="padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h3 style="margin:0;font-size:16px">請求書一覧</h3>
+          <button class="btn btn-primary" onclick="switchTab(1)" style="padding:8px 16px">新規作成</button>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="border-bottom:2px solid #555;text-align:left">
+            <th style="padding:10px 8px">No.</th>
+            <th style="padding:10px 8px">日付</th>
+            <th style="padding:10px 8px">宛先</th>
+            <th style="padding:10px 8px;text-align:right">金額</th>
+            <th style="padding:10px 8px">ステータス</th>
+            <th style="padding:10px 8px">操作</th>
+          </tr></thead>
+          <tbody id="invoiceListBody"></tbody>
+        </table>
+        <div id="invoiceListEmpty" style="text-align:center;padding:40px;color:#888;display:none">保存済みの請求書はありません</div>
+      </div>
+    </div>
     <div id="t6" class="tab-content"><!-- Settings --></div>
 
     <!-- Navigation Bar -->
@@ -499,7 +518,7 @@
         + '</div>'
         + '</div>';
     }
-    function openInvoice(prefill){
+    function openInvoice(prefill){currentInvoiceId=null;
       const d = new Date();
       const y = d.getFullYear();
       const m = String(d.getMonth()+1).padStart(2,'0');
@@ -517,18 +536,34 @@
       renderInvForm();
       document.getElementById('invoiceOverlay').style.display = 'block';
     }
-    function saveInvoice() {
-      var no = document.getElementById('invNo').value;
-      var noNum = parseInt(no) || 0;
-      localStorage.setItem('invoiceLastNo', String(noNum));
-      var saved = JSON.parse(localStorage.getItem('invoiceSaved') || '[]');
-      var data = {};
-      ['invNo','invDate','invDue','invTo','invTanto','invFrom','invAddr','invTel','invFax','invRegNo','invRemarks','invBankName','invBankBranch','invBankType','invBankNo','invBankHolder','invSiteName'].forEach(function(id){ var el = document.getElementById(id); if(el) data[id] = el.value; });
-      var cb = document.getElementById('invDueShow'); if(cb) data.invDueShow = cb.checked;
-      saved.push(data);
-      localStorage.setItem('invoiceSaved', JSON.stringify(saved));
-      alert('\u8ACB\u6C42\u66F8 No.' + no + ' \u3092\u4FDD\u5B58\u3057\u307E\u3057\u305F\u3002\u6B21\u306E\u756A\u53F7: ' + String(noNum + 1).padStart(3,'0'));
-      closeInvoice();
+    function showToast(msg){var t=document.createElement('div');t.style.cssText='position:fixed;bottom:20px;right:20px;background:#333;color:#fff;padding:12px 24px;border-radius:8px;z-index:99999;font-size:14px;opacity:1;transition:opacity 0.3s';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove()},300)},2000)}
+    var currentInvoiceId=null;
+    async function saveInvoice(){
+      var no=document.getElementById('invNo').value;
+      var rows=document.getElementById('invDetailBody').querySelectorAll('tr');
+      var items=[];var subtotal=0;
+      rows.forEach(function(r){var inp=r.querySelectorAll('input,select');if(inp.length>=5){var nm=inp[0].value,sp=inp[1].value,qt=parseInt(inp[2].value)||0,un=inp[3].value,up=parseInt(inp[4].value)||0;if(nm){items.push({name:nm,spec:sp,qty:qt,unit:un,unitPrice:up,amount:qt*up});subtotal+=qt*up;}}});
+      var tax10=Math.floor(subtotal*0.10);
+      var payload={
+        account_id:currentUser.id,
+        invoice_no:no,
+        issue_date:document.getElementById('invDate').value||null,
+        due_date:document.getElementById('invDue').value||null,
+        client_company:document.getElementById('invTo').value,
+        person_in_charge:document.getElementById('invTanto').value,
+        construction_name:document.getElementById('invSiteName').value,
+        items:items,subtotal:subtotal,tax_8:0,tax_10:tax10,total:subtotal+tax10,
+        memo:document.getElementById('invRemarks').value,
+        bank_info:{name:document.getElementById('invBankName').value,branch:document.getElementById('invBankBranch').value,type:document.getElementById('invBankType').value,no:document.getElementById('invBankNo').value,holder:document.getElementById('invBankHolder').value},
+        status:'\u4E0B\u66F8\u304D'
+      };
+      try{
+        var res;
+        if(currentInvoiceId){res=await SB.from('invoices').update(payload).eq('id',currentInvoiceId).select();}else{res=await SB.from('invoices').insert([payload]).select();if(res.data&&res.data[0])currentInvoiceId=res.data[0].id;}
+        if(res.error)throw res.error;
+        showToast('\u4FDD\u5B58\u3057\u307E\u3057\u305F');
+        if(typeof loadInvoiceList==='function')loadInvoiceList();
+      }catch(e){console.error(e);showToast('\u4FDD\u5B58\u5931\u6557: '+e.message);}
     }
     function printInvoice() {
   var content = document.getElementById('invoice-print-area').outerHTML;
@@ -542,6 +577,29 @@
     function closeInvoice(){
       document.getElementById('invoiceOverlay').style.display = 'none';
     }
+    async function loadInvoiceList(){
+      if(!currentUser)return;
+      var res=await SB.from('invoices').select('*').eq('account_id',currentUser.id).order('created_at',{ascending:false});
+      var tb=document.getElementById('invoiceListBody');if(!tb)return;
+      tb.innerHTML='';
+      (res.data||[]).forEach(function(inv){
+        var tr=document.createElement('tr');tr.style.cursor='pointer';tr.style.borderBottom='1px solid #444';
+        tr.innerHTML='<td style="padding:8px">'+inv.invoice_no+'</td><td style="padding:8px">'+(inv.issue_date||'')+'</td><td style="padding:8px">'+(inv.client_company||'')+'</td><td style="padding:8px;text-align:right">\u00A5'+(inv.total||0).toLocaleString()+'</td><td style="padding:8px">'+(inv.status||'')+'</td><td style="padding:8px"><button onclick="editInvoice(\''+inv.id+'\')" style="padding:4px 12px;cursor:pointer">\u7DE8\u96C6</button></td>';
+        tb.appendChild(tr);
+      });
+    }
+    async function editInvoice(invId){
+      var res=await SB.from('invoices').select('*').eq('id',invId).single();
+      if(res.error||!res.data)return;
+      var inv=res.data;currentInvoiceId=inv.id;
+      var d={invNo:inv.invoice_no,invDate:inv.issue_date||'',invDue:inv.due_date||'',invTo:inv.client_company||'',invTanto:inv.person_in_charge||'',invSiteName:inv.construction_name||'',invFrom:document.getElementById('invFrom')?document.getElementById('invFrom').value:'',invRemarks:inv.memo||''};
+      if(inv.bank_info){d.invBankName=inv.bank_info.name||'';d.invBankBranch=inv.bank_info.branch||'';d.invBankType=inv.bank_info.type||'';d.invBankNo=inv.bank_info.no||'';d.invBankHolder=inv.bank_info.holder||'';}
+      openInvoice(d);
+      currentInvoiceId=inv.id;
+      var tbody=document.getElementById('invDetailBody');if(tbody&&inv.items){tbody.innerHTML='';inv.items.forEach(function(it){var r=addInvRow();var inp=r.querySelectorAll('input,select');if(inp[0])inp[0].value=it.name||'';if(inp[1])inp[1].value=it.spec||'';if(inp[2])inp[2].value=it.qty||0;if(inp[3])inp[3].value=it.unit||'';if(inp[4])inp[4].value=it.unitPrice||0;});}
+      renderInvoicePreview();
+    }
+
 window.addEventListener("beforeprint",function(){var o=document.getElementById("invoiceOverlay");if(o)o.scrollTop=0;});
 
 
@@ -744,6 +802,7 @@ async function changeUserPassword(userId) {
     function isWorker() { return currentUser && currentUser.role === 'worker'; }
 
     function switchTab(n) {      if(n===5 && currentUser && currentUser.role==='worker') return;
+      if(n===5 && typeof loadInvoiceList==='function') loadInvoiceList();
 
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -1603,7 +1662,7 @@ async function changeUserPassword(userId) {
       });
       const cc = clientCompanies.find(c => c.id == clientCompanyId);
       const ccName = cc ? cc.name : '';
-      var nextInvNo = parseInt(localStorage.getItem('invoiceLastNo') || '0') + 1; const invNo = String(nextInvNo).padStart(3, '0');
+      var ym=new Date().toISOString().slice(0,7).replace('-','');var invNo=ym+'-001';SB.from('invoices').select('invoice_no').eq('account_id',currentUser.id).like('invoice_no',ym+'%').order('invoice_no',{ascending:false}).limit(1).then(function(r){if(r.data&&r.data[0]){var seq=parseInt(r.data[0].invoice_no.split('-')[1])||0;invNo=ym+'-'+String(seq+1).padStart(3,'0');}document.getElementById('invNo').value=invNo;});
       const today = localDateStr(new Date());
       openInvoice({
         invNo: invNo,
