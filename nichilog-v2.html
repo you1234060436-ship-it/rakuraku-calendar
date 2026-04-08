@@ -186,6 +186,7 @@
       <div class="form-group">
         <label>現場</label>
         <select id="addEntrySite"></select>
+        <input type="text" id="addEntryNewSite" placeholder="新しい現場名を入力" style="display:none;margin-top:4px;width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;">
       </div>
       <div class="form-group">
         <label>勤務区分</label>
@@ -1039,13 +1040,29 @@ async function changeUserPassword(userId) {
           opts += `<option value="${s.id}">${s.name}</option>`;
         });
       }
+      opts += '<option value="__new__">＋ 新規追加</option>';
       document.getElementById('addEntrySite').innerHTML = opts;
-    }
+
+      document.getElementById('addEntryNewSite').style.display = 'none';
+      document.getElementById('addEntrySite').onchange = function() {
+        document.getElementById('addEntryNewSite').style.display = this.value === '__new__' ? '' : 'none';
+      };    }
 
     async function saveE() {
       const date = document.getElementById('addEntryDate').value;
-      const siteId = parseInt(document.getElementById('addEntrySite').value);
-      const memberId = parseInt(document.getElementById('addEntryMember').value);
+      let siteId;
+      const siteVal = document.getElementById('addEntrySite').value;
+      if (siteVal === '__new__') {
+        const newName = document.getElementById('addEntryNewSite').value.trim();
+        if (!newName) { alert('新しい現場名を入力してください'); return; }
+        const cid = document.getElementById('addEntryCompany').value;
+        const newSite = await sbPost('work_sites', { company_id: company.id, name: newName, client_company_id: cid ? parseInt(cid) : null, price: 0, rate_type: 'daily', color: '#3b82f6' });
+        if (!newSite || !newSite[0]) { alert('現場の追加に失敗しました'); return; }
+        siteId = newSite[0].id;
+        sites = await sbGet('work_sites', 'company_id=eq.' + company.id);
+      } else {
+        siteId = parseInt(siteVal);
+      }      const memberId = parseInt(document.getElementById('addEntryMember').value);
       const note = document.getElementById('addEntryNote').value;
       const workType = document.getElementById('addEntryWorkType').value;
 
