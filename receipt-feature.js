@@ -31,28 +31,28 @@ function initReceiptFeature() {
     const o = document.createElement('div');
     o.id = 'receiptFormOverlay';
     o.innerHTML = `<div class="rcpt-form">
-      <h2>é åæ¸ä½æ</h2>
-      <div class="rcpt-fg"><label>çºè¡åä¼ç¤¾å</label><input type="text" id="rcptIssuer" readonly></div>
-      <div class="rcpt-fg"><label>å®åä¼ç¤¾</label><select id="rcptClient"><option value="">-- é¸æ --</option></select></div>
+      <h2>\u9818\u53ce\u66f8\u4f5c\u6210</h2>
+      <div class="rcpt-fg"><label>\u767a\u884c\u5143\u4f1a\u793e\u540d</label><input type="text" id="rcptIssuer" readonly></div>
+      <div class="rcpt-fg"><label>\u5b9b\u5148\u4f1a\u793e</label><select id="rcptClient"><option value="">-- \u9078\u629e --</option></select></div>
       <div class="rcpt-row">
-        <div class="rcpt-fg"><label>åè¨éé¡ï¼ç¨è¾¼ï¼</label><input type="number" id="rcptTotal" placeholder="0" min="0" oninput="calcRcptTax()"></div>
-        <div class="rcpt-fg"><label>ç¨ç</label><select id="rcptTaxRate" onchange="calcRcptTax()"><option value="0.08">8%</option><option value="0.10" selected>10%</option></select></div>
+        <div class="rcpt-fg"><label>\u5408\u8a08\u91d1\u984d\uff08\u7a0e\u8fbc\uff09</label><input type="number" id="rcptTotal" placeholder="0" min="0" oninput="calcRcptTax()"></div>
+        <div class="rcpt-fg"><label>\u7a0e\u7387</label><select id="rcptTaxRate" onchange="calcRcptTax()"><option value="0.08">8%</option><option value="0.10" selected>10%</option></select></div>
       </div>
       <div class="rcpt-calc">
-        <div><span>ç¨æéé¡:</span><span id="rcptExcl">&yen;0</span></div>
-        <div><span>æ¶è²»ç¨é¡:</span><span id="rcptTaxAmt">&yen;0</span></div>
-        <div class="total"><span>åè¨:</span><span id="rcptSubtotal">&yen;0</span></div>
+        <div><span>\u7a0e\u629c\u91d1\u984d:</span><span id="rcptExcl">&yen;0</span></div>
+        <div><span>\u6d88\u8cbb\u7a0e\u984d:</span><span id="rcptTaxAmt">&yen;0</span></div>
+        <div class="total"><span>\u5408\u8a08:</span><span id="rcptSubtotal">&yen;0</span></div>
       </div>
-      <div class="rcpt-fg"><label>ä½ãæ¸ã</label><input type="text" id="rcptDesc" placeholder="å·¥äºä»£éã¨ãã¦"></div>
+      <div class="rcpt-fg"><label>\u4f46\u3057\u66f8\u304d</label><input type="text" id="rcptDesc" placeholder="\u5de5\u4e8b\u4ee3\u91d1\u3068\u3057\u3066"></div>
       <div class="rcpt-row">
-        <div class="rcpt-fg"><label>çºè¡æ¥</label><input type="date" id="rcptDate"></div>
-        <div class="rcpt-fg"><label>é åæ¸No.</label><input type="text" id="rcptNo" readonly></div>
+        <div class="rcpt-fg"><label>\u767a\u884c\u65e5</label><input type="date" id="rcptDate"></div>
+        <div class="rcpt-fg"><label>\u9818\u53ce\u66f8No.</label><input type="text" id="rcptNo" readonly></div>
       </div>
-      <div class="rcpt-fg"><label>ã¤ã³ãã¤ã¹ç»é²çªå·</label><input type="text" id="rcptRegNo" readonly></div>
+      <div class="rcpt-fg"><label>\u30a4\u30f3\u30dc\u30a4\u30b9\u767b\u9332\u756a\u53f7</label><input type="text" id="rcptRegNo" readonly></div>
       <div class="rcpt-actions">
-        <button class="rcpt-btn-cancel" onclick="closeRcptForm()">ã­ã£ã³ã»ã«</button>
-        <button class="rcpt-btn-preview" onclick="previewRcpt()">ãã¬ãã¥ã¼ / å°å·</button>
-        <button class="rcpt-btn-save" onclick="saveRcpt()">ä¿å­</button>
+        <button class="rcpt-btn-cancel" onclick="closeRcptForm()">\u30ad\u30e3\u30f3\u30bb\u30eb</button>
+        <button class="rcpt-btn-preview" onclick="previewRcpt()">\u30d7\u30ec\u30d3\u30e5\u30fc / \u5370\u5237</button>
+        <button class="rcpt-btn-save" onclick="saveRcpt()">\u4fdd\u5b58</button>
       </div>
     </div>`;
     document.body.appendChild(o);
@@ -153,7 +153,7 @@ td{border:1px solid #ddd;padding:8px 12px;text-align:right}
 .noprint button{padding:10px 24px;background:#1a237e;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;font-weight:600}
 @media print{body{padding:0;background:#fff}.rc{box-shadow:none;margin:0;padding:30px;width:100%;min-height:auto}.noprint{display:none!important}}
 </style></head><body>
-<div class="noprint"><button onclick="window.print()">å°å· / PDF</button></div>
+<div class="noprint"><button onclick="window.print()">\u5370\u5237 / PDF</button></div>
 <div class="rc">
 <div class="rh"><h1>\u9818\u53CE\u66F8</h1></div>
 <div class="rm"><div><label>\u9818\u53CE\u66F8No.</label><span>${no}</span></div><div><label>\u767A\u884C\u65E5</label><span>${fmtDate}</span></div></div>
@@ -169,7 +169,7 @@ ${stamp ? '<div class="inkan"><div style="display:inline-block;padding:12px 20px
 <div class="ack">\u4E0A\u8A18\u6B63\u306B\u9818\u53CE\u3044\u305F\u3057\u307E\u3057\u305F</div>
 <div class="ri">
   <div class="nm">${issuer}</div>
-  <div class="rg">\u30A4\u30F3\u30DC\u30A4\u30B9\u767B\u9332\u756A\u53F7: ${regNo}</div>
+  <div class="rg">\u30A4\u30F3\u30DC\u30A4\u30B5\u767B\u9332\u756A\u53F7: ${regNo}</div>
   <div style="margin-top:16px"><div class="stamp">\u5370</div></div>
 </div>
 </div></body></html>`;
