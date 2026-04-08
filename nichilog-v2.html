@@ -1056,7 +1056,7 @@ async function changeUserPassword(userId) {
         const newName = document.getElementById('addEntryNewSite').value.trim();
         if (!newName) { alert('新しい現場名を入力してください'); return; }
         const cid = document.getElementById('addEntryCompany').value;
-        const newSite = await sbPost('work_sites', { company_id: company.id, name: newName, client_company_id: cid ? parseInt(cid) : null, price: 0, rate_type: 'daily', color: '#3b82f6' });
+        const newSite = await sbPost('work_sites', { company_id: company.id, name: newName, client_company_id: cid ? parseInt(cid) : null, price: 0, rate_type: 'daily', color: '#'#f0f0f0' });
         if (!newSite || !newSite[0]) { alert('現場の追加に失敗しました'); return; }
         siteId = newSite[0].id;
         sites = await sbGet('work_sites', 'company_id=eq.' + company.id);
