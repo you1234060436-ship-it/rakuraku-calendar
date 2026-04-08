@@ -477,11 +477,15 @@
         // 10 Remarks left + Totals right
         + '<div style="display:flex;justify-content:space-between;margin-top:12px;gap:16px;">'
         // Remarks
-        + '<div style="flex:1;font-size:9pt;">'
+        + '<div style="flex:1;font-size:9pt;display:flex;flex-direction:column;">'
         + '<div style="font-weight:bold;margin-bottom:4px;border-bottom:1px solid #999;padding-bottom:2px;">\u5099\u8003</div>'
         + '<div style="white-space:pre-wrap;line-height:1.6;font-size:8.5pt;">' + (remarks || '') + '</div>'
         + (bankName ? '<div style="margin-top:10px;font-size:8.5pt;line-height:1.6;border-top:1px solid #ccc;padding-top:6px;">\u304A\u632F\u8FBC\u5148\uFF1A' + bankName + '\u3000' + bankBranch + '\u3000' + bankType + '\u3000' + bankNo + '<br>' + bankHolder + '</div>' : '')
-        + '</div>'
+        
+        + '<div style="margin-top:auto;padding-top:8px;font-size:9pt;line-height:1.7;">'
+        + '<div style="font-weight:bold;font-size:12pt;">' + from + '</div>'
+        + (regNo ? '<div style="font-size:8.5pt;margin-top:4px;">\u30A4\u30F3\u30DC\u30A4\u30B9\u767B\u9332\u756A\u53F7: ' + regNo + '</div>' : '')
+        + '</div>'+ '</div>'
         // Totals
         + '<div style="width:220px;font-size:9pt;">'
         + '<table style="width:100%;border-collapse:collapse;font-size:9pt;">'
@@ -493,11 +497,6 @@
         + '</table>'
         + '</div>'
         + '</div>'
-        // 11 + 12 Issuer info right + stamp box
-        + '<div style="margin-top:24px;display:flex;justify-content:flex-start;align-items:flex-start;gap:16px;">'
-        + '<div style="text-align:left;font-size:9pt;line-height:1.7;">'
-        + '<div style="font-weight:bold;font-size:12pt;">' + from + '</div>'
-        + (addr ? '<div>' + addr + '</div>' : '')
         + (tel ? '<div>TEL: ' + tel + '</div>' : '')
         + (fax ? '<div>FAX: ' + fax + '</div>' : '')
         + (regNo ? '<div style="font-size:8.5pt;margin-top:4px;">\u30A4\u30F3\u30DC\u30A4\u30B9\u767B\u9332\u756A\u53F7: ' + regNo + '</div>' : '')
