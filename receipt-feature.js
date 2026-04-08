@@ -116,63 +116,92 @@ function previewRcpt() {
   const stamp = total >= 50000;
   const fmtDate = date ? new Date(date + 'T00:00:00').toLocaleDateString('ja-JP') : '';
   const fmt = n => '\u00a5' + n.toLocaleString();
+  const tax8 = pct === '8' ? tax : 0;
+  const tax10 = pct === '10' ? tax : 0;
 
   const h = `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>\u9818\u53CE\u66F8 ${no}</title>
 <style>
+@page{size:A4;margin:0}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:#f5f5f5;padding:20px}
-.rc{width:210mm;min-height:297mm;background:#fff;margin:0 auto;padding:40px;box-shadow:0 2px 10px rgba(0,0,0,.1);position:relative}
-.rh{background:linear-gradient(135deg,#1a237e 0%,#283593 100%);color:#fff;padding:24px;margin:-40px -40px 30px;text-align:center}
-.rh h1{font-size:42px;font-weight:700;letter-spacing:6px}
-.rm{display:flex;justify-content:space-between;margin-bottom:24px;font-size:13px}
-.rm div{display:flex;flex-direction:column}
-.rm label{font-weight:600;color:#888;margin-bottom:2px;font-size:11px}
-.rm span{color:#333;font-weight:500}
-.rt{margin-bottom:24px;padding:16px 20px;background:#f9f9f9;border-left:4px solid #1a237e}
-.rt small{font-size:11px;color:#999;font-weight:600}
-.rt .name{font-size:20px;font-weight:600;color:#333;margin-top:4px}
-.ra{text-align:center;margin:30px 0;padding:20px;border:2px solid #1a237e;border-radius:8px}
-.ra .lbl{font-size:11px;color:#888;margin-bottom:8px;font-weight:600}
-.ra .amt{font-size:38px;font-weight:700;color:#1a237e;letter-spacing:2px}
-.ra .sub{font-size:12px;color:#666;margin-top:4px}
-.rd{margin-bottom:24px;padding:14px;background:#fafafa;border:1px solid #eee;border-radius:4px}
-.rd small{font-size:11px;color:#999;font-weight:600}
-.rd p{font-size:14px;color:#333;margin-top:6px}
-table{width:100%;border-collapse:collapse;margin-bottom:24px;font-size:13px}
-th{background:#f0f0f0;border:1px solid #ddd;padding:8px 12px;text-align:right;font-weight:600}
-td{border:1px solid #ddd;padding:8px 12px;text-align:right}
-.tl{text-align:left}
-.totrow{background:#f0f0f0;font-weight:700}
-.stamp{margin:20px auto;width:80px;height:80px;border:3px solid #d32f2f;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#d32f2f;font-size:16px}
-.inkan{text-align:center;margin:20px 0}
-.ack{text-align:center;margin:20px 0;font-size:14px;color:#333}
-.ri{text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid #ddd}
-.ri .nm{font-size:16px;font-weight:600;color:#1a237e;margin-bottom:6px}
-.ri .rg{font-size:11px;color:#999}
-.noprint{text-align:center;margin-bottom:20px}
-.noprint button{padding:10px 24px;background:#1a237e;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;font-weight:600}
-@media print{body{padding:0;background:#fff}.rc{box-shadow:none;margin:0;padding:30px;width:100%;min-height:auto}.noprint{display:none!important}}
+body{font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:#e8e8e8;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;padding:20px 0}
+.a4{width:210mm;height:297mm;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 16px rgba(0,0,0,.15);position:relative}
+.b5{width:182mm;border:1px solid #333;padding:0;position:relative;overflow:hidden}
+/* Header */
+.r-head{display:flex;justify-content:space-between;align-items:center;padding:0 0 0 0}
+.r-title{background:#1a237e;color:#fff;font-size:18px;font-weight:700;letter-spacing:8px;padding:10px 28px}
+.r-date{font-size:11px;color:#444;padding-right:16px;text-align:right;line-height:1.6}
+.r-date span{display:block}
+/* Addressee */
+.r-to{text-align:center;padding:14px 20px 10px;border-bottom:1px solid #333;font-size:16px;font-weight:600;color:#222}
+/* Amount row */
+.r-amt-row{display:flex;align-items:stretch;border-bottom:1px solid #333}
+.r-amt-box{flex:1;text-align:center;padding:14px 10px;border-right:1px solid #333}
+.r-amt-lbl{font-size:10px;color:#666;margin-bottom:4px}
+.r-amt-val{font-size:28px;font-weight:800;color:#1a237e;letter-spacing:1px}
+.r-stamp-box{width:72px;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:6px}
+.r-stamp-frame{width:56px;height:56px;border:2px dashed #aaa;display:flex;align-items:center;justify-content:center;font-size:9px;color:#999}
+/* Description */
+.r-desc{padding:10px 20px;font-size:12px;color:#333;border-bottom:1px solid #ccc}
+.r-desc span{color:#888;margin-right:6px}
+/* Bottom section */
+.r-bottom{display:flex;padding:12px 16px 14px;gap:0}
+/* Breakdown */
+.r-breakdown{flex:1;font-size:11px;color:#333}
+.r-breakdown table{width:100%;border-collapse:collapse}
+.r-breakdown th{text-align:left;font-weight:600;background:#f5f5f5;border:1px solid #ccc;padding:4px 8px;font-size:10px;color:#444}
+.r-breakdown td{border:1px solid #ccc;padding:4px 8px;font-size:11px}
+.r-breakdown td.num{text-align:right}
+.r-breakdown .totrow{background:#f0f0f0;font-weight:700}
+/* Issuer */
+.r-issuer{width:200px;text-align:center;padding-left:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.r-issuer .nm{font-size:13px;font-weight:700;color:#1a237e}
+.r-issuer .rg{font-size:9px;color:#888}
+.r-issuer .stamp{width:48px;height:48px;border:2px solid #d32f2f;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#d32f2f;font-size:12px;margin-top:4px}
+/* Print */
+.noprint{text-align:center;margin-bottom:16px}
+.noprint button{padding:8px 20px;background:#1a237e;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600}
+@media print{
+  body{background:#fff;padding:0;min-height:auto}
+  .a4{box-shadow:none;margin:0;width:210mm;height:297mm}
+  .noprint{display:none!important}
+}
 </style></head><body>
 <div class="noprint"><button onclick="window.print()">\u5370\u5237 / PDF</button></div>
-<div class="rc">
-<div class="rh"><h1>\u9818\u53CE\u66F8</h1></div>
-<div class="rm"><div><label>\u9818\u53CE\u66F8No.</label><span>${no}</span></div><div><label>\u767A\u884C\u65E5</label><span>${fmtDate}</span></div></div>
-<div class="rt"><small>\u4E0B\u8A18\u306E\u901A\u308A\u9818\u53CE\u3044\u305F\u3057\u307E\u3059</small><div class="name">${cname} \u69D8</div></div>
-<div class="ra"><div class="lbl">\u91D1\u984D</div><div class="amt">${fmt(total)}-</div><div class="sub">\uFF08\u7A0E\u8FBC\u307F\uFF09</div></div>
-<div class="rd"><small>\u4F46\u3057\u66F8\u304D</small><p>${desc}</p></div>
-<table><thead><tr><th class="tl">\u9805\u76EE</th><th>\u91D1\u984D</th></tr></thead><tbody>
-<tr><td class="tl">\u7A0E\u629C\u91D1\u984D</td><td>${fmt(excl)}</td></tr>
-<tr><td class="tl">\u6D88\u8CBB\u7A0E\uFF08${pct}%\uFF09</td><td>${fmt(tax)}</td></tr>
-<tr class="totrow"><td class="tl">\u5408\u8A08</td><td>${fmt(total)}</td></tr>
-</tbody></table>
-${stamp ? '<div class="inkan"><div style="display:inline-block;padding:12px 20px;border:2px dashed #ccc;color:#999;font-size:11px;margin-bottom:10px">\u53CE\u5165\u5370\u7D19</div></div>' : ''}
-<div class="ack">\u4E0A\u8A18\u6B63\u306B\u9818\u53CE\u3044\u305F\u3057\u307E\u3057\u305F</div>
-<div class="ri">
-  <div class="nm">${issuer}</div>
-  <div class="rg">\u30A4\u30F3\u30DC\u30A4\u30B5\u767B\u9332\u756A\u53F7: ${regNo}</div>
-  <div style="margin-top:16px"><div class="stamp">\u5370</div></div>
+<div class="a4">
+<div class="b5">
+  <div class="r-head">
+    <div class="r-title">\u9818\u3000\u53CE\u3000\u66F8</div>
+    <div class="r-date"><span>No. ${no}</span><span>${fmtDate}</span></div>
+  </div>
+  <div class="r-to">${cname}\u3000\u69D8</div>
+  <div class="r-amt-row">
+    <div class="r-amt-box">
+      <div class="r-amt-val">${fmt(total)}-</div>
+    </div>
+    ${stamp ? '<div class="r-stamp-box"><div class="r-stamp-frame">\u53CE\u5165\u5370\u7D19</div></div>' : '<div class="r-stamp-box"></div>'}
+  </div>
+  <div class="r-desc"><span>\u4F46</span>${desc}\u3000\u4E0A\u8A18\u6B63\u306B\u9818\u53CE\u3044\u305F\u3057\u307E\u3057\u305F\u3002</div>
+  <div class="r-bottom">
+    <div class="r-breakdown">
+      <table>
+        <tr><th>\u5185\u8A33</th><th style="text-align:right">\u91D1\u984D</th></tr>
+        <tr><td>\u5C0F\u8A08\u3000\u2460</td><td class="num">${fmt(excl)}</td></tr>
+        <tr><td>\u6D88\u8CBB\u7A0E\u7B49\u3000\u2461\uFF08\u2463\uFF0B\u2464\uFF09</td><td class="num">${fmt(tax)}</td></tr>
+        <tr class="totrow"><td>\u5408\u8A08\u3000\u2462\uFF08\u2460\uFF0B\u2461\uFF09</td><td class="num">${fmt(total)}</td></tr>
+        <tr><td>(8%)\u6D88\u8CBB\u7A0E\u5408\u8A08\u3000\u2463</td><td class="num">${fmt(tax8)}</td></tr>
+        <tr><td>(10%)\u6D88\u8CBB\u7A0E\u5408\u8A08\u3000\u2464</td><td class="num">${fmt(tax10)}</td></tr>
+      </table>
+    </div>
+    <div class="r-issuer">
+      <div class="nm">${issuer}</div>
+      <div class="rg">\u30A4\u30F3\u30DC\u30A4\u30B9\u767B\u9332\u756A\u53F7</div>
+      <div class="rg">${regNo}</div>
+      <div class="stamp">\u5370</div>
+    </div>
+  </div>
 </div>
-</div></body></html>`;
+</div>
+</body></html>`;
 
   const w = window.open('', '_blank');
   if (w) { w.document.write(h); w.document.close(); }
