@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ニチログ v2 - 建設工事管理</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { font-family: system-ui, -apple-system, sans-serif; width: 100%; height: 100%; overflow: hidden; background: #f5f5f5; }
@@ -673,11 +674,11 @@
     // === Global Config ===
     const SB = 'https://hjmtsuxrwypimscyviey.supabase.co/rest/v1';
     const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqbXRzdXhyd3lwaW1zY3l2aWV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTM3NTksImV4cCI6MjA4OTU4OTc1OX0.IRxvLQIgd_styfEwvZbOTpCUxdzHTvZHNZtZqkRGHyg';
-    const H = {
-      'apikey': SK,
-      'Authorization': `Bearer ${SK}`,
-      'Content-Type': 'application/json'
-    };
+    const sb = window.supabase.createClient(SB, SK);
+    async function getAuthToken() {
+      const { data: { session } } = await sb.auth.getSession();
+      return session?.access_token || SK;
+    }
 
     // === Global State ===
     let currentUser = null;
@@ -695,148 +696,111 @@
 
     // === Supabase Helpers ===
     async function sbGet(table, filters = '') {
-      try {
-        const url = SB + '/' + table + (filters ? '?' + filters : '');
-        const res = await fetch(url, { method: 'GET', headers: H });
-        if (!res.ok) {
-          if (res.status === 404) return [];
-          throw new Error(`${res.status}`);
-        }
-        return await res.json();
-      } catch (e) {
-        console.error('sbGet error:', e);
-        return [];
-      }
+      const token = await getAuthToken();
+      const u = `${SB}/rest/v1/${table}?${filters}`;
+      const res = await fetch(u, {
+        headers: { 'apikey': SK, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+      });
+      if (!res.ok) { console.error('sbGet error', res.status); return []; }
+      return res.json();
     }
-
     async function sbPost(table, data) {
-      const res = await fetch(SB + '/' + table, {
+      const token = await getAuthToken();
+      const res = await fetch(`${SB}/rest/v1/${table}`, {
         method: 'POST',
-        headers: {...H, 'Prefer': 'return=representation'},
+        headers: { 'apikey': SK, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
         body: JSON.stringify(data)
       });
-      if (!res.ok) { const e = await res.text(); console.error('sbPost', res.status, e); throw new Error(res.status + ':' + e); }
-      return await res.json();
+      if (!res.ok) { console.error('sbPost error', res.status); return null; }
+      const arr = await res.json(); return arr[0] || arr;
     }
-
-    async function sbPatch(table, id, data) {
-      const res = await fetch(SB + '/' + table + '?id=eq.' + id, {
+    async function sbPatch(table, filters, data) {
+      const token = await getAuthToken();
+      const res = await fetch(`${SB}/rest/v1/${table}?${filters}`, {
         method: 'PATCH',
-        headers: {...H, 'Prefer': 'return=representation'},
+        headers: { 'apikey': SK, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
         body: JSON.stringify(data)
       });
-      if (!res.ok) { const e = await res.text(); console.error('sbPatch', res.status, e); throw new Error(res.status + ':' + e); }
-      return await res.json();
+      if (!res.ok) { console.error('sbPatch error', res.status); return null; }
+      const arr = await res.json(); return arr[0] || arr;
     }
-
-    async function sbDelete(table, id) {
-      const res = await fetch(SB + '/' + table + '?id=eq.' + id, {
+    async function sbDelete(table, filters) {
+      const token = await getAuthToken();
+      const res = await fetch(`${SB}/rest/v1/${table}?${filters}`, {
         method: 'DELETE',
-        headers: H
+        headers: { 'apikey': SK, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
       });
-      if (!res.ok) { const e = await res.text(); console.error('sbDelete', res.status, e); throw new Error(res.status + ':' + e); }
-      return true;
+      return res.ok;
     }
 
     // === Auth ===
     async function doLogin() {
-      const compName = document.getElementById('loginCompany').value.trim();
-      const name = document.getElementById('loginName').value.trim();
-      const pwd = document.getElementById('loginPassword').value;
-      if (!compName || !name || !pwd) { showLoginError('全項目を入力してください'); return; }
-      const companies = await sbGet('companies', 'name=eq.' + encodeURIComponent(compName));
-      if (!companies || companies.length === 0) { showLoginError('会社が見つかりません'); return; }
-      const compId = companies[0].id;
-      const accounts = await sbGet('accounts', 'company_id=eq.' + compId + '&name=eq.' + encodeURIComponent(name));
-      if (!accounts || accounts.length === 0) { showLoginError('ユーザーが見つかりません'); return; }
-      const acct = accounts[0];
-      const hash = await sha256(pwd);
-      if (hash !== acct.password) { showLoginError('パスワードが違います'); return; }
-      company = companies[0];
-      currentUser = acct;
-      companyId = compId;
-      companyName = companies[0].name;
-      document.getElementById('loginScreen').style.display = 'none';
-      document.getElementById('appHeader').style.display = '';
-      document.getElementById('navBar').style.display = '';
-      await renderAll();
-      localStorage.setItem('nichilog_session', JSON.stringify({companyName: companyName, userName: currentUser.name, pwd: document.getElementById('loginPassword').value}));
-      switchTab(1)
+      const comp = document.getElementById('loginCompany').value.trim();
+      const nm = document.getElementById('loginName').value.trim();
+      const pw = document.getElementById('loginPassword').value;
+      if (!comp || !nm || !pw) { showLoginError('全項目を入力してください'); return; }
+      try {
+        const { data: email, error: luErr } = await sb.rpc('login_lookup', { p_company: comp, p_name: nm });
+        if (luErr || !email) { showLoginError('会社名または名前が見つかりません'); return; }
+        const { data: authData, error: authErr } = await sb.auth.signInWithPassword({ email, password: pw });
+        if (authErr) { showLoginError('パスワードが正しくありません'); return; }
+        const accs = await sbGet('accounts', 'name=eq.' + encodeURIComponent(nm));
+        if (!accs || accs.length === 0) { showLoginError('アカウント情報の取得に失敗'); return; }
+        currentUser = accs[0];
+        const comps = await sbGet('companies', 'id=eq.' + currentUser.company_id);
+        company = comps[0];
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appHeader').style.display = '';
+        document.getElementById('navBar').style.display = '';
+        await renderAll();
+      } catch(e) { showLoginError('ログインエラー: ' + e.message); }
     }
     async function doRegister() {
+      const comp = document.getElementById('regCompany').value.trim();
+      const nm = document.getElementById('regName').value.trim();
+      const pw = document.getElementById('regPassword').value;
+      const role = document.getElementById('regRole').value;
+      if (!comp || !nm || !pw) { showLoginError('全項目を入力してください'); return; }
       try {
-        const cName = document.getElementById('regCompany').value.trim();
-        const name = document.getElementById('regName').value.trim();
-        const pw = document.getElementById('regPassword').value;
-        const role = document.getElementById('regRole').value;
-        if (!cName || !name || !pw) { alert('全ての項目を入力してください'); return; }
-        const hash = await sha256(pw);
-        // Check or create company
-        const ec = await sbGet('companies', `name=eq.${encodeURIComponent(cName)}`);
-        let cid;
-        if (ec[0]) {
-          company = ec[0];
-          cid = ec[0].id;
-        } else {
-          const nc = await sbPost('companies', {name: cName});
-          if (!nc || !nc[0]) { alert('会社の作成に失敗しました'); return; }
-          company = nc[0];
-          cid = nc[0].id;
-        }
-        companyId = cid;
-        companyName = cName;
-        // Check duplicate user
-        const existingAccounts = await sbGet('accounts', `company_id=eq.${cid}&name=eq.${encodeURIComponent(name)}`);
-        if (existingAccounts.length > 0) { alert('同じ名前のアカウントが既に存在します'); return; }
-        // Create account
-        const na = await sbPost('accounts', {company_id: cid, name: name, password: hash, raw_password: password, role: role, team: ''});
-        if (!na || !na[0]) { alert('アカウントの作成に失敗しました'); return; }
-        currentUser = na[0];
-        // Login
+        const tempEmail = crypto.randomUUID() + '@nichilog.app';
+        const { data: authData, error: signUpErr } = await sb.auth.signUp({ email: tempEmail, password: pw });
+        if (signUpErr) { showLoginError('登録エラー: ' + signUpErr.message); return; }
+        const { data: regData, error: regErr } = await sb.rpc('complete_registration', {
+          p_company: comp, p_name: nm, p_role: role, p_team: ''
+        });
+        if (regErr) { showLoginError('登録完了エラー: ' + regErr.message); return; }
+        const accs = await sbGet('accounts', 'auth_uid=eq.' + authData.user.id);
+        if (!accs || accs.length === 0) { showLoginError('アカウント取得失敗'); return; }
+        currentUser = accs[0];
+        const comps = await sbGet('companies', 'id=eq.' + currentUser.company_id);
+        company = comps[0];
         document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appHeader').style.display = '';
+        document.getElementById('navBar').style.display = '';
         await renderAll();
-        switchTab(1);
-      } catch(e) {
-        alert('登録エラー: ' + e.message);
-      }
+        showToast('登録完了');
+      } catch(e) { showLoginError('登録エラー: ' + e.message); }
     }
-async function changeUserPassword(userId) {
-      const newPwd = prompt('新しいパスワードを入力');
-      if (!newPwd) return;
-      if (newPwd.length < 4) { alert('パスワードは4文字以上で入力してください'); return; }
-      const hash = await sha256(newPwd);
-      const res = await fetch(SB + '/accounts?id=eq.' + userId, {
-        method: 'PATCH',
-        headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ password: hash, raw_password: newPwd })
-      });
-      if (res.ok) {
-        alert('パスワードを変更しました');
-        members = await sbGet('accounts', 'company_id=eq.' + company.id);
-        const updatedUser = members.find(x => x.id === currentUser.id);
-        if (updatedUser) currentUser = updatedUser;
-        renderSettings();
-      } else {
-        alert('パスワードの変更に失敗しました');
-      }
+    async function changeUserPassword() {
+      const newPw = document.getElementById('newPassword')?.value;
+      if (!newPw || newPw.length < 4) { showToast('パスワードは4文字以上'); return; }
+      try {
+        const { error } = await sb.auth.updateUser({ password: newPw });
+        if (error) { showToast('変更失敗: ' + error.message); return; }
+        showToast('パスワード変更完了');
+      } catch(e) { showToast('エラー: ' + e.message); }
     }
 
-    function doLogout() {
-      if (!confirm('ログアウトしますか？')) return;
-      localStorage.removeItem('nichilog_session');
+    async function doLogout() {
+      await sb.auth.signOut();
       currentUser = null;
       company = null;
-      entries = [];
-      sites = [];
-      members = [];
-      document.getElementById('loginScreen').style.display = 'flex';
+      entries = []; sites = []; clientCompanies = []; members = [];
+      document.getElementById('loginScreen').style.display = '';
       document.getElementById('appHeader').style.display = 'none';
       document.getElementById('navBar').style.display = 'none';
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.getElementById('loginCompany').value = '';
-      document.getElementById('loginName').value = '';
+      document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
       document.getElementById('loginPassword').value = '';
-      document.getElementById('loginError').style.display = 'none';
     }
 
     function showLoginError(msg) {
@@ -2168,7 +2132,29 @@ async function changeUserPassword(userId) {
     })();
 
     </script>
+
+    // Supabase Auth session restore on page load
+    (async function restoreSession() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session && session.user) {
+        try {
+          const accs = await sbGet('accounts', 'auth_uid=eq.' + session.user.id);
+          if (accs && accs.length > 0) {
+            currentUser = accs[0];
+            const comps = await sbGet('companies', 'id=eq.' + currentUser.company_id);
+            if (comps && comps.length > 0) {
+              company = comps[0];
+              document.getElementById('loginScreen').style.display = 'none';
+              document.getElementById('appHeader').style.display = '';
+              document.getElementById('navBar').style.display = '';
+              await renderAll();
+              return;
+            }
+          }
+        } catch(e) { console.error('Session restore failed', e); }
+      }
+      document.getElementById('loginScreen').style.display = '';
+    })();
 <script src="receipt-feature.js"></script>
 </body>
 </html>
-
