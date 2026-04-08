@@ -1630,7 +1630,8 @@ async function changeUserPassword(userId) {
       });
       html += '<div style="background:#f9fafb;border-radius:12px;padding:16px;margin-top:16px;display:flex;gap:24px"><div><b>\u6708\u9593\u5408\u8A08</b></div><div>' + totalDays + '\u65E5\u7A3C\u50CD</div><div>\u00A5' + totalAmount.toLocaleString() + '</div></div>';
       html += '<div style="margin-top:12px"><button onclick="exportCSV()" style="background:#f3f4f6;border:1px solid #d1d5db;padding:8px 16px;border-radius:6px;cursor:pointer">\uD83D\uDCE5 CSV\u51FA\u529B</button></div>';
-      el.innerHTML = html;
+      el.innerHTML = html + '<div style="padding:16px;margin-top:24px;border-top:2px solid #555"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0;color:#fff">請求書一覧</h3><button class="btn btn-primary" onclick="openInvoice({})" style="padding:6px 16px;background:#2563eb;color:#fff;border:none;border-radius:4px;cursor:pointer">新規作成</button></div><table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:1px solid #555;color:#aaa"><th style="text-align:left;padding:8px">No.</th><th style="text-align:left;padding:8px">日付</th><th style="text-align:left;padding:8px">宛先</th><th style="text-align:right;padding:8px">金額</th><th style="text-align:left;padding:8px">ステータス</th><th style="text-align:left;padding:8px">操作</th></tr></thead><tbody id="invoiceListBody"></tbody></table></div>';
+      if(typeof loadInvoiceList==='function') loadInvoiceList();
     }
     function generateInvoiceFromReport(clientCompanyId) {
       const yr = viewMonth.getFullYear();
