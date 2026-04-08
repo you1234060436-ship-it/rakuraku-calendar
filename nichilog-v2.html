@@ -629,19 +629,19 @@
         var rows=document.getElementById('invDetailBody').querySelectorAll('tr');
         items.forEach(function(it,i){if(i<rows.length){var inp=rows[i].querySelectorAll('input,select');if(inp.length>=5){inp[0].value=it.name||'';inp[1].value=it.spec||'';inp[2].value=it.qty||0;inp[3].value=it.unit||'';inp[4].value=it.unitPrice||0;}}});
         if(typeof renderInvoicePreview==='function') renderInvoicePreview();
-        var toolbar=document.getElementById('invoiceFormContainer').querySelector('.toolbar-area,div');
+        var toolbar=document.getElementById('invV').querySelector('.toolbar-area,div');
         var existingSel=document.getElementById('invStatusSelect');
         if(!existingSel){
           var wrap=document.createElement('div');
           wrap.style.cssText='display:inline-block;margin-left:12px;vertical-align:middle';
           wrap.innerHTML='<label style="color:#fff;font-size:13px;margin-right:4px">\u30B9\u30C6\u30FC\u30BF\u30B9:</label><select id="invStatusSelect" style="padding:4px 8px;border-radius:4px;border:1px solid #555;background:#222;color:#fff;font-size:13px"><option value="\u4E0B\u66F8\u304D">\u672A\u78BA\u5B9A</option><option value="\u78BA\u5B9A">\u78BA\u5B9A\u6E08</option><option value="\u9001\u4ED8\u6E08\u307F">\u9001\u4ED8\u6E08</option></select>';
-          var saveBtn=document.getElementById('invoiceFormContainer').querySelector('button[onclick*="saveInvoice"]');
+          var saveBtn=document.getElementById('invV').querySelector('button[onclick*="saveInvoice"]');
           if(saveBtn)saveBtn.parentNode.insertBefore(wrap,saveBtn);
-          else{var firstDiv=document.getElementById('invoiceFormContainer').querySelector('div');if(firstDiv)firstDiv.appendChild(wrap);}
+          else{var firstDiv=document.getElementById('invV').querySelector('div');if(firstDiv)firstDiv.appendChild(wrap);}
         }
         var sel=document.getElementById('invStatusSelect');
         if(sel)sel.value=inv.status||'\u4E0B\u66F8\u304D';
-        document.getElementById('invoiceFormContainer').scrollTop=0;
+        document.getElementById('invV').scrollTop=0;
       }catch(e){console.error('previewInvoice error:',e);}
     }
     async function editInvoice(invId){previewInvoice(invId);}
