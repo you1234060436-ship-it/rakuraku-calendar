@@ -1589,7 +1589,7 @@ async function changeUserPassword(userId) {
       });
       const cc = clientCompanies.find(c => c.id == clientCompanyId);
       const ccName = cc ? cc.name : '';
-      const invNo = moStr.replace('-','') + '-' + String(clientCompanyId||0).padStart(3,'0');
+      const invNo = '001';
       const today = localDateStr(new Date());
       openInvoice({
         invNo: invNo,
