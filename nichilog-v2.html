@@ -540,15 +540,7 @@ showToast('\u4FDD\u5B58\u3057\u307E\u3057\u305F');
 if(typeof loadInvoiceList==='function')loadInvoiceList();
 }catch(e){console.error(e);showToast('\u4FDD\u5B58\u5931\u6557: '+e.message);}
 }
-function printInvoice() {
-var content = document.getElementById('invoice-print-area').outerHTML;
-var w = window.open('','_blank');
-w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>御請求書</title><style>@page{size:A4;margin:10mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Yu Mincho","游明朝",serif;font-size:10pt;width:190mm;margin:0 auto}table{width:100%;border-collapse:collapse}table th,table td{border:1px solid #333;padding:4px 8px;font-size:9pt}table th{background:#e8e8e8}h1.inv-title{background:#2563eb;color:#fff;padding:8px 16px;font-size:14pt;letter-spacing:0.8em}.right{text-align:right}.bold{font-weight:bold}.stamp{border:2px solid red;width:55px;height:55px;display:inline-block;text-align:center;line-height:55px;color:red}</style></head><body>');
-w.document.write(content);
-w.document.write('</body></html>');
-w.document.close();
-setTimeout(function(){w.print()},500);
-}
+function printInvoice() { var content = document.getElementById('invoice-print-area').outerHTML; var ov = document.getElementById('print-overlay'); if(!ov){ ov=document.createElement('div'); ov.id='print-overlay'; ov.innerHTML='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:99999;display:flex;flex-direction:column"><div style="display:flex;justify-content:flex-end;padding:8px 12px;background:#333;gap:8px"><button id=print-inv-btn style="padding:6px 16px;background:#4CAF50;color:#fff;border:none;border-radius:4px;font-size:14px">\u5370\u5237</button><button id=print-close-btn style="padding:6px 16px;background:#f44336;color:#fff;border:none;border-radius:4px;font-size:14px">\u9589\u3058\u308b</button></div><iframe id=print-iframe style="flex:1;border:none;background:#fff"></iframe></div>'; document.body.appendChild(ov); document.getElementById('print-close-btn').onclick=function(){ov.remove()}; document.getElementById('print-inv-btn').onclick=function(){try{document.getElementById('print-iframe').contentWindow.print()}catch(e){}}; } else { ov.style.display='block'; } var w=document.getElementById('print-iframe').contentWindow; w.document.open(); w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>\u5fa1\u8acb\u6c42\u66f8</title><style>@page{size:A4;margin:10mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:"Yu Mincho","游明朝",serif;font-size:10pt;width:190mm;margin:0 auto}table{width:100%;border-collapse:collapse}table th,table td{border:1px solid #333;padding:4px 8px;font-size:9pt}table th{background:#e8e8e8}h1.inv-title{background:#2563eb;color:#fff;padding:8px 16px;font-size:14pt;letter-spacing:0.8em}.right{text-align:right}.bold{font-weight:bold}.stamp{border:2px solid red;width:55px;height:55px;display:inline-block;text-align:center;line-height:55px;color:red}</style></head><body>'); w.document.write(content); w.document.write('</body></html>'); w.document.close(); }
 function closeInvoice(){
 document.getElementById('invoiceOverlay').style.display = 'none';
 }
@@ -1226,13 +1218,13 @@ se.types.forEach(t => { dayCount += t === 'half' ? 0.5 : 1; });
 totalPersonnel += dayCount;
 rows += '<tr>';
 if (idx === 0) {
-rows += '<td style="border:1px solid #333;padding:6px 4px;text-align:center;" rowspan="' + siteEntries.length + '">' + dayNum + '</td>';
-rows += '<td style="border:1px solid #333;padding:6px 4px;text-align:center;color:' + dowColor + ';" rowspan="' + siteEntries.length + '">' + dow + '</td>';
+rows += '<td style="border:1px solid #333;padding:2px;text-align:center;" rowspan="' + siteEntries.length + '">' + dayNum + '</td>';
+rows += '<td style="border:1px solid #333;padding:2px;text-align:center;color:' + dowColor + ';" rowspan="' + siteEntries.length + '">' + dow + '</td>';
 }
-rows += '<td style="border:1px solid #333;padding:6px 8px;text-align:center;">' + timeStr + '</td>';
-rows += '<td style="border:1px solid #333;padding:6px 8px;">' + se.site_name + '</td>';
-rows += '<td style="border:1px solid #333;padding:6px 8px;color:#666;">' + (se.note || '-') + '</td>';
-rows += '<td style="border:1px solid #333;padding:6px 8px;">' + personnel + '</td>';
+rows += '<td style="border:1px solid #333;padding:2px;text-align:center;">' + timeStr + '</td>';
+rows += '<td style="border:1px solid #333;padding:2px;">' + se.site_name + '</td>';
+rows += '<td style="border:1px solid #333;padding:2px;color:#666;">' + (se.note || '-') + '</td>';
+rows += '<td style="border:1px solid #333;padding:2px;">' + personnel + '</td>';
 rows += '</tr>';
 });
 });
@@ -1240,24 +1232,24 @@ if (sortedDates.length === 0) {
 rows = '<tr><td colspan="6" style="border:1px solid #333;padding:20px;text-align:center;color:#999;">\u30c7\u30fc\u30bf\u306a\u3057</td></tr>';
 }
 let phtml = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>\u5de5\u4e8b\u65e5\u5831 ' + cName + ' ' + summaryMonthNum + '\u6708</title>';
-phtml += '<style>body{font-family:sans-serif;padding:20px;margin:0;} table{width:100%;border-collapse:collapse;font-size:13px;} @media print{body{padding:10px;}}</style></head><body>';
+phtml += '<style>body{font-family:sans-serif;padding:4px;margin:0;} table{width:100%;border-collapse:collapse;font-size:9px;table-layout:fixed;} th,td{word-break:break-all;overflow-wrap:break-word;} @media print{body{padding:4px;}}</style></head><body>';
 phtml += '<div style="text-align:center;font-size:22px;font-weight:bold;margin:0 0 4px;">\u5de5\u4e8b\u65e5\u5831\uff08' + summaryMonthNum + '\u6708\uff09</div>';
 phtml += '<div style="text-align:right;padding:4px 8px;font-size:14px;margin-bottom:8px;">\u62c5\u5f53\u3000' + (company.name || '') + '\u3000' + masterName + '</div>';
 phtml += '<div style="text-align:left;padding:4px 8px;font-size:14px;margin-bottom:8px;">\u5b9b\u5148: ' + cName + '</div>';
 phtml += '<table>';
 phtml += '<thead><tr style="background:#f0f0f0;">';
-phtml += '<th style="border:1px solid #333;padding:8px 4px;text-align:center;width:30px;">\u65e5</th>';
-phtml += '<th style="border:1px solid #333;padding:8px 4px;text-align:center;width:30px;">\u66dc\u65e5</th>';
-phtml += '<th style="border:1px solid #333;padding:8px 4px;text-align:center;width:90px;">\u6642\u9593</th>';
-phtml += '<th style="border:1px solid #333;padding:8px 8px;text-align:center;">\u73fe\u5834\u540d</th>';
-phtml += '<th style="border:1px solid #333;padding:8px 8px;text-align:center;">\u4f5c\u696d\u5185\u5bb9</th>';
-phtml += '<th style="border:1px solid #333;padding:8px 8px;text-align:center;width:120px;">\u4eba\u54e1</th>';
+phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:6%;">\u65e5</th>';
+phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:7%;">\u66dc\u65e5</th>';
+phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:16%;">\u6642\u9593</th>';
+phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:32%;">\u73fe\u5834\u540d</th>';
+phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:27%;">\u4f5c\u696d\u5185\u5bb9</th>';
+phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:10%;">\u4eba\u54e1</th>';
 phtml += '</tr></thead>';
 phtml += '<tbody>' + rows + '</tbody>';
 if (sortedDates.length > 0) {
 phtml += '<tfoot><tr style="background:#f0f0f0;font-weight:bold;">';
-phtml += '<td colspan="5" style="border:1px solid #333;padding:8px;text-align:right;">\u5408\u8a08\u4eba\u5de5</td>';
-phtml += '<td style="border:1px solid #333;padding:8px;text-align:center;">' + totalPersonnel + ' \u4eba\u5de5</td>';
+phtml += '<td colspan="5" style="border:1px solid #333;padding:2px;text-align:right;">\u5408\u8a08\u4eba\u5de5</td>';
+phtml += '<td style="border:1px solid #333;padding:2px;text-align:center;">' + totalPersonnel + ' \u4eba\u5de5</td>';
 phtml += '</tr></tfoot>';
 }
 phtml += '</table></body></html>';
