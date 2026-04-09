@@ -502,7 +502,7 @@ if(prefill.invTo) document.getElementById('invTo').value = prefill.invTo;
 if(prefill.invTanto) document.getElementById('invTanto').value = prefill.invTanto;
 if(prefill.rows) { invRows = prefill.rows; }
 }
-if(companyName) document.getElementById('invFrom').value = companyName;
+if(company.name) document.getElementById('invFrom').value = company.name;
 renderInvForm();
 document.getElementById('invoiceOverlay').style.display = 'block';
 }
@@ -1727,7 +1727,7 @@ html += '</div>';
 document.getElementById('t6').innerHTML = html;
 }
 async function updateCompanyName() {
-const newName = document.getElementById('companyNameInput').value.trim();
+const newName = document.getElementById('company.nameInput').value.trim();
 if (!newName) {
 alert('会社名を入力してください');
 return;
@@ -1900,7 +1900,7 @@ const saved = localStorage.getItem('nichilog_session');
 if (saved) {
 try {
 const s = JSON.parse(saved);
-document.getElementById('loginCompany').value = s.companyName;
+document.getElementById('loginCompany').value = s.company.name;
 document.getElementById('loginName').value = s.userName;
 document.getElementById('loginPassword').value = s.pwd;
 await doLogin();
