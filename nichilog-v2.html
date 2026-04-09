@@ -118,7 +118,7 @@
 .invoice-page .issuer-area .company{font-size:11pt;font-weight:bold}
 .invoice-page .seal-space{display:inline-block;width:20mm;height:20mm;border:2px solid #c00;margin-left:5mm;vertical-align:middle}
 .receipt-page{width:128mm;min-height:182mm;background:#fff;margin:20px auto;padding:8mm 10mm;font-family:'Hiragino Mincho ProN','Yu Mincho','MS PMincho',serif;font-size:9pt;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15);position:relative}
-@media print{.no-print{display:none!important}.print-target,.print-target *{display:block!important;visibility:visible!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.print-target{position:absolute;left:0;top:0;width:100%}body{margin:0;padding:0}@page{size:A4;margin:10mm}}
+@media print{#loginScreen,#appHeader,#t1,#t2,#t3,#t4,#t5,#t6,#navBar,#addEntryModal,#dayDetailModal,#siteModal,#memberModal,.toolbar,#invForm{display:none!important}#invoiceOverlay,#receiptOverlay,#nippo-overlay{position:static!important;overflow:visible!important}#invoice-print-area,#receiptPage,#nippo-content{display:block!important;visibility:visible!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{margin:0;padding:0}@page{size:A4;margin:10mm}}
 @media screen and (max-width:800px){.invoice-page,.receipt-page{width:auto!important;min-height:auto!important;margin:8px!important;padding:8px 10px!important;font-size:11px}.invoice-page table,.receipt-page table{font-size:10px;word-break:break-all}.invoice-page h2{font-size:18px}.invoice-overlay .toolbar{padding:6px 10px;font-size:12px}}
 
     </style>
@@ -349,7 +349,7 @@
   <div id="receiptOverlay" class="invoice-overlay">
     <div class="toolbar">
       <button class="btn-close" onclick="closeReceipt()">閉じる</button>
-      <button class="btn-print" onclick="doPrint('receiptPage')">印刷 / PDF</button>
+      <button class="btn-print" onclick="window.print()">印刷 / PDF</button>
       <span style="flex:1"></span>
       <span style="font-size:13px">領収書プレビュー</span>
     </div>
@@ -357,7 +357,6 @@
   </div>
 
   <script>
-function doPrint(areaId){var el=document.getElementById(areaId);if(!el)return;var children=document.body.children;for(var i=0;i<children.length;i++){if(!children[i].contains(el)&&children[i]!==el){children[i].classList.add('no-print')}}el.classList.add('print-target');el.style.display='block';window.onafterprint=function(){for(var i=0;i<children.length;i++){children[i].classList.remove('no-print')}el.classList.remove('print-target');window.onafterprint=null};window.print()}
 
 function _d(s){return atob(s).split('').reverse().join('');}
 let invRows = [{name:'',spec:'',qty:1,unit:'人工',price:25000,taxRate:10}];
@@ -542,7 +541,7 @@ showToast('\u4FDD\u5B58\u3057\u307E\u3057\u305F');
 if(typeof loadInvoiceList==='function')loadInvoiceList();
 }catch(e){console.error(e);showToast('\u4FDD\u5B58\u5931\u6557: '+e.message);}
 }
-function printInvoice(){doPrint('invoice-print-area')}
+function printInvoice(){window.print()}
 function closeInvoice(){
 document.getElementById('invoiceOverlay').style.display = 'none';
 }
@@ -1162,7 +1161,7 @@ html += '<div style="text-align:center;padding:40px;color:#999;">\u3053\u306e\u6
 document.getElementById('t2').innerHTML = html;
 }
 async function generateKoujiNippo(clientCompanyId) {
-let _ov=document.getElementById('nippo-overlay');if(!_ov){_ov=document.createElement('div');_ov.id='nippo-overlay';_ov.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:99999;display:flex;flex-direction:column';var _bar=document.createElement('div');_bar.style.cssText='display:flex;justify-content:flex-end;padding:8px 12px;background:#333;gap:8px';_bar.innerHTML='<button onclick="doPrint(\'nippo-content\')" style="padding:6px 16px;background:#4CAF50;color:#fff;border:none;border-radius:4px;font-size:14px">\u5370\u5237</button><button onclick="document.getElementById(\'nippo-overlay\').style.display=\'none\'" style="padding:6px 16px;background:#f44336;color:#fff;border:none;border-radius:4px;font-size:14px">\u9589\u3058\u308b</button>';_ov.appendChild(_bar);var _nc=document.createElement('div');_nc.id='nippo-content';_nc.style.cssText='flex:1;overflow:auto;background:#fff;padding:4px';_ov.appendChild(_nc);document.body.appendChild(_ov)}else{_ov.style.display='flex'} var _nc=document.getElementById('nippo-content');
+let _ov=document.getElementById('nippo-overlay');if(!_ov){_ov=document.createElement('div');_ov.id='nippo-overlay';_ov.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:99999;display:flex;flex-direction:column';var _bar=document.createElement('div');_bar.style.cssText='display:flex;justify-content:flex-end;padding:8px 12px;background:#333;gap:8px';_bar.innerHTML='<button onclick="window.print()" style="padding:6px 16px;background:#4CAF50;color:#fff;border:none;border-radius:4px;font-size:14px">\u5370\u5237</button><button onclick="document.getElementById(\'nippo-overlay\').style.display=\'none\'" style="padding:6px 16px;background:#f44336;color:#fff;border:none;border-radius:4px;font-size:14px">\u9589\u3058\u308b</button>';_ov.appendChild(_bar);var _nc=document.createElement('div');_nc.id='nippo-content';_nc.style.cssText='flex:1;overflow:auto;background:#fff;padding:4px';_ov.appendChild(_nc);document.body.appendChild(_ov)}else{_ov.style.display='flex'} var _nc=document.getElementById('nippo-content');
 _nc.innerHTML='<div style="padding:40px;text-align:center;color:#666;">読み込み中...</div>'
 const ym = summaryYear + '-' + String(summaryMonthNum).padStart(2, '0');
 const dayNames = ['\u65e5','\u6708','\u706b','\u6c34','\u6728','\u91d1','\u571f'];
