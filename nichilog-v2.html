@@ -529,9 +529,9 @@ status:(document.getElementById('invStatusSelect')?document.getElementById('invS
 try{
 var res;
 if(currentInvoiceId){
-res=await fetch(SB+'/invoices?id=eq.'+currentInvoiceId,{method:'PATCH',headers:{...(await getH()),'Prefer':'return=representation'},body:JSON.stringify(payload)});
+res=await fetch(SB+'/rest/v1/invoices?id=eq.'+currentInvoiceId,{method:'PATCH',headers:{...(await getH()),'Prefer':'return=representation'},body:JSON.stringify(payload)});
 }else{
-res=await fetch(SB+'/invoices',{method:'POST',headers:{...(await getH()),'Prefer':'return=representation'},body:JSON.stringify(payload)});
+res=await fetch(SB+'/rest/v1/invoices',{method:'POST',headers:{...(await getH()),'Prefer':'return=representation'},body:JSON.stringify(payload)});
 }
 var data=await res.json();
 if(!res.ok)throw new Error(JSON.stringify(data));
@@ -558,7 +558,7 @@ function displayStatus(s){return statusMap[s]||s;}
 async function loadInvoiceList(){
 if(!currentUser)return;
 try{
-var res=await fetch(SB+'/invoices?account_id=eq.'+currentUser.id+'&order=created_at.desc',{headers:await getH()});
+var res=await fetch(SB+'/rest/v1/invoices?account_id=eq.'+currentUser.id+'&order=created_at.desc',{headers:await getH()});
 var data=await res.json();
 var container=document.getElementById('invoiceListBody');
 var emptyMsg=document.getElementById('invoiceEmptyMsg');
@@ -590,7 +590,7 @@ container.appendChild(card);
 }
 async function previewInvoice(invId){
 try{
-var res=await fetch(SB+'/invoices?id=eq.'+invId,{headers:await getH()});
+var res=await fetch(SB+'/rest/v1/invoices?id=eq.'+invId,{headers:await getH()});
 var data=await res.json();
 if(!data||data.length===0)return;
 var inv=data[0];currentInvoiceId=inv.id;
@@ -634,7 +634,7 @@ async function editInvoice(invId){previewInvoice(invId);}
 async function deleteInvoice(invId){
 if(!confirm('\u3053\u306E\u8ACB\u6C42\u66F8\u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F'))return;
 try{
-var res=await fetch(SB+'/invoices?id=eq.'+invId,{method:'DELETE',headers:H});
+var res=await fetch(SB+'/rest/v1/invoices?id=eq.'+invId,{method:'DELETE',headers:H});
 if(!res.ok){var e=await res.text();throw new Error(e);}
 showToast('\u524A\u9664\u3057\u307E\u3057\u305F');
 loadInvoiceList();
@@ -1024,7 +1024,7 @@ const memberId = parseInt(document.getElementById('editMember').value);
 const workType = document.getElementById('editWorkType').value;
 const note = document.getElementById('editNote').value;
 if (!siteId || !memberId) { alert('現場とメンバーを選択してください'); return; }
-const res = await fetch(SB + '/attendance?id=eq.' + id, {
+const res = await fetch(SB + '/rest/v1/attendance?id=eq.' + id, {
 method: 'PATCH',
 headers: { ...(await getH()), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
 body: JSON.stringify({ site_id: siteId, account_id: memberId, work_type: workType, note: note })
@@ -1060,7 +1060,7 @@ const nextM = summaryMonthNum < 12 ? summaryYear + '-' + String(summaryMonthNum 
 let aq = 'company_id=eq.' + company.id + '&work_date=gte.' + ym + '-01&work_date=lt.' + nextM + '&select=*';
 if (isWorker()) aq += '&account_id=eq.' + currentUser.id;
 const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK };
-const res = await fetch(SB + '/attendance?' + aq, { headers: H });
+const res = await fetch(SB + '/rest/v1/attendance?' + aq, { headers: await getH() });
 if (res.ok) {
 mEntries = await res.json();
 }
@@ -1181,7 +1181,7 @@ try {
 const nextM = summaryMonthNum < 12 ? summaryYear + '-' + String(summaryMonthNum + 1).padStart(2, '0') + '-01' : (summaryYear + 1) + '-01-01';
 const aq = 'company_id=eq.' + company.id + '&work_date=gte.' + ym + '-01&work_date=lt.' + nextM + '&select=*';
 const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK };
-const res = await fetch(SB + '/attendance?' + aq, { headers: H });
+const res = await fetch(SB + '/rest/v1/attendance?' + aq, { headers: await getH() });
 if (res.ok) mEntries = await res.json();
 } catch(err) {
 mEntries = entries.filter(e => e.work_date.startsWith(ym));
@@ -1499,7 +1499,7 @@ taxRate: 10
 });
 const cc = clientCompanies.find(c => c.id == clientCompanyId);
 const ccName = cc ? cc.name : '';
-var ym=new Date().toISOString().slice(0,7).replace('-','');var invNo=ym+'-001';fetch(SB+'/invoices?select=invoice_no&account_id=eq.'+currentUser.id+'&invoice_no=like.'+ym+'*&order=invoice_no.desc&limit=1',{headers:await getH()}).then(function(r){return r.json()}).then(function(data){if(data&&data[0]){var seq=parseInt(data[0].invoice_no.split('-')[1])||0;invNo=ym+'-'+String(seq+1).padStart(3,'0');}document.getElementById('invNo').value=invNo;});
+var ym=new Date().toISOString().slice(0,7).replace('-','');var invNo=ym+'-001';fetch(SB+'/rest/v1/invoices?select=invoice_no&account_id=eq.'+currentUser.id+'&invoice_no=like.'+ym+'*&order=invoice_no.desc&limit=1',{headers:await getH()}).then(function(r){return r.json()}).then(function(data){if(data&&data[0]){var seq=parseInt(data[0].invoice_no.split('-')[1])||0;invNo=ym+'-'+String(seq+1).padStart(3,'0');}document.getElementById('invNo').value=invNo;});
 const today = localDateStr(new Date());
 openInvoice({
 invNo: invNo,
@@ -1759,7 +1759,7 @@ if (!confirm('確認: すべての出勤データを削除します。本当に�
 try {
 const res = await fetch(
 `${SB}/attendance?company_id=eq.${company.id}`,
-{ method: 'DELETE', headers: H }
+{ method: 'DELETE', headers: await getH() }
 );
 if (res.ok) {
 entries = [];
@@ -1866,11 +1866,11 @@ if (!confirm('最終確認：この操作は取り消せません。本当に削
 if (!company || !company.id) { showToast('ログインしてください'); return; }
 try {
 const cid = company.id;
-await fetch(SB + '/attendance?company_id=eq.' + cid, { method: 'DELETE', headers: H });
-await fetch(SB + '/client_companies?company_id=eq.' + cid, { method: 'DELETE', headers: H });
-await fetch(SB + '/work_sites?company_id=eq.' + cid, { method: 'DELETE', headers: H });
-await fetch(SB + '/accounts?company_id=eq.' + cid, { method: 'DELETE', headers: H });
-await fetch(SB + '/companies?id=eq.' + cid, { method: 'DELETE', headers: H });
+await fetch(SB + '/rest/v1/attendance?company_id=eq.' + cid, { method: 'DELETE', headers: await getH() });
+await fetch(SB + '/rest/v1/client_companies?company_id=eq.' + cid, { method: 'DELETE', headers: await getH() });
+await fetch(SB + '/rest/v1/work_sites?company_id=eq.' + cid, { method: 'DELETE', headers: await getH() });
+await fetch(SB + '/rest/v1/accounts?company_id=eq.' + cid, { method: 'DELETE', headers: await getH() });
+await fetch(SB + '/rest/v1/companies?id=eq.' + cid, { method: 'DELETE', headers: await getH() });
 showToast('全データを削除しました。ログアウトします。');
 setTimeout(() => { logout(); }, 1500);
 } catch(e) { console.error('deleteAllData error:', e); showToast('削除エラー: ' + e.message); }
