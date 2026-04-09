@@ -558,7 +558,7 @@ function displayStatus(s){return statusMap[s]||s;}
 async function loadInvoiceList(){
 if(!currentUser)return;
 try{
-var res=await fetch(SB+'/invoices?account_id=eq.'+currentUser.id+'&order=created_at.desc',{headers:H});
+var res=await fetch(SB+'/invoices?account_id=eq.'+currentUser.id+'&order=created_at.desc',{headers:await getH()});
 var data=await res.json();
 var container=document.getElementById('invoiceListBody');
 var emptyMsg=document.getElementById('invoiceEmptyMsg');
@@ -590,7 +590,7 @@ container.appendChild(card);
 }
 async function previewInvoice(invId){
 try{
-var res=await fetch(SB+'/invoices?id=eq.'+invId,{headers:H});
+var res=await fetch(SB+'/invoices?id=eq.'+invId,{headers:await getH()});
 var data=await res.json();
 if(!data||data.length===0)return;
 var inv=data[0];currentInvoiceId=inv.id;
@@ -650,6 +650,8 @@ async function getAuthToken() {
 const { data: { session } } = await sb.auth.getSession();
 return session?.access_token || SK;
 }
+async function getH(){var t=await getAuthToken();return{'apikey':SK,'Authorization':'Bearer '+t,'Content-Type':'application/json'};}
+
 let currentUser = null;
 let company = null;
 function localDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -1497,7 +1499,7 @@ taxRate: 10
 });
 const cc = clientCompanies.find(c => c.id == clientCompanyId);
 const ccName = cc ? cc.name : '';
-var ym=new Date().toISOString().slice(0,7).replace('-','');var invNo=ym+'-001';fetch(SB+'/invoices?select=invoice_no&account_id=eq.'+currentUser.id+'&invoice_no=like.'+ym+'*&order=invoice_no.desc&limit=1',{headers:H}).then(function(r){return r.json()}).then(function(data){if(data&&data[0]){var seq=parseInt(data[0].invoice_no.split('-')[1])||0;invNo=ym+'-'+String(seq+1).padStart(3,'0');}document.getElementById('invNo').value=invNo;});
+var ym=new Date().toISOString().slice(0,7).replace('-','');var invNo=ym+'-001';fetch(SB+'/invoices?select=invoice_no&account_id=eq.'+currentUser.id+'&invoice_no=like.'+ym+'*&order=invoice_no.desc&limit=1',{headers:await getH()}).then(function(r){return r.json()}).then(function(data){if(data&&data[0]){var seq=parseInt(data[0].invoice_no.split('-')[1])||0;invNo=ym+'-'+String(seq+1).padStart(3,'0');}document.getElementById('invNo').value=invNo;});
 const today = localDateStr(new Date());
 openInvoice({
 invNo: invNo,
