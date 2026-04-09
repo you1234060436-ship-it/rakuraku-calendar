@@ -1469,7 +1469,7 @@ html += '</div>';
 el.innerHTML = html;
 if(typeof loadInvoiceList==='function') loadInvoiceList();
 }
-function generateInvoiceFromReport(clientCompanyId) {
+async function generateInvoiceFromReport(clientCompanyId) {
 const yr = viewMonth.getFullYear();
 const mo = viewMonth.getMonth();
 const moStr = yr + '-' + String(mo+1).padStart(2,'0');
