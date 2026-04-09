@@ -529,9 +529,9 @@ status:(document.getElementById('invStatusSelect')?document.getElementById('invS
 try{
 var res;
 if(currentInvoiceId){
-res=await fetch(SB+'/invoices?id=eq.'+currentInvoiceId,{method:'PATCH',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(payload)});
+res=await fetch(SB+'/invoices?id=eq.'+currentInvoiceId,{method:'PATCH',headers:{...(await getH()),'Prefer':'return=representation'},body:JSON.stringify(payload)});
 }else{
-res=await fetch(SB+'/invoices',{method:'POST',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(payload)});
+res=await fetch(SB+'/invoices',{method:'POST',headers:{...(await getH()),'Prefer':'return=representation'},body:JSON.stringify(payload)});
 }
 var data=await res.json();
 if(!res.ok)throw new Error(JSON.stringify(data));
@@ -1026,7 +1026,7 @@ const note = document.getElementById('editNote').value;
 if (!siteId || !memberId) { alert('現場とメンバーを選択してください'); return; }
 const res = await fetch(SB + '/attendance?id=eq.' + id, {
 method: 'PATCH',
-headers: { ...H, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+headers: { ...(await getH()), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
 body: JSON.stringify({ site_id: siteId, account_id: memberId, work_type: workType, note: note })
 });
 if (res.ok) {
