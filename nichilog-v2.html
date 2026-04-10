@@ -1926,15 +1926,7 @@ await doLogin();
 function nichiPrint(targetId){
   var target = document.getElementById(targetId);
   if(!target) return;
-  var style = document.createElement('style');
-  style.id = '__print_style__';
-  style.textContent = 'body>*{display:none!important}#'+targetId+'{display:block!important;position:static!important;width:100%!important;height:auto!important;overflow:visible!important;}#'+targetId+' *{display:block!important;visibility:visible!important}';
-  document.head.appendChild(style);
-  window.print();
-  setTimeout(function(){
-    var s = document.getElementById('__print_style__');
-    if(s) s.parentNode.removeChild(s);
-  }, 1000);
+  window.flutter_inappwebview.callHandler('nichiPrint', target.outerHTML);
 }
 </script>
 <script src="receipt-feature.js"></script>
