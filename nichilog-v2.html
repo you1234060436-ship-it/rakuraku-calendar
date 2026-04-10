@@ -1926,10 +1926,15 @@ await doLogin();
 function nichiPrint(targetId){
   var target = document.getElementById(targetId);
   if(!target) return;
-  var orig = document.body.innerHTML;
-  document.body.innerHTML = '<div style="width:100%;padding:10mm;box-sizing:border-box">'+target.innerHTML+'</div>';
+  var style = document.createElement('style');
+  style.id = '__print_style__';
+  style.textContent = 'body>*{display:none!important}#'+targetId+'{display:block!important;position:static!important;width:100%!important;height:auto!important;overflow:visible!important;}#'+targetId+' *{display:block!important;visibility:visible!important}';
+  document.head.appendChild(style);
   window.print();
-  document.body.innerHTML = orig;
+  setTimeout(function(){
+    var s = document.getElementById('__print_style__');
+    if(s) s.parentNode.removeChild(s);
+  }, 1000);
 }
 </script>
 <script src="receipt-feature.js"></script>
