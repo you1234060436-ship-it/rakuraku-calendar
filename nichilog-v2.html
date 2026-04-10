@@ -1246,7 +1246,7 @@ phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:3
 phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:27%;">\u4f5c\u696d\u5185\u5bb9</th>';
 phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:10%;">\u4eba\u54e1</th>';
 phtml += '</tr></thead>';
-phtml += (function(){ var emptyRow = '<tr>'; for(var c=0;c<6;c++) emptyRow += '<td style="border:1px solid #333;padding:6px 4px;">&nbsp;</td>'; emptyRow += '</tr>'; var dataRows = rows; var rowCount = (rows.match(/<tr/g)||[]).length; var target = 28; for(var i=rowCount; i<target; i++) dataRows += emptyRow; return '<tbody>' + dataRows + '</tbody>'; })();
+phtml += (function(){ var emptyRow = '<tr>'; for(var c=0;c<6;c++) emptyRow += '<td style="border:1px solid #333;padding:6px 4px;">&nbsp;</td>'; emptyRow += '</tr>'; var dataRows = rows; var rowCount = (rows.match(/<tr/g)||[]).length; var target = 15; for(var i=rowCount; i<target; i++) dataRows += emptyRow; return '<tbody>' + dataRows + '</tbody>'; })();
 if (sortedDates.length > 0) {
 phtml += '<tfoot><tr style="background:#f0f0f0;font-weight:bold;">';
 phtml += '<td colspan="5" style="border:1px solid #333;padding:2px;text-align:right;">\u5408\u8a08\u4eba\u5de5</td>';
