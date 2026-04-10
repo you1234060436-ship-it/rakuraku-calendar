@@ -349,7 +349,7 @@
   <div id="receiptOverlay" class="invoice-overlay">
     <div class="toolbar">
       <button class="btn-close" onclick="closeReceipt()">閉じる</button>
-      <button class="btn-print" onclick="window.print()">印刷 / PDF</button>
+      <button class="btn-print" onclick="nichiPrint('receiptPage')">印刷 / PDF</button>
       <span style="flex:1"></span>
       <span style="font-size:13px">領収書プレビュー</span>
     </div>
@@ -541,7 +541,7 @@ showToast('\u4FDD\u5B58\u3057\u307E\u3057\u305F');
 if(typeof loadInvoiceList==='function')loadInvoiceList();
 }catch(e){console.error(e);showToast('\u4FDD\u5B58\u5931\u6557: '+e.message);}
 }
-function printInvoice(){window.print()}
+function printInvoice(){nichiPrint('invoice-print-area')}
 function closeInvoice(){
 document.getElementById('invoiceOverlay').style.display = 'none';
 }
@@ -1161,7 +1161,7 @@ html += '<div style="text-align:center;padding:40px;color:#999;">\u3053\u306e\u6
 document.getElementById('t2').innerHTML = html;
 }
 async function generateKoujiNippo(clientCompanyId) {
-let _ov=document.getElementById('nippo-overlay');if(!_ov){_ov=document.createElement('div');_ov.id='nippo-overlay';_ov.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:99999;display:flex;flex-direction:column';var _bar=document.createElement('div');_bar.style.cssText='display:flex;justify-content:flex-end;padding:8px 12px;background:#333;gap:8px';_bar.innerHTML='<button onclick="window.print()" style="padding:6px 16px;background:#4CAF50;color:#fff;border:none;border-radius:4px;font-size:14px">\u5370\u5237</button><button onclick="document.getElementById(\'nippo-overlay\').style.display=\'none\'" style="padding:6px 16px;background:#f44336;color:#fff;border:none;border-radius:4px;font-size:14px">\u9589\u3058\u308b</button>';_ov.appendChild(_bar);var _nc=document.createElement('div');_nc.id='nippo-content';_nc.style.cssText='flex:1;overflow:auto;background:#fff;padding:4px';_ov.appendChild(_nc);document.body.appendChild(_ov)}else{_ov.style.display='flex'} var _nc=document.getElementById('nippo-content');
+let _ov=document.getElementById('nippo-overlay');if(!_ov){_ov=document.createElement('div');_ov.id='nippo-overlay';_ov.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:99999;display:flex;flex-direction:column';var _bar=document.createElement('div');_bar.style.cssText='display:flex;justify-content:flex-end;padding:8px 12px;background:#333;gap:8px';_bar.innerHTML='<button onclick="nichiPrint(\'nippo-content\')" style="padding:6px 16px;background:#4CAF50;color:#fff;border:none;border-radius:4px;font-size:14px">\u5370\u5237</button><button onclick="document.getElementById(\'nippo-overlay\').style.display=\'none\'" style="padding:6px 16px;background:#f44336;color:#fff;border:none;border-radius:4px;font-size:14px">\u9589\u3058\u308b</button>';_ov.appendChild(_bar);var _nc=document.createElement('div');_nc.id='nippo-content';_nc.style.cssText='flex:1;overflow:auto;background:#fff;padding:4px';_ov.appendChild(_nc);document.body.appendChild(_ov)}else{_ov.style.display='flex'} var _nc=document.getElementById('nippo-content');
 _nc.innerHTML='<div style="padding:40px;text-align:center;color:#666;">読み込み中...</div>'
 const ym = summaryYear + '-' + String(summaryMonthNum).padStart(2, '0');
 const dayNames = ['\u65e5','\u6708','\u706b','\u6c34','\u6728','\u91d1','\u571f'];
@@ -1923,6 +1923,15 @@ await doLogin();
       }
       document.getElementById('loginScreen').style.display = '';
     })();
+function nichiPrint(targetId){
+  var target = document.getElementById(targetId);
+  if(!target) return;
+  var orig = document.body.innerHTML;
+  document.body.innerHTML = target.outerHTML;
+  window.print();
+  document.body.innerHTML = orig;
+  window.location.reload();
+}
 </script>
 <script src="receipt-feature.js"></script>
 </body>
