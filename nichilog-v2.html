@@ -1927,10 +1927,9 @@ function nichiPrint(targetId){
   var target = document.getElementById(targetId);
   if(!target) return;
   var orig = document.body.innerHTML;
-  document.body.innerHTML = target.outerHTML;
+  document.body.innerHTML = '<div style="width:100%;padding:10mm;box-sizing:border-box">'+target.innerHTML+'</div>';
   window.print();
   document.body.innerHTML = orig;
-  window.location.reload();
 }
 </script>
 <script src="receipt-feature.js"></script>
