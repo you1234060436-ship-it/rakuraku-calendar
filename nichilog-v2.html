@@ -1926,7 +1926,7 @@ await doLogin();
 function nichiPrint(targetId){
   var target = document.getElementById(targetId);
   if(!target) return;
-  location.href = 'nichiprint://' + encodeURIComponent(target.outerHTML);
+  window.webkit.messageHandlers.nichiPrint.postMessage(target.outerHTML);
 }
 </script>
 <script src="receipt-feature.js"></script>
