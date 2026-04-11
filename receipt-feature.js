@@ -200,12 +200,9 @@ function closeRcptPreview() {
 
 function printRcpt() {
   if (!window._rcptPrintBody) return;
-  const css = [...document.querySelectorAll('#receipt-feature-styles')].map(s => s.textContent).join('');
-  const w = window.open('', '_blank');
-  if (w) {
-    w.document.write('<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><title>\u9818\u53CE\u66F8</title><style>@page{size:A4;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{background:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh}' + css + '</style></head><body>' + window._rcptPrintBody + '<script>window.onload=function(){window.print()}<\/script></body></html>');
-    w.document.close();
-  }
+  const blob = new Blob([window._rcptPrintBody], {type: 'text/html'});
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
 }
 
 function saveRcpt() {
