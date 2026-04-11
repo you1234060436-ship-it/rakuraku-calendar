@@ -1935,21 +1935,21 @@ await doLogin();
       }
       document.getElementById('loginScreen').style.display = '';
     })();
-async function nichiPrint(id) {
-  await openWithSession();
+function openWithSession() {
+  sb.auth.getSession().then(function(result) {
+    var session = result.data.session;
+    var url = 'https://nichilog.vercel.app/nichilog-v2.html';
+    if (session) {
+      url += '#access_token=' + session.access_token
+           + '&refresh_token=' + session.refresh_token
+           + '&token_type=bearer';
+    }
+    window.open(url, '_blank');
+  });
 }
 
-async function openWithSession() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) {
-    window.open('https://nichilog.vercel.app/nichilog-v2.html', '_blank');
-    return;
-  }
-  const url = 'https://nichilog.vercel.app/nichilog-v2.html'
-    + '#access_token=' + session.access_token
-    + '&refresh_token=' + session.refresh_token
-    + '&token_type=bearer';
-  window.open(url, '_blank');
+function nichiPrint(id) {
+  openWithSession();
 }
 </script>
 <script src="receipt-feature.js"></script>
