@@ -198,8 +198,12 @@ function closeRcptPreview() {
   document.getElementById('receiptFormOverlay').classList.add('show');
 }
 
-function printRcpt() {
-  window.open('https://nichilog.vercel.app/nichilog-v2.html', '_blank');
+async function printRcpt() {
+  if (typeof openWithSession === 'function') {
+    await openWithSession();
+  } else {
+    window.open('https://nichilog.vercel.app/nichilog-v2.html', '_blank');
+  }
 }
 
 function saveRcpt() {
