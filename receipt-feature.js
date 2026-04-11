@@ -199,14 +199,7 @@ function closeRcptPreview() {
 }
 
 function printRcpt() {
-  if (!window._rcptPrintBody) return;
-  const bar = document.querySelector('#receiptPreviewOverlay .rcpt-preview-bar');
-  if (bar) bar.style.display = 'none';
-  window.addEventListener('afterprint', function handler() {
-    window.removeEventListener('afterprint', handler);
-    if (bar) bar.style.display = '';
-  });
-  window.print();
+  window.open('https://nichilog.vercel.app/nichilog-v2.html', '_blank');
 }
 
 function saveRcpt() {
