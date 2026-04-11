@@ -200,9 +200,9 @@ function closeRcptPreview() {
 
 function printRcpt() {
   if (!window._rcptPrintBody) return;
-  const blob = new Blob([window._rcptPrintBody], {type: 'text/html; charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
+  if (window.flutter_inappwebview) {
+    window.flutter_inappwebview.callHandler('printHtml', window._rcptPrintBody);
+  }
 }
 
 function saveRcpt() {
