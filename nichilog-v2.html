@@ -1908,6 +1908,13 @@ await doLogin();
 
     // Supabase Auth session restore on page load
     (async function restoreSession() {
+      const _h = new URLSearchParams(window.location.hash.slice(1));
+      const _at = _h.get('access_token');
+      const _rt = _h.get('refresh_token');
+      if (_at && _rt) {
+        await sb.auth.setSession({ access_token: _at, refresh_token: _rt });
+        history.replaceState(null, '', window.location.pathname);
+      }
       const { data: { session } } = await sb.auth.getSession();
       if (session && session.user) {
         try {
@@ -1928,8 +1935,21 @@ await doLogin();
       }
       document.getElementById('loginScreen').style.display = '';
     })();
-function nichiPrint(id) {
-  window.open('https://nichilog.vercel.app/nichilog-v2.html', '_blank');
+async function nichiPrint(id) {
+  await openWithSession();
+}
+
+async function openWithSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    window.open('https://nichilog.vercel.app/nichilog-v2.html', '_blank');
+    return;
+  }
+  const url = 'https://nichilog.vercel.app/nichilog-v2.html'
+    + '#access_token=' + session.access_token
+    + '&refresh_token=' + session.refresh_token
+    + '&token_type=bearer';
+  window.open(url, '_blank');
 }
 </script>
 <script src="receipt-feature.js"></script>
