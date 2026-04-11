@@ -1926,7 +1926,8 @@ await doLogin();
 function nichiPrint(targetId){
   var target = document.getElementById(targetId);
   if(!target) return;
-  window.webkit.messageHandlers.nichiPrint.postMessage(target.outerHTML);
+  window.__printQueue = window.__printQueue || [];
+  window.__printQueue.push(encodeURIComponent(target.outerHTML));
 }
 </script>
 <script src="receipt-feature.js"></script>
