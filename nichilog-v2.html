@@ -1924,9 +1924,7 @@ await doLogin();
       document.getElementById('loginScreen').style.display = '';
     })();
 function nichiPrint(targetId){
-  var target = document.getElementById(targetId);
-  if(!target) return;
-  window.print();
+  window.open('https://nichilog.vercel.app/nichilog-v2.html', '_blank');
 }
 </script>
 <script src="receipt-feature.js"></script>
