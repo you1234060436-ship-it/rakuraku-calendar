@@ -200,9 +200,13 @@ function closeRcptPreview() {
 
 function printRcpt() {
   if (!window._rcptPrintBody) return;
-  if (window.flutter_inappwebview) {
-    window.flutter_inappwebview.callHandler('printHtml', window._rcptPrintBody);
-  }
+  const bar = document.querySelector('#receiptPreviewOverlay .rcpt-preview-bar');
+  if (bar) bar.style.display = 'none';
+  window.addEventListener('afterprint', function handler() {
+    window.removeEventListener('afterprint', handler);
+    if (bar) bar.style.display = '';
+  });
+  window.print();
 }
 
 function saveRcpt() {
