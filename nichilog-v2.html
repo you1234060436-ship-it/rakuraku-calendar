@@ -1926,8 +1926,7 @@ await doLogin();
 function nichiPrint(targetId){
   var target = document.getElementById(targetId);
   if(!target) return;
-  window.__printQueue = window.__printQueue || [];
-  window.__printQueue.push(encodeURIComponent(target.outerHTML));
+  window.flutter_inappwebview.callHandler('nichiPrint', encodeURIComponent(target.outerHTML));
 }
 </script>
 <script src="receipt-feature.js"></script>
