@@ -198,7 +198,7 @@ function closeRcptPreview() {
   document.getElementById('receiptFormOverlay').classList.add('show');
 }
 
-async function printRcpt(){const element=document.getElementById('receiptPreviewOverlay');if(!element)return;const printArea=element.querySelector('#receiptPage')||element;const canvas=await html2canvas(printArea,{scale:2,useCORS:true,backgroundColor:'#ffffff'});const imgData=canvas.toDataURL('image/jpeg',0.95);const{jsPDF}=window.jspdf;const pdf=new jsPDF('p','mm','a4');const pageWidth=pdf.internal.pageSize.getWidth();const pageHeight=pdf.internal.pageSize.getHeight();const imgWidth=pageWidth;const imgHeight=(canvas.height*pageWidth)/canvas.width;pdf.addImage(imgData,'JPEG',0,0,imgWidth,Math.min(imgHeight,pageHeight));pdf.save('nichilog_receipt_'+new Date().toISOString().slice(0,10)+'.pdf');}
+async function printRcpt(){const overlay=document.getElementById('receiptPreviewOverlay');if(!overlay)return;const printArea=overlay.querySelector('#receiptPage')||overlay;const canvas=await html2canvas(printArea,{scale:2,useCORS:true,backgroundColor:'#ffffff'});const imgData=canvas.toDataURL('image/jpeg',0.95);const{jsPDF}=window.jspdf;const pdf=new jsPDF('p','mm','a4');const pageWidth=pdf.internal.pageSize.getWidth();const pageHeight=pdf.internal.pageSize.getHeight();const imgHeight=(canvas.height*pageWidth)/canvas.width;pdf.addImage(imgData,'JPEG',0,0,pageWidth,Math.min(imgHeight,pageHeight));showPdfPreview(pdf,'nichilog_receipt_'+new Date().toISOString().slice(0,10)+'.pdf');}
 
 function saveRcpt() {
   const cid = document.getElementById('rcptClient').value;
