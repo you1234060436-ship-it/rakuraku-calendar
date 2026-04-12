@@ -198,11 +198,9 @@ function closeRcptPreview() {
   document.getElementById('receiptFormOverlay').classList.add('show');
 }
 
-async function printRcpt() {
+function printRcpt() {
   if (typeof openWithSession === 'function') {
-    await openWithSession();
-  } else {
-    window.open('https://nichilog.vercel.app/nichilog-v2.html', '_blank');
+    openWithSession('receipt');
   }
 }
 
