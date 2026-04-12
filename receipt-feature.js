@@ -184,7 +184,7 @@ function previewRcpt() {
     document.body.appendChild(ov);
   }
   ov.innerHTML = '<div class="rcpt-preview-wrap">'
-    + '<div class="rcpt-preview-bar"><button class="bp" onclick="printRcpt()">\u5370\u5237 / PDF</button><button class="bc" onclick="closeRcptPreview()">\u9589\u3058\u308B</button></div>'
+    + '<div class="rcpt-preview-bar"><button class="bp" onclick="printRcpt()">PDF\u4F5C\u6210</button><button class="bc" onclick="closeRcptPreview()">\u9589\u3058\u308B</button></div>'
     + body + '</div>';
   ov.classList.add('show');
   // Hide the form overlay while preview is showing
