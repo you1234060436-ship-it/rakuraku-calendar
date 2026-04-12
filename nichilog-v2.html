@@ -1958,7 +1958,7 @@ function openWithSession(page) {
     if (window.flutter_inappwebview) {
       window.flutter_inappwebview.callHandler('openExternal', url);
     } else {
-      window.open(url, '_blank');
+      window.print();
     }
   });
 }
@@ -1967,7 +1967,11 @@ function nichiPrint(id) {
   var page = '';
   if (id === 'invoice-print-area') page = 'invoice';
   if (id === 'nippo-content') page = 'nippo';
-  openWithSession(page);
+  if (window.flutter_inappwebview) {
+    openWithSession(page);
+  } else {
+    window.print();
+  }
 }
 </script>
 <script src="receipt-feature.js"></script>
