@@ -1915,6 +1915,14 @@ await doLogin();
         await sb.auth.setSession({ access_token: _at, refresh_token: _rt });
         history.replaceState(null, '', window.location.pathname);
       }
+      const page = hash.get('page');
+      if (page === 'invoice') {
+        setTimeout(function() { if(typeof showTab==='function') showTab('t5'); if(typeof showInvoice==='function') showInvoice(); }, 800);
+      } else if (page === 'nippo') {
+        setTimeout(function() { if(typeof showTab==='function') showTab('t2'); if(typeof generateKoujiNippo==='function') generateKoujiNippo(); }, 800);
+      } else if (page === 'receipt') {
+        setTimeout(function() { if(typeof showTab==='function') showTab('t5'); if(typeof openReceiptForm==='function') openReceiptForm(); }, 800);
+      }
       const { data: { session } } = await sb.auth.getSession();
       if (session && session.user) {
         try {
@@ -1935,15 +1943,18 @@ await doLogin();
       }
       document.getElementById('loginScreen').style.display = '';
     })();
-function openWithSession() {
+function openWithSession(page) {
   sb.auth.getSession().then(function(result) {
     var session = result.data.session;
-    var url = 'https://nichilog.vercel.app/nichilog-v2.html';
+    var base = 'https://nichilog.vercel.app/nichilog-v2.html';
+    var fragment = '';
     if (session) {
-      url += '#access_token=' + session.access_token
-           + '&refresh_token=' + session.refresh_token
-           + '&token_type=bearer';
+      fragment = '#access_token=' + session.access_token
+               + '&refresh_token=' + session.refresh_token
+               + '&token_type=bearer';
     }
+    var pageParam = page ? '&page=' + page : '';
+    var url = base + fragment + pageParam;
     if (window.flutter_inappwebview) {
       window.flutter_inappwebview.callHandler('openExternal', url);
     } else {
@@ -1953,7 +1964,10 @@ function openWithSession() {
 }
 
 function nichiPrint(id) {
-  openWithSession();
+  var page = '';
+  if (id === 'invoice-print-area') page = 'invoice';
+  if (id === 'nippo-content') page = 'nippo';
+  openWithSession(page);
 }
 </script>
 <script src="receipt-feature.js"></script>
