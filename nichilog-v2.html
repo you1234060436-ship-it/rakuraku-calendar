@@ -123,6 +123,8 @@
 
     
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -1959,16 +1961,7 @@ function openWithSession(page) {
   });
 }
 
-function nichiPrint(id) {
-  var page = '';
-  if (id === 'invoice-print-area') page = 'invoice';
-  if (id === 'nippo-content') page = 'nippo';
-  if (window.flutter_inappwebview) {
-    openWithSession(page);
-  } else {
-    window.print();
-  }
-}
+async function nichiPrint(id){const element=document.getElementById(id);if(!element)return;const canvas=await html2canvas(element,{scale:2,useCORS:true,backgroundColor:'#ffffff'});const imgData=canvas.toDataURL('image/jpeg',0.95);const{jsPDF}=window.jspdf;const pdf=new jsPDF('p','mm','a4');const pageWidth=pdf.internal.pageSize.getWidth();const pageHeight=pdf.internal.pageSize.getHeight();const imgWidth=pageWidth;const imgHeight=(canvas.height*pageWidth)/canvas.width;if(imgHeight<=pageHeight){pdf.addImage(imgData,'JPEG',0,0,imgWidth,imgHeight);}else{let y=0;while(y<canvas.height){const pageCanvas=document.createElement('canvas');pageCanvas.width=canvas.width;pageCanvas.height=Math.min(canvas.height-y,(pageHeight*canvas.width)/pageWidth);const ctx=pageCanvas.getContext('2d');ctx.drawImage(canvas,0,-y);const pageImg=pageCanvas.toDataURL('image/jpeg',0.95);if(y>0)pdf.addPage();pdf.addImage(pageImg,'JPEG',0,0,pageWidth,pageHeight);y+=pageCanvas.height;}}pdf.save('nichilog_'+id+'_'+new Date().toISOString().slice(0,10)+'.pdf');}
 </script>
 <script src="receipt-feature.js"></script>
 </body>
