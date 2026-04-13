@@ -215,8 +215,16 @@ async function printRcpt() {
     const imgHeight = (canvas.height * pageWidth) / canvas.width;
     const pdf = new jsPDF('p', 'mm', [pageWidth, Math.max(imgHeight, 297)]);
     pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, imgHeight);
-    const blobUrl = URL.createObjectURL(pdf.output('blob'));
-    window.open(blobUrl);
+    if (typeof showPdfPreview === 'function') {
+      showPdfPreview(pdf, 'nichilog_receipt_' + new Date().toISOString().slice(0,10) + '.pdf');
+    } else {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(pdf.output('blob'));
+      a.download = 'nichilog_receipt_' + new Date().toISOString().slice(0,10) + '.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   } catch(e) {
     console.error('printRcpt error:', e);
   }
