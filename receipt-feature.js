@@ -199,16 +199,19 @@ function closeRcptPreview() {
 }
 
 async function printRcpt() {
+  alert('printRcpt\u958B\u59CB');
   try {
     const overlay = document.getElementById('receiptPreviewOverlay');
-    if (!overlay) { alert('\u9818\u53ce\u66f8\u30d7\u30ec\u30d3\u30e5\u30fc\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093'); return; }
-    if (typeof html2canvas === 'undefined') { alert('html2canvas\u672a\u8aad\u307f\u8fbc\u307f'); return; }
-    if (typeof window.jspdf === 'undefined') { alert('jsPDF\u672a\u8aad\u307f\u8fbc\u307f'); return; }
+    if (!overlay) { alert('\u9818\u53CE\u66F8\u30D7\u30EC\u30D3\u30E5\u30FC\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093'); return; }
+    if (typeof html2canvas === 'undefined') { alert('html2canvas\u672A\u8AAD\u307F\u8FBC\u307F'); return; }
+    if (typeof window.jspdf === 'undefined') { alert('jsPDF\u672A\u8AAD\u307F\u8FBC\u307F'); return; }
+    alert('\u30AD\u30E3\u30D7\u30C1\u30E3\u958B\u59CB');
     const canvas = await html2canvas(overlay, {
       scale: 2,
       useCORS: true,
       backgroundColor: '#ffffff'
     });
+    alert('\u30AD\u30E3\u30D7\u30C1\u30E3\u5B8C\u4E86: ' + canvas.width + 'x' + canvas.height);
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const { jsPDF } = window.jspdf;
     const pageWidth = 210;
@@ -217,12 +220,10 @@ async function printRcpt() {
     pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, imgHeight);
     const blobUrl = URL.createObjectURL(pdf.output('blob'));
     const filename = 'nichilog_receipt_' + new Date().toISOString().slice(0,10) + '.pdf';
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = filename;
-    a.click();
+    alert('PDF\u751F\u6210\u5B8C\u4E86\u3002window.open\u3067\u958B\u304D\u307E\u3059');
+    window.open(blobUrl);
   } catch(e) {
-    alert('\u30a8\u30e9\u30fc: ' + e.message);
+    alert('\u30A8\u30E9\u30FC: ' + e.message);
   }
 }
 
