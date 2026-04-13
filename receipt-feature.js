@@ -83,7 +83,7 @@ function initReceiptFeature() {
       <div class="rcpt-fg"><label>\u30a4\u30f3\u30dc\u30a4\u30b9\u767b\u9332\u756a\u53f7</label><input type="text" id="rcptRegNo" readonly></div>
       <div class="rcpt-actions">
         <button class="rcpt-btn-cancel" onclick="closeRcptForm()">\u30ad\u30e3\u30f3\u30bb\u30eb</button>
-        <button class="rcpt-btn-preview" onclick="previewRcpt()">PDF\u4F5C\u6210</button>
+        <button class="rcpt-btn-preview" onclick="previewRcpt()">\u30D7\u30EC\u30D3\u30E5\u30FC\u78BA\u8A8D</button>
         <button class="rcpt-btn-save" onclick="saveRcpt()">\u4fdd\u5b58</button>
       </div>
     </div>`;
