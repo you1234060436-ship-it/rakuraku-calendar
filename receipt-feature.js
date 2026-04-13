@@ -198,7 +198,33 @@ function closeRcptPreview() {
   document.getElementById('receiptFormOverlay').classList.add('show');
 }
 
-async function printRcpt(){const overlay=document.getElementById('receiptPreviewOverlay');if(!overlay)return;const printArea=document.getElementById('receiptPage')||overlay;const canvas=await html2canvas(printArea,{scale:2,useCORS:true,backgroundColor:'#ffffff'});const imgData=canvas.toDataURL('image/jpeg',0.95);const{jsPDF}=window.jspdf;const pageWidth=210;const imgHeight=(canvas.height*pageWidth)/canvas.width;const pdf=new jsPDF('p','mm',[pageWidth,Math.max(imgHeight,297)]);pdf.addImage(imgData,'JPEG',0,0,pageWidth,imgHeight);if(typeof showPdfPreview==='function'){showPdfPreview(pdf,'nichilog_receipt_'+new Date().toISOString().slice(0,10)+'.pdf');}}
+async function printRcpt() {
+  try {
+    const overlay = document.getElementById('receiptPreviewOverlay');
+    if (!overlay) { alert('\u9818\u53ce\u66f8\u30d7\u30ec\u30d3\u30e5\u30fc\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093'); return; }
+    if (typeof html2canvas === 'undefined') { alert('html2canvas\u672a\u8aad\u307f\u8fbc\u307f'); return; }
+    if (typeof window.jspdf === 'undefined') { alert('jsPDF\u672a\u8aad\u307f\u8fbc\u307f'); return; }
+    const canvas = await html2canvas(overlay, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff'
+    });
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    const { jsPDF } = window.jspdf;
+    const pageWidth = 210;
+    const imgHeight = (canvas.height * pageWidth) / canvas.width;
+    const pdf = new jsPDF('p', 'mm', [pageWidth, Math.max(imgHeight, 297)]);
+    pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, imgHeight);
+    const blobUrl = URL.createObjectURL(pdf.output('blob'));
+    const filename = 'nichilog_receipt_' + new Date().toISOString().slice(0,10) + '.pdf';
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    a.click();
+  } catch(e) {
+    alert('\u30a8\u30e9\u30fc: ' + e.message);
+  }
+}
 
 function saveRcpt() {
   const cid = document.getElementById('rcptClient').value;
