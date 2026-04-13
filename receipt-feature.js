@@ -202,13 +202,14 @@ async function printRcpt() {
   try {
     const overlay = document.getElementById('receiptPreviewOverlay');
     if (!overlay) return;
-    if (typeof html2canvas === 'undefined') return;
-    if (typeof window.jspdf === 'undefined') return;
+    const bar = overlay.querySelector('.rcpt-preview-bar');
+    if (bar) bar.style.display = 'none';
     const canvas = await html2canvas(overlay, {
       scale: 2,
       useCORS: true,
       backgroundColor: '#ffffff'
     });
+    if (bar) bar.style.display = '';
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const { jsPDF } = window.jspdf;
     const pageWidth = 210;
@@ -217,16 +218,9 @@ async function printRcpt() {
     pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, imgHeight);
     if (typeof showPdfPreview === 'function') {
       showPdfPreview(pdf, 'nichilog_receipt_' + new Date().toISOString().slice(0,10) + '.pdf');
-    } else {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(pdf.output('blob'));
-      a.download = 'nichilog_receipt_' + new Date().toISOString().slice(0,10) + '.pdf';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
     }
   } catch(e) {
-    console.error('printRcpt error:', e);
+    console.error(e);
   }
 }
 
