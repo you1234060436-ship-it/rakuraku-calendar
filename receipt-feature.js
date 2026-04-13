@@ -199,19 +199,16 @@ function closeRcptPreview() {
 }
 
 async function printRcpt() {
-  alert('printRcpt\u958B\u59CB');
   try {
     const overlay = document.getElementById('receiptPreviewOverlay');
-    if (!overlay) { alert('\u9818\u53CE\u66F8\u30D7\u30EC\u30D3\u30E5\u30FC\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093'); return; }
-    if (typeof html2canvas === 'undefined') { alert('html2canvas\u672A\u8AAD\u307F\u8FBC\u307F'); return; }
-    if (typeof window.jspdf === 'undefined') { alert('jsPDF\u672A\u8AAD\u307F\u8FBC\u307F'); return; }
-    alert('\u30AD\u30E3\u30D7\u30C1\u30E3\u958B\u59CB');
+    if (!overlay) return;
+    if (typeof html2canvas === 'undefined') return;
+    if (typeof window.jspdf === 'undefined') return;
     const canvas = await html2canvas(overlay, {
       scale: 2,
       useCORS: true,
       backgroundColor: '#ffffff'
     });
-    alert('\u30AD\u30E3\u30D7\u30C1\u30E3\u5B8C\u4E86: ' + canvas.width + 'x' + canvas.height);
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const { jsPDF } = window.jspdf;
     const pageWidth = 210;
@@ -219,11 +216,9 @@ async function printRcpt() {
     const pdf = new jsPDF('p', 'mm', [pageWidth, Math.max(imgHeight, 297)]);
     pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, imgHeight);
     const blobUrl = URL.createObjectURL(pdf.output('blob'));
-    const filename = 'nichilog_receipt_' + new Date().toISOString().slice(0,10) + '.pdf';
-    alert('PDF\u751F\u6210\u5B8C\u4E86\u3002window.open\u3067\u958B\u304D\u307E\u3059');
     window.open(blobUrl);
   } catch(e) {
-    alert('\u30A8\u30E9\u30FC: ' + e.message);
+    console.error('printRcpt error:', e);
   }
 }
 
