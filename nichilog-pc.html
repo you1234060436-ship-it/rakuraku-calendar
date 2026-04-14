@@ -6,6 +6,7 @@
 <title>ニチログ - 日誌管理システム</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 * {
 margin: 0;
@@ -560,8 +561,12 @@ justify-content: space-between;
 <div class="login-subtitle">日誌管理システム</div>
 <form id="loginForm">
 <div class="form-group">
-<label for="loginEmail">メールアドレス</label>
-<input type="email" id="loginEmail" placeholder="your@email.com" required>
+<label for="loginCompany">会社名</label>
+<input type="text" id="loginCompany" placeholder="会社名を入力" required>
+</div>
+<div class="form-group">
+<label for="loginName">名前</label>
+<input type="text" id="loginName" placeholder="名前を入力" required>
 </div>
 <div class="form-group">
 <label for="loginPassword">パスワード</label>
@@ -599,7 +604,7 @@ justify-content: space-between;
 <span>カレンダー</span>
 </div>
 <div class="nav-item" onclick="switchSection('summary')">
-<span class="nav-icon">💊</span>
+<span class="nav-icon">📊</span>
 <span>サマリー</span>
 </div>
 <div class="nav-item" onclick="switchSection('work-sites')">
@@ -655,7 +660,7 @@ justify-content: space-between;
 </select>
 </div>
 <div class="form-group">
-<label>労働時間（時間）</label>
+<label>労僝時間（時間）</label>
 <input type="number" id="modalHours" step="0.5" min="0" max="24">
 </div>
 <div class="form-group">
@@ -691,7 +696,7 @@ justify-content: space-between;
 </div>
 </div>
 <div class="card">
-<h3 style="margin-bottom: 16px;">日別労働時間</h3>
+<h3 style="margin-bottom: 16px;">日別労僝時間</h3>
 <div id="chartContainer" style="height: 300px; display: flex; align-items: flex-end; gap: 4px; padding: 16px 0;">
 </div>
 </div>
@@ -857,7 +862,7 @@ justify-content: space-between;
 <input type="text" id="receiptClient" required>
 </div>
 <div class="form-group">
-<label for="receiptDescription">説明</label>
+<label for="receiptDescription">謬明</label>
 <textarea id="receiptDescription"></textarea>
 </div>
 <div class="btn-group">
@@ -918,21 +923,24 @@ const SB = 'b2MuZXNhYmFwdXMueWVpdnljc21pcHl3cnhxc3RtamgvLzpzcHR0aA==';
 const SK = 'Z3lIR1JrcVp0Wk5IWnZUSHpkeFVDcFRPYlp2d0VmeXRzX2RnSVFMdnhSSS4wWE8xY1RPNFVUT3pRak02SUNjNFZtSXNrVE4zTVRNd1F6TjNFak9pUVhZcEpDTGk0MmJ1Rm1JNklTWnM5bWNpd2lJNVZXYTJsM1l6MVdhd2wzZHloWGR6UlhicWhtSTZJaVpsSm5Jc0lTWnpGbVloQlhkekppT2lNM2NwSnllLjlKQ1ZYcGtJNklDYzVSbklzSWlNMUl6VUlKaU9pY0diaEp5ZQ==';
 const SUPABASE_URL = _d(SB);
 const SUPABASE_KEY = _d(SK);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, storageKey: 'nichilog-auth' } });
 // Global State
 let currentUser = null;
 let currentCompany = null;
+let company = null;
 let selectedDate = null;
 let currentMonth = new Date();
 let attendanceData = {};
 // Auth Token Management
-function getAuthToken() {
-return sessionStorage.getItem('authToken');
+async function getAuthToken() {
+const { data } = await sb.auth.getSession();
+return data?.session?.access_token || null;
 }
 function setAuthToken(token) {
-sessionStorage.setItem('authToken', token);
+// managed by Supabase JS client
 }
 function clearAuthToken() {
-sessionStorage.removeItem('authToken');
+sb.auth.signOut();
 }
 // Supabase Fetch Helper
 async function sbFetch(table, params = '', method = 'GET', body = null) {
@@ -941,7 +949,7 @@ const headers = {
 'apikey': SUPABASE_KEY,
 'Content-Type': 'application/json'
 };
-const token = getAuthToken();
+const token = await getAuthToken();
 if (token) {
 headers['Authorization'] = `Bearer ${token}`;
 }
@@ -966,31 +974,33 @@ throw error;
 }
 }
 // Login Handler
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-e.preventDefault();
-const email = document.getElementById('loginEmail').value;
-const password = document.getElementById('loginPassword').value;
-try {
-const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-method: 'POST',
-headers: {
-'apikey': SUPABASE_KEY,
-'Content-Type': 'application/json'
-},
-body: JSON.stringify({ email, password })
-});
-if (!response.ok) {
-throw new Error('ログイン失敗');
-}
-const data = await response.json();
-setAuthToken(data.access_token);
-currentUser = { email, id: data.user.id };
-showLoginScreen(false);
-loadInitialData();
-} catch (error) {
-document.getElementById('loginError').textContent = 'メールアドレスまたはパスワードが正しくありません';
+function showLoginError(msg) {
+document.getElementById('loginError').textContent = msg;
 document.getElementById('loginError').style.display = 'block';
 }
+async function doLogin() {
+const comp = document.getElementById('loginCompany').value.trim();
+const nm = document.getElementById('loginName').value.trim();
+const pw = document.getElementById('loginPassword').value;
+if (!comp || !nm || !pw) { showLoginError('全ての項目を入力してください'); return; }
+try {
+const { data: email, error: luErr } = await sb.rpc('login_lookup', { p_company: comp, p_name: nm });
+if (luErr || !email) { showLoginError('会社名または名前が見つかりません'); return; }
+const { data: authData, error: authErr } = await sb.auth.signInWithPassword({ email, password: pw });
+if (authErr) { showLoginError('パスワードが正しくありません'); return; }
+const accs = await sbFetch('accounts', 'name=eq.' + encodeURIComponent(nm));
+if (!accs || accs.length === 0) { showLoginError('アカウントが見つかりません'); return; }
+currentUser = accs[0];
+const comps = await sbFetch('companies', 'id=eq.' + currentUser.company_id);
+currentCompany = comps[0];
+company = comps[0];
+showLoginScreen(false);
+loadInitialData();
+} catch(e) { showLoginError('ログインエラー: ' + e.message); }
+}
+document.getElementById('loginForm').addEventListener('submit', (e) => {
+e.preventDefault();
+doLogin();
 });
 // UI Navigation
 function switchSection(sectionName) {
@@ -1411,19 +1421,23 @@ function logout() {
 if (confirm('ログアウトしますか？')) {
 clearAuthToken();
 currentUser = null;
-document.getElementById('loginEmail').value = '';
+document.getElementById('loginCompany').value = '';
+document.getElementById('loginName').value = '';
 document.getElementById('loginPassword').value = '';
 document.getElementById('loginError').style.display = 'none';
 showLoginScreen(true);
 }
 }
 // Initialize
-if (getAuthToken()) {
+(async () => {
+const token = await getAuthToken();
+if (token) {
 showLoginScreen(false);
 loadInitialData();
 } else {
 showLoginScreen(true);
 }
+})();
 </script>
 </body>
 </html>
