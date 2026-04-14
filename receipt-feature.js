@@ -216,7 +216,9 @@ async function printRcpt() {
     const imgHeight = (canvas.height * pageWidth) / canvas.width;
     const pdf = new jsPDF('p', 'mm', [pageWidth, Math.max(imgHeight, 297)]);
     pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, imgHeight);
-    pdf.save('nichilog_receipt_' + new Date().toISOString().slice(0,10) + '.pdf');
+    if (typeof showPdfPreview === 'function') {
+      showPdfPreview(pdf, 'nichilog_receipt_' + new Date().toISOString().slice(0,10) + '.pdf');
+    }
   } catch(e) {
     console.error(e);
   }
