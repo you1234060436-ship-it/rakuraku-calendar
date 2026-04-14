@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ニチログ - 日誌管理システム</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+:root {
+--primary-color: #1976D2;
+--accent-color: #1565C0;
+--background: #f5f5f5;
+--surface: #ffffff;
+--text-primary: #212121;
+--text-secondary: #757575;
+--border-color: #e0e0e0;
+--success: #4caf50;
+--warning: #ff9800;
+--error: #f44336;
+}
+body {
+font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+background-color: var(--background);
+color: var(--text-primary);
+line-height: 1.5;
+}
+/* Layout */
+.app-container {
+display: flex;
+height: 100vh;
+flex-direction: column;
+}
+.header {
+background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+color: white;
+padding: 16px 24px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+position: relative;
+z-index: 100;
+}
+.header-left {
+display: flex;
+align-items: center;
+gap: 24px;
+flex: 1;
+}
+.logo {
+font-size: 24px;
+font-weight: bold;
+letter-spacing: -0.5px;
+}
+.company-name {
+font-size: 14px;
+opacity: 0.9;
+font-weight: 500;
+}
+.header-right {
+display: flex;
+align-items: center;
+gap: 16px;
+}
+.user-info {
+text-align: right;
+font-size: 13px;
+}
+.user-email {
+opacity: 0.85;
+}
+.logout-btn {
+background: rgba(255, 255, 255, 0.2);
+border: 1px solid rgba(255, 255, 255, 0.3);
+color: white;
+padding: 8px 16px;
+border-radius: 4px;
+cursor: pointer;
+font-size: 13px;
+font-weight: 500;
+transition: all 0.3s ease;
+}
+.logout-btn:hover {
+background: rgba(255, 255, 255, 0.3);
+}
+.main-content {
+display: flex;
+flex: 1;
+overflow: hidden;
+}
+/* Sidebar */
+.sidebar {
+width: 240px;
+background: var(--surface);
+border-right: 1px solid var(--border-color);
+overflow-y: auto;
+padding: 16px 0;
+box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+}
+.nav-item {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 12px 20px;
+cursor: pointer;
+color: var(--text-secondary);
+transition: all 0.3s ease;
+border-left: 3px solid transparent;
+font-size: 14px;
+font-weight: 500;
+}
+.nav-item:hover {
+background-color: rgba(25, 118, 210, 0.05);
+color: var(--primary-color);
+}
+.nav-item.active {
+background-color: rgba(25, 118, 210, 0.1);
+color: var(--primary-color);
+border-left-color: var(--primary-color);
+}
+.nav-icon {
+font-size: 18px;
+}
+/* Content Area */
+.content {
+flex: 1;
+overflow-y: auto;
+padding: 32px;
+background-color: var(--background);
+}
+.section {
+display: none;
+}
+.section.active {
+display: block;
+animation: fadeIn 0.3s ease-in;
+}
+@keyframes fadeIn {
+from { opacity: 0; }
+to { opacity: 1; }
+}
+.section-title {
+font-size: 28px;
+font-weight: 600;
+margin-bottom: 24px;
+color: var(--text-primary);
+}
+/* Cards */
+.card {
+background: var(--surface);
+border-radius: 8px;
+padding: 24px;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+margin-bottom: 16px;
+transition: box-shadow 0.3s ease;
+}
+.card:hover {
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+/* Forms */
+.form-group {
+margin-bottom: 20px;
+}
+label {
+display: block;
+font-weight: 500;
+margin-bottom: 8px;
+font-size: 13px;
+color: var(--text-primary);
+}
+input, select, textarea {
+width: 100%;
+padding: 10px 12px;
+border: 1px solid var(--border-color);
+border-radius: 4px;
+font-size: 14px;
+font-family: inherit;
+transition: border-color 0.3s ease;
+}
+input:focus, select:focus, textarea:focus {
+outline: none;
+border-color: var(--primary-color);
+box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+textarea {
+resize: vertical;
+min-height: 100px;
+}
+/* Buttons */
+.btn {
+padding: 10px 20px;
+border: none;
+border-radius: 4px;
+font-size: 14px;
+font-weight: 500;
+cursor: pointer;
+transition: all 0.3s ease;
+display: inline-flex;
+align-items: center;
+gap: 8px;
+}
+.btn-primary {
+background-color: var(--primary-color);
+color: white;
+}
+.btn-primary:hover {
+background-color: var(--accent-color);
+box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+.btn-secondary {
+background-color: transparent;
+color: var(--primary-color);
+border: 1px solid var(--primary-color);
+}
+.btn-secondary:hover {
+background-color: rgba(25, 118, 210, 0.05);
+}
+.btn-danger {
+background-color: var(--error);
+color: white;
+}
+.btn-danger:hover {
+background-color: #d32f2f;
+}
+.btn-small {
+padding: 6px 12px;
+font-size: 12px;
+}
+.btn-group {
+display: flex;
+gap: 8px;
+margin-top: 16px;
+}
+/* Tables */
+.table {
+width: 100%;
+border-collapse: collapse;
+margin-top: 16px;
+}
+.table th {
+background-color: rgba(25, 118, 210, 0.05);
+padding: 12px;
+text-align: left;
+font-weight: 600;
+font-size: 13px;
+color: var(--text-primary);
+border-bottom: 2px solid var(--border-color);
+}
+.table td {
+padding: 12px;
+border-bottom: 1px solid var(--border-color);
+}
+.table tr:hover {
+background-color: rgba(0, 0, 0, 0.02);
+}
+/* Stats Cards */
+.stats-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+gap: 16px;
+margin-bottom: 32px;
+}
+.stat-card {
+background: var(--surface);
+border-radius: 8px;
+padding: 20px;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.stat-label {
+font-size: 12px;
+font-weight: 600;
+color: var(--text-secondary);
+text-transform: uppercase;
+letter-spacing: 0.5px;
+margin-bottom: 8px;
+}
+.stat-value {
+font-size: 32px;
+font-weight: bold;
+color: var(--primary-color);
+}
+/* Calendar */
+.calendar {
+background: var(--surface);
+border-radius: 8px;
+padding: 20px;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.calendar-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 20px;
+}
+.calendar-nav {
+display: flex;
+gap: 8px;
+}
+.calendar-nav button {
+width: 36px;
+height: 36px;
+border: 1px solid var(--border-color);
+background: var(--surface);
+border-radius: 4px;
+cursor: pointer;
+font-weight: 600;
+transition: all 0.3s ease;
+}
+.calendar-nav button:hover {
+border-color: var(--primary-color);
+color: var(--primary-color);
+}
+.calendar-month-year {
+font-size: 18px;
+font-weight: 600;
+}
+.calendar-grid {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+gap: 8px;
+}
+.day-header {
+text-align: center;
+font-weight: 600;
+font-size: 12px;
+color: var(--text-secondary);
+padding: 10px;
+}
+.calendar-day {
+aspect-ratio: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 4px;
+cursor: pointer;
+border: 1px solid var(--border-color);
+transition: all 0.3s ease;
+font-size: 13px;
+font-weight: 500;
+position: relative;
+background: var(--surface);
+}
+.calendar-day:hover {
+border-color: var(--primary-color);
+}
+.calendar-day.other-month {
+opacity: 0.3;
+}
+.calendar-day.today {
+background: rgba(25, 118, 210, 0.1);
+border-color: var(--primary-color);
+}
+.calendar-day.attended {
+background: rgba(76, 175, 80, 0.1);
+border-color: var(--success);
+}
+.calendar-day.absent {
+background: rgba(158, 158, 158, 0.1);
+border-color: #9e9e9e;
+}
+.calendar-day.late {
+background: rgba(255, 152, 0, 0.1);
+border-color: var(--warning);
+}
+/* Modal */
+.modal {
+display: none;
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: rgba(0, 0, 0, 0.5);
+z-index: 200;
+align-items: center;
+justify-content: center;
+}
+.modal.active {
+display: flex;
+}
+.modal-content {
+background: var(--surface);
+border-radius: 8px;
+padding: 32px;
+width: 90%;
+max-width: 500px;
+max-height: 80vh;
+overflow-y: auto;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+.modal-header {
+font-size: 20px;
+font-weight: 600;
+margin-bottom: 20px;
+color: var(--text-primary);
+}
+.modal-close {
+position: absolute;
+top: 16px;
+right: 16px;
+background: none;
+border: none;
+font-size: 24px;
+cursor: pointer;
+color: var(--text-secondary);
+}
+/* Notifications */
+.toast {
+position: fixed;
+bottom: 24px;
+right: 24px;
+background: var(--text-primary);
+color: white;
+padding: 16px 24px;
+border-radius: 4px;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+z-index: 300;
+animation: slideIn 0.3s ease;
+}
+.toast.success {
+background: var(--success);
+}
+.toast.error {
+background: var(--error);
+}
+.toast.warning {
+background: var(--warning);
+}
+@keyframes slideIn {
+from {
+transform: translateX(400px);
+opacity: 0;
+}
+to {
+transform: translateX(0);
+opacity: 1;
+}
+}
+/* Loading Spinner */
+.spinner {
+display: inline-block;
+width: 20px;
+height: 20px;
+border: 3px solid rgba(25, 118, 210, 0.2);
+border-radius: 50%;
+border-top-color: var(--primary-color);
+animation: spin 1s linear infinite;
+}
+@keyframes spin {
+to { transform: rotate(360deg); }
+}
+/* Empty State */
+.empty-state {
+text-align: center;
+padding: 60px 20px;
+color: var(--text-secondary);
+}
+.empty-state-icon {
+font-size: 48px;
+margin-bottom: 16px;
+opacity: 0.5;
+}
+.empty-state-title {
+font-size: 18px;
+font-weight: 600;
+color: var(--text-primary);
+margin-bottom: 8px;
+}
+.empty-state-description {
+font-size: 14px;
+margin-bottom: 24px;
+}
+/* Login Screen */
+.login-container {
+display: flex;
+align-items: center;
+justify-content: center;
+height: 100vh;
+background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+}
+.login-box {
+background: white;
+border-radius: 8px;
+padding: 40px;
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+width: 100%;
+max-width: 400px;
+}
+.login-title {
+font-size: 28px;
+font-weight: bold;
+text-align: center;
+margin-bottom: 8px;
+color: var(--primary-color);
+}
+.login-subtitle {
+text-align: center;
+color: var(--text-secondary);
+margin-bottom: 32px;
+font-size: 14px;
+}
+/* Responsive */
+@media (max-width: 768px) {
+.main-content {
+flex-direction: column;
+}
+.sidebar {
+width: 100%;
+border-right: none;
+border-bottom: 1px solid var(--border-color);
+padding: 0;
+display: flex;
+overflow-x: auto;
+}
+.nav-item {
+flex-direction: column;
+gap: 4px;
+padding: 12px 16px;
+font-size: 11px;
+border-left: none;
+border-bottom: 3px solid transparent;
+text-align: center;
+}
+.nav-item.active {
+border-left: none;
+border-bottom-color: var(--primary-color);
+}
+.content {
+padding: 16px;
+}
+.section-title {
+font-size: 20px;
+}
+.stats-grid {
+grid-template-columns: repeat(2, 1fr);
+}
+.header {
+flex-direction: column;
+gap: 12px;
+align-items: flex-start;
+}
+.header-left, .header-right {
+width: 100%;
+justify-content: space-between;
+}
+}
+</style>
+</head>
+<body>
+<!-- Login Screen -->
+<div id="loginScreen" class="login-container">
+<div class="login-box">
+<div class="login-title">ニチログ</div>
+<div class="login-subtitle">日誌管理システム</div>
+<form id="loginForm">
+<div class="form-group">
+<label for="loginEmail">メールアドレス</label>
+<input type="email" id="loginEmail" placeholder="your@email.com" required>
+</div>
+<div class="form-group">
+<label for="loginPassword">パスワード</label>
+<input type="password" id="loginPassword" placeholder="••••••••" required>
+</div>
+<button type="submit" class="btn btn-primary" style="width: 100%;">
+ログイン
+</button>
+</form>
+<div id="loginError" style="color: var(--error); margin-top: 16px; text-align: center; display: none;"></div>
+</div>
+</div>
+<!-- Main App -->
+<div id="appScreen" style="display: none;" class="app-container">
+<!-- Header -->
+<div class="header">
+<div class="header-left">
+<div class="logo">📋 ニチログ</div>
+<div class="company-name" id="companyDisplay">会社名</div>
+</div>
+<div class="header-right">
+<div class="user-info">
+<div id="userNameDisplay">ユーザー</div>
+<div class="user-email" id="userEmailDisplay">user@example.com</div>
+</div>
+<button class="logout-btn" onclick="logout()">ログアウト</button>
+</div>
+</div>
+<!-- Main Content -->
+<div class="main-content">
+<!-- Sidebar Navigation -->
+<div class="sidebar">
+<div class="nav-item active" onclick="switchSection('calendar')">
+<span class="nav-icon">📅</span>
+<span>カレンダー</span>
+</div>
+<div class="nav-item" onclick="switchSection('summary')">
+<span class="nav-icon">💊</span>
+<span>サマリー</span>
+</div>
+<div class="nav-item" onclick="switchSection('work-sites')">
+<span class="nav-icon">🏗️</span>
+<span>現場</span>
+</div>
+<div class="nav-item" onclick="switchSection('members')">
+<span class="nav-icon">👥</span>
+<span>メンバー</span>
+</div>
+<div class="nav-item" onclick="switchSection('invoices')">
+<span class="nav-icon">📄</span>
+<span>請求書</span>
+</div>
+<div class="nav-item" onclick="switchSection('receipts')">
+<span class="nav-icon">🧾</span>
+<span>領収書</span>
+</div>
+<div class="nav-item" onclick="switchSection('settings')">
+<span class="nav-icon">⚙️</span>
+<span>設定</span>
+</div>
+</div>
+<!-- Content Area -->
+<div class="content">
+<!-- Calendar Section -->
+<div id="section-calendar" class="section active">
+<div class="section-title">カレンダー</div>
+<div class="calendar">
+<div class="calendar-header">
+<div class="calendar-nav">
+<button onclick="prevMonth()">&lt;</button>
+<button onclick="nextMonth()">&gt;</button>
+</div>
+<div class="calendar-month-year" id="calendarMonthYear">2026年4月</div>
+</div>
+<div class="calendar-grid" id="calendarGrid"></div>
+</div>
+<div id="dayDetailModal" class="modal">
+<div class="modal-content">
+<button class="modal-close" onclick="closeDayModal()">&times;</button>
+<div class="modal-header">日付の詳細</div>
+<div class="form-group">
+<label>日付</label>
+<input type="text" id="modalDate" readonly>
+</div>
+<div class="form-group">
+<label>ステータス</label>
+<select id="modalStatus">
+<option value="出勤">出勤</option>
+<option value="休み">休み</option>
+<option value="遅刻">遅刻</option>
+</select>
+</div>
+<div class="form-group">
+<label>労働時間（時間）</label>
+<input type="number" id="modalHours" step="0.5" min="0" max="24">
+</div>
+<div class="form-group">
+<label>メモ</label>
+<textarea id="modalMemo"></textarea>
+</div>
+<div class="btn-group">
+<button class="btn btn-primary" onclick="saveDayAttendance()">保存</button>
+<button class="btn btn-secondary" onclick="closeDayModal()">キャンセル</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Summary Section -->
+<div id="section-summary" class="section">
+<div class="section-title">サマリー</div>
+<div class="stats-grid">
+<div class="stat-card">
+<div class="stat-label">出勤日数</div>
+<div class="stat-value" id="statAttended">0</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">休日数</div>
+<div class="stat-value" id="statAbsent">0</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">遅刻回数</div>
+<div class="stat-value" id="statLate">0</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">総労働時間</div>
+<div class="stat-value" id="statTotalHours">0h</div>
+</div>
+</div>
+<div class="card">
+<h3 style="margin-bottom: 16px;">日別労働時間</h3>
+<div id="chartContainer" style="height: 300px; display: flex; align-items: flex-end; gap: 4px; padding: 16px 0;">
+</div>
+</div>
+</div>
+<!-- Work Sites Section -->
+<div id="section-work-sites" class="section">
+<div class="section-title">現場</div>
+<button class="btn btn-primary" onclick="openWorkSiteForm(null)">新規追加</button>
+<table class="table" id="workSitesTable">
+<thead>
+<tr>
+<th>名称</th>
+<th>住所</th>
+<th>顧客企業</th>
+<th>操作</th>
+</tr>
+</thead>
+<tbody id="workSitesBody">
+</tbody>
+</table>
+<div id="workSiteModal" class="modal">
+<div class="modal-content">
+<button class="modal-close" onclick="closeWorkSiteModal()">&times;</button>
+<div class="modal-header">現場情報</div>
+<form id="workSiteForm" onsubmit="saveWorkSite(event)">
+<input type="hidden" id="workSiteId">
+<div class="form-group">
+<label for="workSiteName">現場名</label>
+<input type="text" id="workSiteName" required>
+</div>
+<div class="form-group">
+<label for="workSiteAddress">住所</label>
+<input type="text" id="workSiteAddress">
+</div>
+<div class="form-group">
+<label for="workSiteClient">顧客企業</label>
+<select id="workSiteClient">
+<option value="">選択してください</option>
+</select>
+</div>
+<div class="btn-group">
+<button type="submit" class="btn btn-primary">保存</button>
+<button type="button" class="btn btn-secondary" onclick="closeWorkSiteModal()">キャンセル</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!-- Members Section -->
+<div id="section-members" class="section">
+<div class="section-title">メンバー</div>
+<button class="btn btn-primary" onclick="openMemberForm(null)">新規追加</button>
+<table class="table" id="membersTable">
+<thead>
+<tr>
+<th>名前</th>
+<th>メールアドレス</th>
+<th>役職</th>
+<th>操作</th>
+</tr>
+</thead>
+<tbody id="membersBody">
+</tbody>
+</table>
+<div id="memberModal" class="modal">
+<div class="modal-content">
+<button class="modal-close" onclick="closeMemberModal()">&times;</button>
+<div class="modal-header">メンバー情報</div>
+<form id="memberForm" onsubmit="saveMember(event)">
+<input type="hidden" id="memberId">
+<div class="form-group">
+<label for="memberName">名前</label>
+<input type="text" id="memberName" required>
+</div>
+<div class="form-group">
+<label for="memberEmail">メールアドレス</label>
+<input type="email" id="memberEmail" required>
+</div>
+<div class="form-group">
+<label for="memberRole">役職</label>
+<input type="text" id="memberRole">
+</div>
+<div class="btn-group">
+<button type="submit" class="btn btn-primary">保存</button>
+<button type="button" class="btn btn-secondary" onclick="closeMemberModal()">キャンセル</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!-- Invoices Section -->
+<div id="section-invoices" class="section">
+<div class="section-title">請求書</div>
+<button class="btn btn-primary" onclick="openInvoiceForm()">新規作成</button>
+<div id="invoicesList">
+<div class="empty-state">
+<div class="empty-state-icon">📄</div>
+<div class="empty-state-title">請求書がありません</div>
+<div class="empty-state-description">新規作成から請求書を作成できます</div>
+</div>
+</div>
+<div id="invoiceModal" class="modal">
+<div class="modal-content">
+<button class="modal-close" onclick="closeInvoiceModal()">&times;</button>
+<div class="modal-header">請求書作成</div>
+<form id="invoiceForm" onsubmit="saveInvoice(event)">
+<div class="form-group">
+<label for="invoiceNumber">請求書番号</label>
+<input type="text" id="invoiceNumber" required>
+</div>
+<div class="form-group">
+<label for="invoiceClient">顧客企業</label>
+<select id="invoiceClient" required>
+<option value="">選択してください</option>
+</select>
+</div>
+<div class="form-group">
+<label for="invoiceAmount">金額</label>
+<input type="number" id="invoiceAmount" step="0.01" min="0" required>
+</div>
+<div class="form-group">
+<label for="invoiceDate">請求日</label>
+<input type="date" id="invoiceDate" required>
+</div>
+<div class="form-group">
+<label for="invoiceNotes">備考</label>
+<textarea id="invoiceNotes"></textarea>
+</div>
+<div class="btn-group">
+<button type="submit" class="btn btn-primary">保存</button>
+<button type="button" class="btn btn-secondary" onclick="closeInvoiceModal()">キャンセル</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!-- Receipts Section -->
+<div id="section-receipts" class="section">
+<div class="section-title">領収書</div>
+<button class="btn btn-primary" onclick="openReceiptForm()">新規作成</button>
+<div id="receiptsList">
+<div class="empty-state">
+<div class="empty-state-icon">🧾</div>
+<div class="empty-state-title">領収書がありません</div>
+<div class="empty-state-description">新規作成から領収書を発行できます</div>
+</div>
+</div>
+<div id="receiptModal" class="modal">
+<div class="modal-content">
+<button class="modal-close" onclick="closeReceiptModal()">&times;</button>
+<div class="modal-header">領収書作成</div>
+<form id="receiptForm" onsubmit="saveReceipt(event)">
+<div class="form-group">
+<label for="receiptAmount">金額</label>
+<input type="number" id="receiptAmount" step="0.01" min="0" required>
+</div>
+<div class="form-group">
+<label for="receiptDate">日付</label>
+<input type="date" id="receiptDate" required>
+</div>
+<div class="form-group">
+<label for="receiptClient">顧客</label>
+<input type="text" id="receiptClient" required>
+</div>
+<div class="form-group">
+<label for="receiptDescription">説明</label>
+<textarea id="receiptDescription"></textarea>
+</div>
+<div class="btn-group">
+<button type="submit" class="btn btn-primary">作成</button>
+<button type="button" class="btn btn-secondary" onclick="closeReceiptModal()">キャンセル</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!-- Settings Section -->
+<div id="section-settings" class="section">
+<div class="section-title">設定</div>
+<div class="card">
+<h3 style="margin-bottom: 20px;">企業情報</h3>
+<form id="companyForm" onsubmit="saveCompanyInfo(event)">
+<div class="form-group">
+<label for="companyNameInput">会社名</label>
+<input type="text" id="companyNameInput" required>
+</div>
+<div class="form-group">
+<label for="companyAddress">所在地</label>
+<input type="text" id="companyAddress">
+</div>
+<div class="form-group">
+<label for="companyPhone">電話番号</label>
+<input type="tel" id="companyPhone">
+</div>
+<div class="btn-group">
+<button type="submit" class="btn btn-primary">保存</button>
+</div>
+</form>
+</div>
+<div class="card" style="margin-top: 24px;">
+<h3 style="margin-bottom: 20px;">ユーザープロフィール</h3>
+<form id="profileForm" onsubmit="saveProfile(event)">
+<div class="form-group">
+<label for="profileName">名前</label>
+<input type="text" id="profileName" required>
+</div>
+<div class="form-group">
+<label for="profileEmail">メールアドレス</label>
+<input type="email" id="profileEmail" readonly>
+</div>
+<div class="btn-group">
+<button type="submit" class="btn btn-primary">保存</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+// Supabase Configuration
+function _d(s) { return atob(s).split('').reverse().join(''); }
+const SB = 'b2MuZXNhYmFwdXMueWVpdnljc21pcHl3cnhxc3RtamgvLzpzcHR0aA==';
+const SK = 'Z3lIR1JrcVp0Wk5IWnZUSHpkeFVDcFRPYlp2d0VmeXRzX2RnSVFMdnhSSS4wWE8xY1RPNFVUT3pRak02SUNjNFZtSXNrVE4zTVRNd1F6TjNFak9pUVhZcEpDTGk0MmJ1Rm1JNklTWnM5bWNpd2lJNVZXYTJsM1l6MVdhd2wzZHloWGR6UlhicWhtSTZJaVpsSm5Jc0lTWnpGbVloQlhkekppT2lNM2NwSnllLjlKQ1ZYcGtJNklDYzVSbklzSWlNMUl6VUlKaU9pY0diaEp5ZQ==';
+const SUPABASE_URL = _d(SB);
+const SUPABASE_KEY = _d(SK);
+// Global State
+let currentUser = null;
+let currentCompany = null;
+let selectedDate = null;
+let currentMonth = new Date();
+let attendanceData = {};
+// Auth Token Management
+function getAuthToken() {
+return sessionStorage.getItem('authToken');
+}
+function setAuthToken(token) {
+sessionStorage.setItem('authToken', token);
+}
+function clearAuthToken() {
+sessionStorage.removeItem('authToken');
+}
+// Supabase Fetch Helper
+async function sbFetch(table, params = '', method = 'GET', body = null) {
+try {
+const headers = {
+'apikey': SUPABASE_KEY,
+'Content-Type': 'application/json'
+};
+const token = getAuthToken();
+if (token) {
+headers['Authorization'] = `Bearer ${token}`;
+}
+let url = `${SUPABASE_URL}/rest/v1/${table}`;
+if (params) url += `?${params}`;
+const options = {
+method,
+headers
+};
+if (body) {
+options.body = JSON.stringify(body);
+}
+const response = await fetch(url, options);
+if (!response.ok) {
+throw new Error(`API Error: ${response.status}`);
+}
+return await response.json();
+} catch (error) {
+console.error('Supabase Fetch Error:', error);
+showToast('エラーが発生しました', 'error');
+throw error;
+}
+}
+// Login Handler
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+e.preventDefault();
+const email = document.getElementById('loginEmail').value;
+const password = document.getElementById('loginPassword').value;
+try {
+const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+method: 'POST',
+headers: {
+'apikey': SUPABASE_KEY,
+'Content-Type': 'application/json'
+},
+body: JSON.stringify({ email, password })
+});
+if (!response.ok) {
+throw new Error('ログイン失敗');
+}
+const data = await response.json();
+setAuthToken(data.access_token);
+currentUser = { email, id: data.user.id };
+showLoginScreen(false);
+loadInitialData();
+} catch (error) {
+document.getElementById('loginError').textContent = 'メールアドレスまたはパスワードが正しくありません';
+document.getElementById('loginError').style.display = 'block';
+}
+});
+// UI Navigation
+function switchSection(sectionName) {
+document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+const section = document.getElementById(`section-${sectionName}`);
+if (section) section.classList.add('active');
+event.target.closest('.nav-item').classList.add('active');
+// Load section-specific data
+if (sectionName === 'calendar') loadCalendar();
+else if (sectionName === 'summary') loadSummary();
+else if (sectionName === 'work-sites') loadWorkSites();
+else if (sectionName === 'members') loadMembers();
+}
+// Calendar Functions
+function loadCalendar() {
+renderCalendar();
+}
+function renderCalendar() {
+const year = currentMonth.getFullYear();
+const month = currentMonth.getMonth();
+const firstDay = new Date(year, month, 1);
+const lastDay = new Date(year, month + 1, 0);
+const daysInMonth = lastDay.getDate();
+const startingDayOfWeek = firstDay.getDay();
+document.getElementById('calendarMonthYear').textContent = `${year}年${month + 1}月`;
+const calendarGrid = document.getElementById('calendarGrid');
+calendarGrid.innerHTML = '';
+const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+dayNames.forEach(name => {
+const header = document.createElement('div');
+header.className = 'day-header';
+header.textContent = name;
+calendarGrid.appendChild(header);
+});
+for (let i = 0; i < startingDayOfWeek; i++) {
+const emptyDay = document.createElement('div');
+emptyDay.className = 'calendar-day other-month';
+calendarGrid.appendChild(emptyDay);
+}
+for (let day = 1; day <= daysInMonth; day++) {
+const dayEl = document.createElement('div');
+dayEl.className = 'calendar-day';
+dayEl.textContent = day;
+const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+const today = new Date();
+if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
+dayEl.classList.add('today');
+}
+if (attendanceData[dateStr]) {
+const status = attendanceData[dateStr].status;
+if (status === '出勤') dayEl.classList.add('attended');
+else if (status === '休み') dayEl.classList.add('absent');
+else if (status === '遅刻') dayEl.classList.add('late');
+}
+dayEl.onclick = () => openDayModal(dateStr);
+calendarGrid.appendChild(dayEl);
+}
+}
+function prevMonth() {
+currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1);
+renderCalendar();
+}
+function nextMonth() {
+currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
+renderCalendar();
+}
+function openDayModal(dateStr) {
+selectedDate = dateStr;
+const data = attendanceData[dateStr] || { status: '出勤', hours: 0, memo: '' };
+document.getElementById('modalDate').value = dateStr;
+document.getElementById('modalStatus').value = data.status;
+document.getElementById('modalHours').value = data.hours || 0;
+document.getElementById('modalMemo').value = data.memo || '';
+document.getElementById('dayDetailModal').classList.add('active');
+}
+function closeDayModal() {
+document.getElementById('dayDetailModal').classList.remove('active');
+}
+async function saveDayAttendance() {
+const status = document.getElementById('modalStatus').value;
+const hours = parseFloat(document.getElementById('modalHours').value) || 0;
+const memo = document.getElementById('modalMemo').value;
+try {
+attendanceData[selectedDate] = { status, hours, memo };
+// Save to database
+await sbFetch('attendance', '', 'POST', {
+date: selectedDate,
+status,
+hours,
+memo,
+user_id: currentUser.id
+});
+showToast('保存しました', 'success');
+closeDayModal();
+renderCalendar();
+} catch (error) {
+showToast('保存に失敗しました', 'error');
+}
+}
+// Summary Functions
+async function loadSummary() {
+try {
+const year = currentMonth.getFullYear();
+const month = currentMonth.getMonth() + 1;
+let attended = 0, absent = 0, late = 0, totalHours = 0;
+const hoursByDay = {};
+Object.entries(attendanceData).forEach(([date, data]) => {
+const d = new Date(date);
+if (d.getFullYear() === year && d.getMonth() + 1 === month) {
+if (data.status === '出勤') attended++;
+else if (data.status === '休み') absent++;
+else if (data.status === '遅刻') late++;
+totalHours += data.hours || 0;
+const day = d.getDate();
+hoursByDay[day] = data.hours || 0;
+}
+});
+document.getElementById('statAttended').textContent = attended;
+document.getElementById('statAbsent').textContent = absent;
+document.getElementById('statLate').textContent = late;
+document.getElementById('statTotalHours').textContent = `${totalHours.toFixed(1)}h`;
+renderChart(hoursByDay);
+} catch (error) {
+showToast('サマリー読み込み失敗', 'error');
+}
+}
+function renderChart(hoursByDay) {
+const container = document.getElementById('chartContainer');
+container.innerHTML = '';
+const maxHours = Math.max(...Object.values(hoursByDay), 8);
+Object.entries(hoursByDay).forEach(([day, hours]) => {
+const bar = document.createElement('div');
+bar.style.cssText = `
+flex: 1;
+background: linear-gradient(180deg, #1976D2 0%, #1565C0 100%);
+border-radius: 4px 4px 0 0;
+height: ${(hours / maxHours) * 250}px;
+transition: all 0.3s ease;
+cursor: pointer;
+position: relative;
+`;
+bar.title = `${day}日: ${hours}h`;
+bar.onmouseover = () => {
+bar.style.opacity = '0.8';
+};
+bar.onmouseout = () => {
+bar.style.opacity = '1';
+};
+container.appendChild(bar);
+});
+}
+// Work Sites Functions
+async function loadWorkSites() {
+try {
+const sites = await sbFetch('work_sites');
+const clients = await sbFetch('client_companies');
+const tbody = document.getElementById('workSitesBody');
+tbody.innerHTML = '';
+sites.forEach(site => {
+const row = document.createElement('tr');
+const client = clients.find(c => c.id === site.client_company_id);
+row.innerHTML = `
+<td>${site.name || ''}</td>
+<td>${site.address || ''}</td>
+<td>${client ? client.name : ''}</td>
+<td>
+<button class="btn btn-small btn-secondary" onclick="openWorkSiteForm(${site.id})">編集</button>
+<button class="btn btn-small btn-danger" onclick="deleteWorkSite(${site.id})">削除</button>
+</td>
+`;
+tbody.appendChild(row);
+});
+populateClientSelect('workSiteClient', clients);
+} catch (error) {
+showToast('現場情報読み込み失敗', 'error');
+}
+}
+function openWorkSiteForm(id) {
+document.getElementById('workSiteId').value = id || '';
+if (id) {
+// Load existing data
+} else {
+document.getElementById('workSiteForm').reset();
+}
+document.getElementById('workSiteModal').classList.add('active');
+}
+function closeWorkSiteModal() {
+document.getElementById('workSiteModal').classList.remove('active');
+}
+async function saveWorkSite(e) {
+e.preventDefault();
+const id = document.getElementById('workSiteId').value;
+const name = document.getElementById('workSiteName').value;
+const address = document.getElementById('workSiteAddress').value;
+const clientId = document.getElementById('workSiteClient').value;
+try {
+if (id) {
+await sbFetch('work_sites', `id=eq.${id}`, 'PATCH', { name, address, client_company_id: clientId });
+} else {
+await sbFetch('work_sites', '', 'POST', { name, address, client_company_id: clientId });
+}
+showToast('保存しました', 'success');
+closeWorkSiteModal();
+loadWorkSites();
+} catch (error) {
+showToast('保存失敗', 'error');
+}
+}
+async function deleteWorkSite(id) {
+if (confirm('削除しますか？')) {
+try {
+await sbFetch('work_sites', `id=eq.${id}`, 'DELETE');
+showToast('削除しました', 'success');
+loadWorkSites();
+} catch (error) {
+showToast('削除失敗', 'error');
+}
+}
+}
+// Members Functions
+async function loadMembers() {
+try {
+const members = await sbFetch('accounts');
+const tbody = document.getElementById('membersBody');
+tbody.innerHTML = '';
+members.forEach(member => {
+const row = document.createElement('tr');
+row.innerHTML = `
+<td>${member.name || ''}</td>
+<td>${member.email || ''}</td>
+<td>${member.role || ''}</td>
+<td>
+<button class="btn btn-small btn-secondary" onclick="openMemberForm(${member.id})">編集</button>
+<button class="btn btn-small btn-danger" onclick="deleteMember(${member.id})">削除</button>
+</td>
+`;
+tbody.appendChild(row);
+});
+} catch (error) {
+showToast('メンバー読み込み失敗', 'error');
+}
+}
+function openMemberForm(id) {
+document.getElementById('memberId').value = id || '';
+if (!id) {
+document.getElementById('memberForm').reset();
+}
+document.getElementById('memberModal').classList.add('active');
+}
+function closeMemberModal() {
+document.getElementById('memberModal').classList.remove('active');
+}
+async function saveMember(e) {
+e.preventDefault();
+const id = document.getElementById('memberId').value;
+const name = document.getElementById('memberName').value;
+const email = document.getElementById('memberEmail').value;
+const role = document.getElementById('memberRole').value;
+try {
+if (id) {
+await sbFetch('accounts', `id=eq.${id}`, 'PATCH', { name, email, role });
+} else {
+await sbFetch('accounts', '', 'POST', { name, email, role });
+}
+showToast('保存しました', 'success');
+closeMemberModal();
+loadMembers();
+} catch (error) {
+showToast('保存失敗', 'error');
+}
+}
+async function deleteMember(id) {
+if (confirm('削除しますか？')) {
+try {
+await sbFetch('accounts', `id=eq.${id}`, 'DELETE');
+showToast('削除しました', 'success');
+loadMembers();
+} catch (error) {
+showToast('削除失敗', 'error');
+}
+}
+}
+// Invoice Functions
+function openInvoiceForm() {
+document.getElementById('invoiceForm').reset();
+document.getElementById('invoiceDate').valueAsDate = new Date();
+document.getElementById('invoiceModal').classList.add('active');
+}
+function closeInvoiceModal() {
+document.getElementById('invoiceModal').classList.remove('active');
+}
+async function saveInvoice(e) {
+e.preventDefault();
+const number = document.getElementById('invoiceNumber').value;
+const client = document.getElementById('invoiceClient').value;
+const amount = parseFloat(document.getElementById('invoiceAmount').value);
+const date = document.getElementById('invoiceDate').value;
+const notes = document.getElementById('invoiceNotes').value;
+try {
+await sbFetch('invoices', '', 'POST', {
+invoice_number: number,
+client_company_id: client,
+amount,
+invoice_date: date,
+notes
+});
+showToast('請求書を保存しました', 'success');
+closeInvoiceModal();
+} catch (error) {
+showToast('保存失敗', 'error');
+}
+}
+// Receipt Functions
+function openReceiptForm() {
+document.getElementById('receiptForm').reset();
+document.getElementById('receiptDate').valueAsDate = new Date();
+document.getElementById('receiptModal').classList.add('active');
+}
+function closeReceiptModal() {
+document.getElementById('receiptModal').classList.remove('active');
+}
+async function saveReceipt(e) {
+e.preventDefault();
+const amount = parseFloat(document.getElementById('receiptAmount').value);
+const date = document.getElementById('receiptDate').value;
+const client = document.getElementById('receiptClient').value;
+const description = document.getElementById('receiptDescription').value;
+try {
+const { jsPDF } = window.jspdf;
+const pdf = new jsPDF();
+pdf.setFontSize(16);
+pdf.text('領収書', 105, 20, { align: 'center' });
+pdf.setFontSize(12);
+pdf.text(`お客様: ${client}`, 20, 40);
+pdf.text(`金額: ¥${amount.toLocaleString()}`, 20, 50);
+pdf.text(`日付: ${date}`, 20, 60);
+pdf.text(`説明: ${description}`, 20, 70);
+pdf.save(`receipt_${date}.pdf`);
+showToast('領収書を保存しました', 'success');
+closeReceiptModal();
+} catch (error) {
+showToast('保存失敗', 'error');
+}
+}
+// Settings Functions
+async function saveCompanyInfo(e) {
+e.preventDefault();
+const name = document.getElementById('companyNameInput').value;
+const address = document.getElementById('companyAddress').value;
+const phone = document.getElementById('companyPhone').value;
+try {
+if (currentCompany) {
+await sbFetch('companies', `id=eq.${currentCompany.id}`, 'PATCH', { name, address, phone });
+} else {
+await sbFetch('companies', '', 'POST', { name, address, phone });
+}
+showToast('企業情報を保存しました', 'success');
+} catch (error) {
+showToast('保存失敗', 'error');
+}
+}
+async function saveProfile(e) {
+e.preventDefault();
+const name = document.getElementById('profileName').value;
+showToast('プロフィールを保存しました', 'success');
+}
+// Helper Functions
+function populateClientSelect(selectId, clients) {
+const select = document.getElementById(selectId);
+select.innerHTML = '<option value="">選択してください</option>';
+clients.forEach(client => {
+const option = document.createElement('option');
+option.value = client.id;
+option.textContent = client.name;
+select.appendChild(option);
+});
+}
+function showToast(message, type = 'info') {
+const toast = document.createElement('div');
+toast.className = `toast ${type}`;
+toast.textContent = message;
+document.body.appendChild(toast);
+setTimeout(() => toast.remove(), 3000);
+}
+function showLoginScreen(show) {
+document.getElementById('loginScreen').style.display = show ? 'flex' : 'none';
+document.getElementById('appScreen').style.display = show ? 'none' : 'flex';
+}
+async function loadInitialData() {
+try {
+const company = await sbFetch('companies');
+if (company && company.length > 0) {
+currentCompany = company[0];
+document.getElementById('companyDisplay').textContent = currentCompany.name;
+document.getElementById('companyNameInput').value = currentCompany.name;
+document.getElementById('companyAddress').value = currentCompany.address || '';
+document.getElementById('companyPhone').value = currentCompany.phone || '';
+}
+document.getElementById('userEmailDisplay').textContent = currentUser.email;
+document.getElementById('profileEmail').value = currentUser.email;
+const year = new Date().getFullYear();
+const month = new Date().getMonth() + 1;
+const attendance = await sbFetch(`attendance?created_at=gte.${year}-${String(month).padStart(2, '0')}-01`);
+attendance.forEach(record => {
+attendanceData[record.date] = {
+status: record.status,
+hours: record.hours,
+memo: record.memo
+};
+});
+loadCalendar();
+} catch (error) {
+console.error('Data loading error:', error);
+}
+}
+function logout() {
+if (confirm('ログアウトしますか？')) {
+clearAuthToken();
+currentUser = null;
+document.getElementById('loginEmail').value = '';
+document.getElementById('loginPassword').value = '';
+document.getElementById('loginError').style.display = 'none';
+showLoginScreen(true);
+}
+}
+// Initialize
+if (getAuthToken()) {
+showLoginScreen(false);
+loadInitialData();
+} else {
+showLoginScreen(true);
+}
+</script>
+</body>
+</html>
