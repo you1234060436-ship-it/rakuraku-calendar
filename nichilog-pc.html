@@ -1284,9 +1284,7 @@ phtml += '<td colspan="5" style="border:1px solid #333;padding:2px;text-align:ri
 phtml += '<td style="border:1px solid #333;padding:2px;text-align:center;">' + totalPersonnel + ' \u4eba\u5de5</td>';
 phtml += '</tr></tfoot>';
 }
-phtml += '</table><script>
-function pcSwitchTab(n, el) { switchTab(n); document.querySelectorAll('.pc-sidebar .sb-item').forEach(function(e){e.classList.remove('active')}); if(el) el.classList.add('active'); }
-</script></body></html>';
+phtml += '</table></body></html>';
 _nc.innerHTML=phtml;
 
 }
@@ -1931,73 +1929,14 @@ await doLogin();
 }
 })();
 
-</script>
-<script>
+<
 
-    // Supabase Auth session restore on page load
-    (async function restoreSession() {
-      const _h = new URLSearchParams(window.location.hash.slice(1));
-      const _at = _h.get('access_token');
-      const _rt = _h.get('refresh_token');
-      if (_at && _rt) {
-        await sb.auth.setSession({ access_token: _at, refresh_token: _rt });
-        history.replaceState(null, '', window.location.pathname);
-      }
-      const page = hash.get('page');
-      if (page === 'invoice') {
-        setTimeout(function() { if(typeof showTab==='function') showTab('t5'); if(typeof showInvoice==='function') showInvoice(); }, 800);
-      } else if (page === 'nippo') {
-        setTimeout(function() { if(typeof showTab==='function') showTab('t2'); if(typeof generateKoujiNippo==='function') generateKoujiNippo(); }, 800);
-      } else if (page === 'receipt') {
-        setTimeout(function() { if(typeof showTab==='function') showTab('t5'); if(typeof openReceiptForm==='function') openReceiptForm(); }, 800);
-      }
-      const { data: { session } } = await sb.auth.getSession();
-      if (session && session.user) {
-        try {
-          const accs = await sbGet('accounts', 'auth_uid=eq.' + session.user.id);
-          if (accs && accs.length > 0) {
-            currentUser = accs[0];
-            const comps = await sbGet('companies', 'id=eq.' + currentUser.company_id);
-            if (comps && comps.length > 0) {
-              company = comps[0];
-              document.getElementById('loginScreen').style.display = 'none';
-              document.getElementById('appHeader').style.display = '';
-              document.getElementById('navBar').style.display = '';
-              await renderAll(); switchTab(1);
-              return;
-            }
-          }
-        } catch(e) { console.error('Session restore failed', e); }
-      }
-      document.getElementById('loginScreen').style.display = '';
-    })();
-function openWithSession(page) {
-  sb.auth.getSession().then(function(result) {
-    var session = result.data.session;
-    var base = 'https://nichilog.vercel.app/nichilog-v2.html';
-    var fragment = '';
-    if (session) {
-      fragment = '#access_token=' + session.access_token
-               + '&refresh_token=' + session.refresh_token
-               + '&token_type=bearer';
-    }
-    var pageParam = page ? '&page=' + page : '';
-    var url = base + fragment + pageParam;
-    if (window.flutter_inappwebview) {
-      window.flutter_inappwebview.callHandler('openExternal', url);
-    } else {
-      window.print();
-    }
-  });
+function pcSwitchTab(n, el) { switchTab(n); document.querySelectorAll('.pc-sidebar .sb-item').forEach(function(e){e.classList.remove('active')}); if(el) el.classList.add('active'); }
+</script></body></html>';
+_nc.innerHTML=phtml;
+
 }
-
-async function nichiPrint(id){try{const element=document.getElementById(id);if(!element){alert('\u8981\u7D20\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093: '+id);return;}if(typeof html2canvas==='undefined'){alert('html2canvas\u672A\u8AAD\u307F\u8FBC\u307F');return;}if(typeof window.jspdf==='undefined'){alert('jsPDF\u672A\u8AAD\u307F\u8FBC\u307F');return;}const canvas=await html2canvas(element,{scale:2,useCORS:true,backgroundColor:'#ffffff'});const imgData=canvas.toDataURL('image/jpeg',0.95);const{jsPDF}=window.jspdf;const pageWidth=210;const imgHeight=(canvas.height*pageWidth)/canvas.width;const pdf=new jsPDF('p','mm',[pageWidth,Math.max(imgHeight,297)]);pdf.addImage(imgData,'JPEG',0,0,pageWidth,imgHeight);showPdfPreview(pdf,'nichilog_'+id+'_'+new Date().toISOString().slice(0,10)+'.pdf');}catch(e){alert('\u30A8\u30E9\u30FC: '+e.message);}}
-function showPdfPreview(pdf,filename){const dataUrl=pdf.output('datauristring');const w=window.open('','_blank');if(w){w.document.write('<html><head><title>'+filename+'</title></head><body style="margin:0;padding:0;"><embed src="'+dataUrl+'" type="application/pdf" width="100%" height="100%"></body></html>');}}
 </script>
 <script src="receipt-feature.js"></script>
 </body>
       </html>
-
-Claude is active in this tab group
-Open chat
-Dismiss
