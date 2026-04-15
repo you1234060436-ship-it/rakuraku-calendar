@@ -389,6 +389,7 @@
 
   <script>
 
+
 function _d(s){return atob(s).split('').reverse().join('');}
 let invRows = [{name:'',spec:'',qty:1,unit:'人工',price:25000,taxRate:10}];
 function addInvRow(){
@@ -1284,7 +1285,7 @@ phtml += '<td colspan="5" style="border:1px solid #333;padding:2px;text-align:ri
 phtml += '<td style="border:1px solid #333;padding:2px;text-align:center;">' + totalPersonnel + ' \u4eba\u5de5</td>';
 phtml += '</tr></tfoot>';
 }
-phtml += '</table></body></html>';
+phtml += '</table><\/body><\/html>';
 _nc.innerHTML=phtml;
 
 }
@@ -1929,7 +1930,7 @@ await doLogin();
 }
 })();
 
-<
+
 
 function pcSwitchTab(n, el) { switchTab(n); document.querySelectorAll('.pc-sidebar .sb-item').forEach(function(e){e.classList.remove('active')}); if(el) el.classList.add('active'); }
 </script></body></html>';
