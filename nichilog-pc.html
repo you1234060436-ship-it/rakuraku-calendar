@@ -125,11 +125,11 @@
 
 @media (min-width: 769px) {
   .nav-bar { display: none !important; }
-  .pc-sidebar { display: none !important; flex-direction: column; width: 240px; min-width: 240px; background: #fff; border-right: 1px solid #e0e0e0; padding: 16px 0; overflow-y: auto; box-shadow: 2px 0 4px rgba(0,0,0,0.05); }
+  .pc-sidebar { display: flex !important; flex-direction: column; width: 240px; min-width: 240px; background: #fff; border-right: 1px solid #e0e0e0; padding: 16px 0; overflow-y: auto; box-shadow: 2px 0 4px rgba(0,0,0,0.05); }
   .pc-sidebar .sb-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; cursor: pointer; color: #757575; border-left: 3px solid transparent; font-size: 14px; font-weight: 500; transition: all 0.2s; }
   .pc-sidebar .sb-item:hover { background: rgba(25,118,210,0.05); color: #1976D2; }
   .pc-sidebar .sb-item.active { background: rgba(25,118,210,0.1); color: #1976D2; border-left-color: #1976D2; }
-  .pc-main-wrap { display: none !important; flex: 1; overflow: hidden; height: calc(100vh - 56px); }
+  .pc-main-wrap { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 56px); }
   .pc-content-area { flex: 1; overflow-y: auto; padding: 24px 32px; background: #f5f5f5; }
   #appHeader { padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
   .pc-header-right { display: flex; align-items: center; gap: 16px; color: white; font-size: 13px; }
@@ -388,7 +388,6 @@
   </div>
 
   <script>
-
 
 function _d(s){return atob(s).split('').reverse().join('');}
 let invRows = [{name:'',spec:'',qty:1,unit:'人工',price:25000,taxRate:10}];
@@ -744,7 +743,7 @@ company = comps[0];
 document.getElementById('loginScreen').style.display = 'none';
 document.getElementById('appHeader').style.display = '';
 document.getElementById('navBar').style.display = '';
-await renderAll(); switchTab(1); document.querySelector('.pc-sidebar').style.setProperty('display','flex','important'); document.querySelector('.pc-main-wrap').style.setProperty('display','flex','important');
+await renderAll(); switchTab(1);
 } catch(e) { showLoginError('ログインエラー: ' + e.message); }
 }
 async function doRegister() {
@@ -1285,7 +1284,9 @@ phtml += '<td colspan="5" style="border:1px solid #333;padding:2px;text-align:ri
 phtml += '<td style="border:1px solid #333;padding:2px;text-align:center;">' + totalPersonnel + ' \u4eba\u5de5</td>';
 phtml += '</tr></tfoot>';
 }
-phtml += '</table><\/body><\/html>';
+phtml += '</table><script>
+function pcSwitchTab(n, el) { switchTab(n); document.querySelectorAll('.pc-sidebar .sb-item').forEach(function(e){e.classList.remove('active')}); if(el) el.classList.add('active'); }
+<\/script><\/body><\/html>';
 _nc.innerHTML=phtml;
 
 }
@@ -1930,9 +1931,68 @@ await doLogin();
 }
 })();
 
+</script>
+<script>
 
+    // Supabase Auth session restore on page load
+    (async function restoreSession() {
+      const _h = new URLSearchParams(window.location.hash.slice(1));
+      const _at = _h.get('access_token');
+      const _rt = _h.get('refresh_token');
+      if (_at && _rt) {
+        await sb.auth.setSession({ access_token: _at, refresh_token: _rt });
+        history.replaceState(null, '', window.location.pathname);
+      }
+      const page = hash.get('page');
+      if (page === 'invoice') {
+        setTimeout(function() { if(typeof showTab==='function') showTab('t5'); if(typeof showInvoice==='function') showInvoice(); }, 800);
+      } else if (page === 'nippo') {
+        setTimeout(function() { if(typeof showTab==='function') showTab('t2'); if(typeof generateKoujiNippo==='function') generateKoujiNippo(); }, 800);
+      } else if (page === 'receipt') {
+        setTimeout(function() { if(typeof showTab==='function') showTab('t5'); if(typeof openReceiptForm==='function') openReceiptForm(); }, 800);
+      }
+      const { data: { session } } = await sb.auth.getSession();
+      if (session && session.user) {
+        try {
+          const accs = await sbGet('accounts', 'auth_uid=eq.' + session.user.id);
+          if (accs && accs.length > 0) {
+            currentUser = accs[0];
+            const comps = await sbGet('companies', 'id=eq.' + currentUser.company_id);
+            if (comps && comps.length > 0) {
+              company = comps[0];
+              document.getElementById('loginScreen').style.display = 'none';
+              document.getElementById('appHeader').style.display = '';
+              document.getElementById('navBar').style.display = '';
+              await renderAll(); switchTab(1);
+              return;
+            }
+          }
+        } catch(e) { console.error('Session restore failed', e); }
+      }
+      document.getElementById('loginScreen').style.display = '';
+    })();
+function openWithSession(page) {
+  sb.auth.getSession().then(function(result) {
+    var session = result.data.session;
+    var base = 'https://nichilog.vercel.app/nichilog-v2.html';
+    var fragment = '';
+    if (session) {
+      fragment = '#access_token=' + session.access_token
+               + '&refresh_token=' + session.refresh_token
+               + '&token_type=bearer';
+    }
+    var pageParam = page ? '&page=' + page : '';
+    var url = base + fragment + pageParam;
+    if (window.flutter_inappwebview) {
+      window.flutter_inappwebview.callHandler('openExternal', url);
+    } else {
+      window.print();
+    }
+  });
+}
 
-function pcSwitchTab(n, el) { switchTab(n); document.querySelectorAll('.pc-sidebar .sb-item').forEach(function(e){e.classList.remove('active')}); if(el) el.classList.add('active'); }
+async function nichiPrint(id){try{const element=document.getElementById(id);if(!element){alert('\u8981\u7D20\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093: '+id);return;}if(typeof html2canvas==='undefined'){alert('html2canvas\u672A\u8AAD\u307F\u8FBC\u307F');return;}if(typeof window.jspdf==='undefined'){alert('jsPDF\u672A\u8AAD\u307F\u8FBC\u307F');return;}const canvas=await html2canvas(element,{scale:2,useCORS:true,backgroundColor:'#ffffff'});const imgData=canvas.toDataURL('image/jpeg',0.95);const{jsPDF}=window.jspdf;const pageWidth=210;const imgHeight=(canvas.height*pageWidth)/canvas.width;const pdf=new jsPDF('p','mm',[pageWidth,Math.max(imgHeight,297)]);pdf.addImage(imgData,'JPEG',0,0,pageWidth,imgHeight);showPdfPreview(pdf,'nichilog_'+id+'_'+new Date().toISOString().slice(0,10)+'.pdf');}catch(e){alert('\u30A8\u30E9\u30FC: '+e.message);}}
+function showPdfPreview(pdf,filename){const dataUrl=pdf.output('datauristring');const w=window.open('','_blank');if(w){w.document.write('<html><head><title>'+filename+'</title></head><body style="margin:0;padding:0;"><embed src="'+dataUrl+'" type="application/pdf" width="100%" height="100%"></body></html>');}}
 </script>
 <script src="receipt-feature.js"></script>
 </body>
