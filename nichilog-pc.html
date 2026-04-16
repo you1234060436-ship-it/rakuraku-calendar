@@ -1284,9 +1284,7 @@ phtml += '<td colspan="5" style="border:1px solid #333;padding:2px;text-align:ri
 phtml += '<td style="border:1px solid #333;padding:2px;text-align:center;">' + totalPersonnel + ' \u4eba\u5de5</td>';
 phtml += '</tr></tfoot>';
 }
-phtml += '</table><script>
-function pcSwitchTab(n, el) { switchTab(n); document.querySelectorAll('.pc-sidebar .sb-item').forEach(function(e){e.classList.remove('active')}); if(el) el.classList.add('active'); }
-<\/script><\/body><\/html>';
+phtml += '</table><script>\nfunction pcSwitchTab(n, el) { switchTab(n); document.querySelectorAll('.pc-sidebar .sb-item').forEach(function(e){e.classList.remove('active')}); if(el) el.classList.add('active'); }\n<\/script><\/body><\/html>';
 _nc.innerHTML=phtml;
 
 }
@@ -1769,8 +1767,8 @@ if (!newPwd || newPwd.length < 6) {
 alert('パスワードは6文字以上です');
 return;
 }
-const hash = await sha256(newPwd);
-const ok = await sbPatch('accounts', currentUser.id, { password: hash });
+const location.hash = await sha256(newPwd);
+const ok = await sbPatch('accounts', currentUser.id, { password: location.hash });
 if (ok) {
 alert('パスワードを変更しました');
 document.getElementById('newPassword').value = '';
@@ -1943,7 +1941,7 @@ await doLogin();
         await sb.auth.setSession({ access_token: _at, refresh_token: _rt });
         history.replaceState(null, '', window.location.pathname);
       }
-      const page = hash.get('page');
+      const page = location.hash.get('page');
       if (page === 'invoice') {
         setTimeout(function() { if(typeof showTab==='function') showTab('t5'); if(typeof showInvoice==='function') showInvoice(); }, 800);
       } else if (page === 'nippo') {
