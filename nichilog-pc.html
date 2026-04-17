@@ -551,7 +551,7 @@ function dayDetail(dstr){
       body+='<td>'+escHtml(cc?cc.name:'')+' '+escHtml(st?st.name:'-')+'</td>';
       body+='<td><span class="badge '+(e.work_type==='half'?'badge-half':'badge-full')+'">'+(e.work_type==='half'?'半日':'1日')+'</span></td>';
       body+='<td>'+escHtml(e.note||'')+'</td>';
-      body+='<td><button class="btn btn-sm btn-secondary" onclick="editE('+e.id+')">編集</button> <button class="btn btn-sm btn-danger" onclick="delE('+e.id+')">削除</button></td></tr>';
+      body+='<td><button class="btn btn-sm btn-secondary" onclick="editE(\''+e.id+'\')">編集</button> <button class="btn btn-sm btn-danger" onclick="delE(\''+e.id+'\')">削除</button></td></tr>';
     });
     body+='</tbody></table>';
   }
@@ -699,7 +699,7 @@ function renderSites(){
   html+='<h3 style="font-size:15px;margin:12px 0 8px;color:#374151">取引先一覧</h3>';
   html+='<table><thead><tr><th>取引先名</th><th>操作</th></tr></thead><tbody>';
   clientCompanies.forEach(function(c){
-    html+='<tr><td>'+escHtml(c.name)+'</td><td><button class="btn btn-sm btn-secondary" onclick="openClientModal('+c.id+')">編集</button> <button class="btn btn-sm btn-danger" onclick="deleteClient('+c.id+')">削除</button></td></tr>';
+    html+='<tr><td>'+escHtml(c.name)+'</td><td><button class="btn btn-sm btn-secondary" onclick="openClientModal(\''+c.id+'\')">編集</button> <button class="btn btn-sm btn-danger" onclick="deleteClient(\''+c.id+'\')">削除</button></td></tr>';
   });
   if(clientCompanies.length===0)html+='<tr><td colspan="2" style="text-align:center;color:#9ca3af;padding:20px">取引先なし</td></tr>';
   html+='</tbody></table>';
@@ -710,7 +710,7 @@ function renderSites(){
     html+='<tr><td>'+escHtml(cc?cc.name:'-')+'</td><td>'+escHtml(s.name)+'</td>';
     html+='<td style="text-align:right">¥'+(s.price||0).toLocaleString()+'</td>';
     html+='<td>'+escHtml(s.type||'人工')+'</td>';
-    html+='<td><button class="btn btn-sm btn-secondary" onclick="openSiteModal('+s.id+')">編集</button> <button class="btn btn-sm btn-danger" onclick="deleteSite('+s.id+')">削除</button></td></tr>';
+    html+='<td><button class="btn btn-sm btn-secondary" onclick="openSiteModal(\''+s.id+'\')">編集</button> <button class="btn btn-sm btn-danger" onclick="deleteSite(\''+s.id+'\')">削除</button></td></tr>';
   });
   if(sites.length===0)html+='<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:20px">現場なし</td></tr>';
   html+='</tbody></table>';
@@ -784,7 +784,7 @@ function renderMembers(){
     html+='<tr><td>'+escHtml(m.name)+'</td>';
     html+='<td><span class="badge '+roleCls+'">'+escHtml(m.role||'-')+'</span></td>';
     html+='<td>'+escHtml(m.team||'-')+'</td>';
-    html+='<td>'+(canManage()?'<button class="btn btn-sm btn-secondary" onclick="openMemberModal('+m.id+')">編集</button> <button class="btn btn-sm btn-danger" onclick="deleteMember('+m.id+')">削除</button>':'')+'</td></tr>';
+    html+='<td>'+(canManage()?'<button class="btn btn-sm btn-secondary" onclick="openMemberModal(\''+m.id+'\')">編集</button> <button class="btn btn-sm btn-danger" onclick="deleteMember(\''+m.id+'\')">削除</button>':'')+'</td></tr>';
   });
   if(members.length===0)html+='<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px">メンバーなし</td></tr>';
   html+='</tbody></table>';
@@ -850,7 +850,7 @@ function renderInvoices(){
       html+='<td>'+escHtml(iv.construction_name||'-')+'</td>';
       html+='<td style="text-align:right">¥'+(iv.total||0).toLocaleString()+'</td>';
       html+='<td><span class="badge '+statusBadgeCls(iv.status)+'">'+escHtml(displayStatus(iv.status))+'</span></td>';
-      html+='<td><button class="btn btn-sm btn-secondary" onclick="openInvoiceEdit('+iv.id+')">開く</button> <button class="btn btn-sm btn-danger" onclick="deleteInvoice('+iv.id+')">削除</button></td></tr>';
+      html+='<td><button class="btn btn-sm btn-secondary" onclick="openInvoiceEdit(\''+iv.id+'\')">開く</button> <button class="btn btn-sm btn-danger" onclick="deleteInvoice(\''+iv.id+'\')">削除</button></td></tr>';
     });
   }
   html+='</tbody></table>';
