@@ -1025,10 +1025,10 @@ function renderSettings(){
   html+='<div class="form-row"><div class="form-grp"><label>新しいパスワード</label><input type="password" id="stNewPw"></div></div>';
   html+='<div class="btn-row"><button class="btn btn-primary" onclick="changeUserPassword()">パスワード変更</button></div></div>';
   if(currentUser&&currentUser.role==='master'){
-    html+='<div class="form-card"><h3>会社設定（master）</h3>';
+    html+='<div class="form-card"><h3>会社設定（社長のみ）</h3>';
     html+='<div class="form-row"><div class="form-grp"><label>会社名</label><input type="text" id="stCoName" value="'+escHtml((company&&company.name)||'')+'"></div></div>';
     html+='<div class="btn-row"><button class="btn btn-primary" onclick="updateCompany()">会社情報を保存</button></div></div>';
-    html+='<div class="form-card"><h3>新規アカウント追加（master）</h3>';
+    html+='<div class="form-card"><h3>新規アカウント追加（社長のみ）</h3>';
     html+='<div class="form-row"><div class="form-grp"><label>名前</label><input type="text" id="stNewName"></div><div class="form-grp"><label>ロール</label><select id="stNewRole"><option value="worker">作業員</option><option value="admin">管理者</option><option value="master">社長</option></select></div></div>';
     html+='<div class="form-row"><div class="form-grp"><label>チーム</label><input type="text" id="stNewTeam"></div><div class="form-grp"><label>初期パスワード</label><input type="password" id="stNewPw2"></div></div>';
     html+='<div class="btn-row"><button class="btn btn-success" onclick="createNewAccount()">アカウント追加</button></div></div>';
