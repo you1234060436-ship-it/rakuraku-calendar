@@ -363,7 +363,7 @@ function localDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padSt
 function gSN(i){return ['日','月','火','水','木','金','土'][i];}
 function gMN(m){return (m+1)+'月';}
 function isWorker(){return currentUser&&currentUser.role==='worker';}
-function canSeeRevenue(){return currentUser&&currentUser.role==='master';}
+function canSeeRevenue(){return currentUser&&(currentUser.role==='master'||currentUser.role==='admin');}
 function canManage(){return currentUser&&(currentUser.role==='master'||currentUser.role==='admin');}
 function roleLabel(r){return{master:'社長',admin:'管理者',worker:'作業員'}[r]||r||'-';}
 function showToast(msg){var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){t.remove();},300);},2200);}
