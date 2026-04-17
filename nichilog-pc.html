@@ -1,1999 +1,1144 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ニチログ PC - 建設工事管理</title>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { font-family: system-ui, -apple-system, sans-serif; width: 100%; max-width: 100vw; height: 100%; overflow: hidden; overflow-x: hidden; background: #f5f5f5; }
-    body { display: flex; align-items: center; justify-content: center; height: 661px; }
-
-    .container { width: 100%; max-width: 430px; height: 661px; background: #fff; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-    .app-header { padding: 16px; background: #2563EB; color: white; text-align: center; font-weight: 600; font-size: 18px; }
-    .tab-content { flex: 1; overflow-y: auto; padding: 16px; display: none; }
-    .tab-content.active { display: block; }
-    .nav-bar { display: flex; justify-content: space-around; align-items: center; height: 60px; border-top: 1px solid #e5e7eb; background: white; }
-    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 6px 2px; font-size: 8px; color: #6b7280; transition: color 0.2s; flex: 1; min-width: 0; }
-    .nav-item.active { color: #2563EB; }
-    .nav-item .material-icons { font-size: 24px; }
-
-    /* Forms & Modals */
-    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
-    .modal.show { display: flex; }
-    .modal-content { background: white; border-radius: 12px; padding: 24px; max-width: 380px; width: 90%; max-height: 80vh; overflow-y: auto; }
-    .modal-header { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: #374151; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-family: inherit; }
-    .form-group textarea { resize: vertical; min-height: 80px; }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-
-    .btn { padding: 10px 16px; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-    .btn-primary { background: #2563EB; color: white; }
-    .btn-primary:hover { background: #1d4ed8; }
-    .btn-danger { background: #dc2626; color: white; }
-    .btn-danger:hover { background: #b91c1c; }
-    .btn-success { background: #16a34a; color: white; }
-    .btn-success:hover { background: #15803d; }
-    .btn-secondary { background: #e5e7eb; color: #374151; }
-    .btn-secondary:hover { background: #d1d5db; }
-    .btn-group { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
-
-    /* Cards */
-    .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .card-header { font-weight: 600; margin-bottom: 8px; color: #1f2937; }
-    .card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 14px; }
-    .card-label { color: #6b7280; }
-    .card-value { font-weight: 500; color: #1f2937; }
-
-    /* Badge */
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
-    .badge-master { background: #fee2e2; color: #dc2626; }
-    .badge-submaster { background: #dbeafe; color: #2563EB; }
-    .badge-worker { background: #dcfce7; color: #16a34a; }
-
-    /* Calendar */
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 16px; }
-    .calendar-day-header { text-align: center; font-weight: 600; font-size: 12px; padding: 8px; }
-    .calendar-day-header.sunday { color: #dc2626; }
-    .calendar-day { aspect-ratio: 1; border: 1px solid #e5e7eb; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; font-size: 13px; transition: background 0.2s; user-select: none; }
-    .calendar-day.today { background: #e3f2fd !important; border: 2px solid #1976d2; font-weight: bold; }
-    .calendar-day:hover { background: #f3f4f6; }
-    .calendar-day-empty { background: #f9fafb; }
-    .calendar-day-dot { width: 4px; height: 4px; border-radius: 50%; position: absolute; bottom: 2px; background: #2563EB; }
-    .calendar-day.selected { background: #dbeafe; border-color: #2563EB; }
-
-    /* Table */
-    .table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    .table th { background: #f3f4f6; padding: 12px 8px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
-    .table td { padding: 12px 8px; border-bottom: 1px solid #e5e7eb; }
-    .table tr:hover { background: #f9fafb; }
-
-    /* Chart Bar */
-    .chart-bar { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 16px; height: 150px; }
-    .bar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .bar-value { width: 100%; background: #2563EB; border-radius: 4px 4px 0 0; transition: background 0.2s; }
-    .bar-label { font-size: 12px; color: #6b7280; text-align: center; }
-    .bar-amount { font-size: 12px; font-weight: 600; color: #374151; }
-
-    
-/* === Invoice Overlay === */
-.invoice-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f5f5;z-index:9999;overflow-y:auto;display:none}
-.invoice-overlay .toolbar{position:sticky;top:0;background:#333;color:#fff;padding:8px 16px;display:flex;gap:10px;align-items:center;z-index:1}
-.invoice-overlay .toolbar button{padding:6px 16px;border:none;border-radius:4px;cursor:pointer;font-size:14px}
-.invoice-overlay .toolbar .btn-close{background:#666;color:#fff}
-.invoice-overlay .toolbar .btn-print{background:#1a73e8;color:#fff}
-.inv-form{max-width:900px;margin:16px auto;padding:16px;background:#fff;border-radius:8px}
-.inv-form .form-row{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap}
-.inv-form .form-group{flex:1;min-width:0}
-.inv-form label{display:block;font-size:12px;color:#666;margin-bottom:2px}
-.inv-form input,.inv-form select,.inv-form textarea{width:100%;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:14px}
-.inv-form textarea{resize:vertical}
-.inv-detail-table{width:100%;border-collapse:collapse;margin:10px 0}
-.inv-detail-table th{background:#f0f0f0;padding:6px;font-size:12px;border:1px solid #ccc}
-.inv-detail-table td{padding:4px;border:1px solid #ccc}
-.inv-detail-table input,.inv-detail-table select{width:100%;padding:4px;border:1px solid #ddd;border-radius:3px;font-size:13px}
-.invoice-page{width:210mm;min-height:297mm;background:#fff;margin:20px auto;padding:12mm 15mm;font-family:'Hiragino Mincho ProN','Yu Mincho','MS PMincho',serif;font-size:10pt;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15);position:relative}
-.invoice-page .doc-title{font-size:18pt;letter-spacing:4mm;text-align:center;border-bottom:2px solid #333;padding-bottom:3mm;margin-bottom:4mm}
-.invoice-page .doc-no{text-align:right;font-size:9pt;margin-bottom:2mm}
-.invoice-page .doc-date{text-align:right;font-size:9pt;margin-bottom:4mm}
-.invoice-page .doc-to{font-size:12pt;border-bottom:1px solid #333;padding-bottom:2mm;margin-bottom:2mm}
-.invoice-page .total-band{background:#f0f0f0;border:1px solid #333;padding:3mm 5mm;font-size:14pt;text-align:center;margin:4mm 0;font-weight:bold}
-.invoice-page .detail-table{width:100%;border-collapse:collapse;margin:4mm 0;font-size:9pt}
-.invoice-page .detail-table th{background:#f0f0f0;border:1px solid #999;padding:2mm 3mm;font-weight:bold}
-.invoice-page .detail-table td{border:1px solid #999;padding:2mm 3mm}
-.invoice-page .detail-table .right{text-align:right}
-.invoice-page .subtotal-area{margin:3mm 0;font-size:9pt}
-.invoice-page .subtotal-area .row{display:flex;justify-content:flex-end;gap:10mm;margin-bottom:1mm}
-.invoice-page .subtotal-area .label{width:40mm;text-align:right}
-.invoice-page .subtotal-area .val{width:30mm;text-align:right}
-.invoice-page .subtotal-area .total-row{font-size:11pt;font-weight:bold;border-top:2px solid #333;padding-top:2mm}
-.invoice-page .remarks{border:1px solid #ccc;padding:3mm;margin:4mm 0;font-size:9pt;min-height:15mm}
-.invoice-page .bank-info{border:1px solid #333;padding:3mm 5mm;margin:4mm 0;font-size:9pt}
-.invoice-page .bank-label{font-weight:bold;margin-bottom:2mm}
-.invoice-page .issuer-area{text-align:right;font-size:9pt;margin-top:4mm}
-.invoice-page .issuer-area .company{font-size:11pt;font-weight:bold}
-.invoice-page .seal-space{display:inline-block;width:20mm;height:20mm;border:2px solid #c00;margin-left:5mm;vertical-align:middle}
-.receipt-page{width:128mm;min-height:182mm;background:#fff;margin:20px auto;padding:8mm 10mm;font-family:'Hiragino Mincho ProN','Yu Mincho','MS PMincho',serif;font-size:9pt;color:#333;box-shadow:0 2px 8px rgba(0,0,0,0.15);position:relative}
-@media print{#loginScreen,#appHeader,#t1,#t2,#t3,#t4,#t5,#t6,#navBar,#addEntryModal,#dayDetailModal,#siteModal,#memberModal,.toolbar,#invForm,#nippo-overlay>div:first-child{display:none!important}#invoiceOverlay,#receiptOverlay{position:static!important;overflow:visible!important;width:100%!important;height:auto!important;background:white!important;}#invoice-print-area,#receiptPage,#nippo-content{display:block!important;visibility:visible!important;width:100%!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.daily-report-table{width:100%!important;border-collapse:collapse!important;table-layout:fixed!important;font-size:11pt!important}.daily-report-table th,.daily-report-table td{padding:6px 4px!important;word-break:break-all;overflow-wrap:break-word}body{margin:0!important;padding:0!important}@page{size:A4 portrait;margin:5mm}#nippo-overlay{position:static!important;display:block!important;background:white!important;width:100%!important;height:auto!important;overflow:visible!important;margin:0!important;padding:0!important}#nippo-content{width:100%!important;max-width:none!important;min-height:0!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important;flex:none!important;box-sizing:border-box!important}body>*:not(#invoiceOverlay):not(#receiptOverlay):not(#nippo-overlay){display:none!important}#invoiceOverlay{margin:0!important;padding:0!important}#invoice-print-area{transform-origin:top left!important}}
-@media screen and (max-width:800px){.invoice-page,.receipt-page{width:auto!important;min-height:auto!important;margin:8px!important;padding:8px 10px!important;font-size:11px}.invoice-page table,.receipt-page table{font-size:10px;word-break:break-all}.invoice-page h2{font-size:18px}.invoice-overlay .toolbar{padding:6px 10px;font-size:12px}}
-
-    
-
-@media (min-width: 769px) {
-  .nav-bar { display: none !important; }
-  .pc-sidebar { display: flex !important; flex-direction: column; width: 240px; min-width: 240px; background: #fff; border-right: 1px solid #e0e0e0; padding: 16px 0; overflow-y: auto; box-shadow: 2px 0 4px rgba(0,0,0,0.05); }
-  .pc-sidebar .sb-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; cursor: pointer; color: #757575; border-left: 3px solid transparent; font-size: 14px; font-weight: 500; transition: all 0.2s; }
-  .pc-sidebar .sb-item:hover { background: rgba(25,118,210,0.05); color: #1976D2; }
-  .pc-sidebar .sb-item.active { background: rgba(25,118,210,0.1); color: #1976D2; border-left-color: #1976D2; }
-  .pc-main-wrap { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 56px); }
-  .pc-content-area { flex: 1; overflow-y: auto; padding: 24px 32px; background: #f5f5f5; }
-  #appHeader { padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
-  .pc-header-right { display: flex; align-items: center; gap: 16px; color: white; font-size: 13px; }
-  .pc-logout-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px; }
-  .pc-logout-btn:hover { background: rgba(255,255,255,0.3); }
-  .tab-page { padding: 0 !important; }
-}
-@media (max-width: 768px) {
-  .pc-sidebar { display: none !important; }
-  .pc-header-right { display: none !important; }
-  .pc-main-wrap { display: block; height: auto; }
-  .pc-content-area { padding: 0; }
-}
-</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280,initial-scale=1">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex">
+<title>ニチログ PC</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{font-family:"Hiragino Sans","Yu Gothic",system-ui,-apple-system,sans-serif;background:#f5f5f5;color:#1f2937;font-size:14px;min-height:100vh}
+body.logged-out{display:flex;align-items:center;justify-content:center;min-height:100vh}
+a{color:#1976D2;text-decoration:none}
+input,select,textarea,button{font-family:inherit;font-size:14px}
+button{cursor:pointer}
+table{border-collapse:collapse;width:100%;background:#fff}
+th,td{padding:10px 12px;border-bottom:1px solid #e5e7eb;text-align:left}
+th{background:#eef2f7;font-weight:600;color:#374151;font-size:13px}
+tr:hover td{background:#fafbfc}
+
+/* ===== Login Card ===== */
+.login-wrap{width:400px;background:#fff;border-radius:12px;padding:32px;box-shadow:0 6px 24px rgba(0,0,0,.08)}
+.login-wrap h1{font-size:22px;margin-bottom:6px;color:#1976D2}
+.login-wrap .sub{color:#6b7280;font-size:13px;margin-bottom:24px}
+.login-wrap .fg{margin-bottom:14px}
+.login-wrap label{display:block;font-size:13px;color:#374151;margin-bottom:4px;font-weight:500}
+.login-wrap input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px}
+.login-wrap .err{color:#dc2626;font-size:13px;margin:10px 0;display:none}
+.login-wrap .login-btn{width:100%;padding:12px;background:#1976D2;color:#fff;border:none;border-radius:8px;font-weight:600;margin-top:8px}
+.login-wrap .login-btn:hover{background:#1565c0}
+.login-wrap .toggle{text-align:center;margin-top:16px;font-size:13px;color:#6b7280}
+.login-wrap .toggle a{color:#1976D2;cursor:pointer}
+
+/* ===== App Layout (PC) ===== */
+.app-layout{display:none;min-height:100vh}
+body.logged-in .app-layout{display:flex}
+body.logged-in .login-wrap{display:none}
+
+.pc-sidebar{width:220px;min-width:220px;background:#1976D2;color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.pc-sidebar .brand{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.18);font-weight:700;font-size:16px}
+.pc-sidebar .brand .co{font-size:13px;opacity:.85;font-weight:400;margin-top:2px}
+.pc-sidebar nav{flex:1;padding:8px 0;overflow-y:auto}
+.sb-item{display:flex;align-items:center;gap:10px;padding:11px 20px;color:#fff;cursor:pointer;font-size:14px;border-left:3px solid transparent;user-select:none}
+.sb-item:hover{background:rgba(255,255,255,.08)}
+.sb-item.active{background:rgba(255,255,255,.15);border-left-color:#fff;font-weight:600}
+.sb-item .ic{width:18px;display:inline-block;text-align:center}
+.pc-sidebar .logout-btn{margin:12px;padding:10px;background:rgba(0,0,0,.15);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:6px;font-size:13px}
+.pc-sidebar .logout-btn:hover{background:rgba(0,0,0,.3)}
+
+.pc-main{flex:1;min-width:0;padding:24px 32px;overflow-x:auto}
+.pc-main h2{font-size:20px;margin-bottom:16px;color:#1f2937;font-weight:700}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ===== Common Buttons ===== */
+.btn{padding:8px 16px;border:none;border-radius:6px;font-size:14px;font-weight:500}
+.btn-primary{background:#1976D2;color:#fff}
+.btn-primary:hover{background:#1565c0}
+.btn-success{background:#16a34a;color:#fff}
+.btn-success:hover{background:#15803d}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-danger:hover{background:#b91c1c}
+.btn-secondary{background:#e5e7eb;color:#374151}
+.btn-secondary:hover{background:#d1d5db}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.stat-row{display:flex;gap:16px;margin-top:16px;flex-wrap:wrap}
+.stat-card{background:#fff;border-radius:8px;padding:16px 20px;min-width:180px;box-shadow:0 1px 3px rgba(0,0,0,.05);border-left:4px solid #1976D2}
+.stat-card .lbl{font-size:12px;color:#6b7280}
+.stat-card .val{font-size:22px;font-weight:700;color:#1f2937;margin-top:4px}
+
+/* ===== Calendar ===== */
+.cal-nav{display:flex;align-items:center;gap:16px;margin-bottom:12px}
+.cal-nav .mon{font-size:18px;font-weight:700;min-width:160px;text-align:center}
+.cal-table{width:100%;table-layout:fixed;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.cal-table th{background:#eef2f7;padding:10px;text-align:center;font-size:13px;font-weight:600}
+.cal-table th.sun{color:#dc2626}
+.cal-table th.sat{color:#1976D2}
+.cal-table td{padding:0;border:1px solid #e5e7eb;vertical-align:top;height:90px}
+.cal-cell{height:100%;padding:6px 8px;cursor:pointer;position:relative;font-size:13px}
+.cal-cell:hover{background:#f3f9ff}
+.cal-cell .d{font-weight:600}
+.cal-cell.sun .d{color:#dc2626}
+.cal-cell.sat .d{color:#1976D2}
+.cal-cell.today{background:#e3f2fd}
+.cal-cell.today .d{color:#1976D2}
+.cal-cell.empty{background:#f9fafb;cursor:default}
+.cal-cell .dot{display:inline-block;width:8px;height:8px;background:#1976D2;border-radius:50%;margin-left:4px;vertical-align:middle}
+.cal-cell .mini{font-size:11px;color:#6b7280;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ===== Forms ===== */
+.form-card{background:#fff;border-radius:8px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.form-card h3{font-size:15px;margin-bottom:12px;color:#1f2937}
+.form-row{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.form-grp{flex:1;min-width:160px}
+.form-grp label{display:block;font-size:12px;color:#6b7280;margin-bottom:3px;font-weight:500}
+.form-grp input,.form-grp select,.form-grp textarea{width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:14px}
+.form-grp input:focus,.form-grp select:focus,.form-grp textarea:focus{outline:none;border-color:#1976D2}
+.form-grp textarea{resize:vertical;min-height:60px}
+
+/* ===== Modal ===== */
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-box{background:#fff;border-radius:10px;padding:24px;max-width:540px;width:90%;max-height:88vh;overflow-y:auto}
+.modal-box h3{margin-bottom:16px;font-size:17px}
+.modal-box .btn-group{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+/* ===== Badge ===== */
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge-master{background:#fee2e2;color:#991b1b}
+.badge-admin{background:#e0e7ff;color:#3730a3}
+.badge-worker{background:#dcfce7;color:#166534}
+.badge-half{background:#fff7ed;color:#9a3412}
+.badge-full{background:#ecfdf5;color:#065f46}
+.badge-draft{background:#f3f4f6;color:#374151}
+.badge-issued{background:#dbeafe;color:#1e40af}
+.badge-paid{background:#d1fae5;color:#065f46}
+
+/* ===== Toast ===== */
+.toast{position:fixed;bottom:20px;right:20px;background:#1f2937;color:#fff;padding:12px 24px;border-radius:8px;z-index:99999;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+
+/* ===== Invoice Overlay ===== */
+.inv-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f5f5;z-index:9999;overflow-y:auto;display:none}
+.inv-overlay.show{display:block}
+.inv-overlay .toolbar{position:sticky;top:0;background:#333;color:#fff;padding:10px 16px;display:flex;gap:10px;align-items:center;z-index:1}
+.inv-overlay .toolbar button{padding:6px 14px;border:none;border-radius:4px;font-size:13px}
+.inv-overlay .toolbar .btn-close{background:#666;color:#fff}
+.inv-overlay .toolbar .btn-print{background:#1a73e8;color:#fff}
+.inv-wrap{max-width:1000px;margin:16px auto;padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.inv-form-panel,.inv-preview-panel{background:#fff;border-radius:8px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.inv-form-panel h4,.inv-preview-panel h4{font-size:14px;margin-bottom:10px;color:#374151}
+.inv-detail-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}
+.inv-detail-table th{background:#f0f0f0;padding:5px;border:1px solid #ccc;font-size:12px}
+.inv-detail-table td{padding:2px;border:1px solid #ccc}
+.inv-detail-table input,.inv-detail-table select{width:100%;padding:3px 5px;border:1px solid #ddd;border-radius:3px;font-size:12px}
+.inv-detail-table .btn-sm{background:#dc2626;color:#fff;padding:3px 8px;font-size:11px}
+.invoice-page{background:#fff;padding:10mm 12mm;font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:9pt;color:#333;border:1px solid #ddd;min-height:280mm}
+.invoice-page .title-line{text-align:center;font-size:18pt;letter-spacing:6px;padding:5mm 0 2mm;border-bottom:2px solid #333;margin-bottom:4mm}
+.invoice-page .ln{margin:2mm 0}
+.invoice-page table.inv-pre{width:100%;border-collapse:collapse;margin-top:4mm}
+.invoice-page table.inv-pre th,.invoice-page table.inv-pre td{border:1px solid #333;padding:2mm;font-size:9pt}
+.invoice-page table.inv-pre th{background:#eee}
+
+.receipt-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f5f5;z-index:9999;overflow-y:auto;display:none}
+.receipt-overlay.show{display:block}
+.receipt-overlay .toolbar{position:sticky;top:0;background:#333;color:#fff;padding:10px 16px;display:flex;gap:10px;align-items:center;z-index:1}
+.receipt-overlay .toolbar button{padding:6px 14px;border:none;border-radius:4px;font-size:13px}
+.receipt-overlay .toolbar .btn-close{background:#666;color:#fff}
+.receipt-overlay .toolbar .btn-print{background:#1a73e8;color:#fff}
+.receipt-page{width:210mm;min-height:100mm;background:#fff;margin:16px auto;padding:14mm;box-shadow:0 2px 8px rgba(0,0,0,.15);font-family:"Hiragino Mincho ProN","Yu Mincho",serif}
+
+/* ===== Empty state ===== */
+.empty{text-align:center;padding:40px;color:#9ca3af;background:#fff;border-radius:8px;margin:16px 0}
+
+@media print{
+@page{size:A4 portrait;margin:5mm}
+body{background:#fff!important}
+.pc-sidebar,.pc-main>.btn-row,.inv-overlay .toolbar,.receipt-overlay .toolbar,.inv-form-panel{display:none!important}
+.inv-wrap{display:block!important;padding:0!important;margin:0!important}
+.inv-preview-panel{box-shadow:none!important;padding:0!important}
+}
+</style>
 </head>
-<body>
-  <div class="container">
-    <!-- Login Screen -->
-    <div id="loginScreen" class="login-screen">
-      <div class="login-logo">ニチログ</div>
-      <div id="loginPanel" class="login-form">
-        <div class="form-group"><label>会社名</label><input type="text" id="loginCompany" placeholder="会社名を入力"></div>
-        <div class="form-group"><label>名前</label><input type="text" id="loginName" placeholder="名前を入力"></div>
-        <div class="form-group"><label>パスワード</label><input type="password" id="loginPassword" placeholder="パスワード"></div>
-        <button class="btn-primary" style="width:100%;padding:12px;margin-top:8px;" onclick="doLogin()">ログイン</button>
-        <div id="loginError" style="color:#e74c3c;text-align:center;margin-top:8px;font-size:13px;"></div>
-        <div style="text-align:center;margin-top:16px;"><a href="#" onclick="event.preventDefault();document.getElementById('loginPanel').style.display='none';document.getElementById('regPanel').style.display='block';" style="color:#4a90d9;font-size:14px;">新規アカウント登録</a></div>
-      </div>
-      <div id="regPanel" class="login-form" style="display:none;">
-        <h3 style="text-align:center;margin-bottom:16px;font-size:16px;">新規アカウント登録</h3>
-        <div class="form-group"><label>会社名</label><input type="text" id="regCompany" placeholder="会社名"></div>
-        <div class="form-group"><label>名前</label><input type="text" id="regName" placeholder="名前"></div>
-        <div class="form-group"><label>パスワード</label><input type="password" id="regPassword" placeholder="パスワード"></div>
-        <div class="form-group"><label>ロール</label><select id="regRole" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;"><option value="master">master（管理者）</option><option value="submaster">submaster（職長）</option><option value="worker">worker（作業員）</option></select></div>
-        <button style="width:100%;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:6px;font-size:16px;cursor:pointer;margin-top:8px;" onclick="doRegister()">登録</button>
-        <div id="regError" style="color:#e74c3c;text-align:center;margin-top:8px;font-size:13px;"></div>
-        <div style="text-align:center;margin-top:16px;"><a href="#" onclick="event.preventDefault();document.getElementById('regPanel').style.display='none';document.getElementById('loginPanel').style.display='block';" style="color:#4a90d9;font-size:14px;">ログインに戻る</a></div>
-      </div>
-    </div>
+<body class="logged-out">
 
-    <!-- App Header -->
-    <div id="appHeader" class="app-header" style="display: none;">ニチログ v2<div class="pc-header-right"><span id="pcCompanyDisplay"></span><span id="pcUserDisplay"></span><button class="pc-logout-btn" onclick="location.reload()">ログアウト</button></div></div><div class="pc-main-wrap"><div class="pc-sidebar">
-<div class="sb-item active" onclick="pcSwitchTab(1,this)"><span class="material-symbols-outlined">calendar_today</span>カレンダー</div>
-<div class="sb-item" onclick="pcSwitchTab(2,this)"><span class="material-symbols-outlined">bar_chart</span>サマリー</div>
-<div class="sb-item" onclick="pcSwitchTab(3,this)"><span class="material-symbols-outlined">location_on</span>現場</div>
-<div class="sb-item" onclick="pcSwitchTab(4,this)"><span class="material-symbols-outlined">people</span>メンバー</div>
-<div class="sb-item" onclick="pcSwitchTab(5,this)"><span class="material-symbols-outlined">receipt</span>請求</div>
-<div class="sb-item" onclick="pcSwitchTab(6,this)"><span class="material-symbols-outlined">settings</span>設定</div>
-</div><div class="pc-content-area">
+<!-- ==================== Login Screen ==================== -->
+<div class="login-wrap" id="loginScreen">
+<h1>ニチログ PC</h1>
+<div class="sub">建設工事・出勤管理システム</div>
+<div id="loginForm">
+<div class="fg"><label>会社名</label><input id="loginCompany" type="text" autocomplete="organization"></div>
+<div class="fg"><label>お名前</label><input id="loginName" type="text" autocomplete="name"></div>
+<div class="fg"><label>パスワード</label><input id="loginPassword" type="password" autocomplete="current-password"></div>
+<div class="err" id="loginError"></div>
+<button class="login-btn" onclick="doLogin()">ログイン</button>
+<div class="toggle">アカウントをお持ちでない方は <a onclick="toggleRegister(true)">新規登録</a></div>
+</div>
+<div id="registerForm" style="display:none">
+<div class="fg"><label>会社名</label><input id="regCompany" type="text"></div>
+<div class="fg"><label>お名前</label><input id="regName" type="text"></div>
+<div class="fg"><label>パスワード</label><input id="regPassword" type="password"></div>
+<div class="fg"><label>ロール</label><select id="regRole"><option value="master">master（管理者）</option><option value="admin">admin（副管理者）</option><option value="worker">worker（作業員）</option></select></div>
+<div class="err" id="regError"></div>
+<button class="login-btn" onclick="doRegister()">登録</button>
+<div class="toggle"><a onclick="toggleRegister(false)">ログイン画面に戻る</a></div>
+</div>
+</div>
 
-    <!-- Tab Contents -->
-    <div id="t1" class="tab-content"><!-- Calendar --></div>
-    <div id="t2" class="tab-content"><!-- Summary --></div>
-    <div id="t3" class="tab-content"><!-- Sites --></div>
-    <div id="t4" class="tab-content"><!-- Members --></div>
-    <div id="t5" class="tab-content">
-      <!-- Invoice list rendered by renderReport() -->
-      </div>
-    <div id="t6" class="tab-content"><!-- Settings --></div>
+<!-- ==================== App Layout ==================== -->
+<div class="app-layout" id="appLayout">
+<div class="pc-sidebar" role="navigation">
+<div class="brand"><div id="sbCompany">-</div><div class="co" id="sbUser">-</div></div>
+<nav id="sbNav">
+<div class="sb-item active" data-tab="1" onclick="switchTab(1)"><span class="ic">◉</span>カレンダー</div>
+<div class="sb-item" data-tab="2" onclick="switchTab(2)"><span class="ic">◈</span>サマリー</div>
+<div class="sb-item" data-tab="3" onclick="switchTab(3)"><span class="ic">◆</span>現場</div>
+<div class="sb-item" data-tab="4" onclick="switchTab(4)"><span class="ic">◎</span>メンバー</div>
+<div class="sb-item" data-tab="5" onclick="switchTab(5)"><span class="ic">◇</span>請求</div>
+<div class="sb-item" data-tab="6" onclick="switchTab(6)"><span class="ic">◐</span>設定</div>
+</nav>
+<button class="logout-btn" onclick="doLogout()">ログアウト</button>
+</div>
 
-    <!-- Navigation Bar -->
-    <div id="navBar" class="nav-bar" style="display: none;">
-      <div class="nav-item active" onclick="switchTab(1)"><span class="material-icons">calendar_today</span>カレンダー</div>
-      <div class="nav-item" onclick="switchTab(2)"><span class="material-icons">bar_chart</span>サマリー</div>
-      <div class="nav-item" onclick="switchTab(3)"><span class="material-icons">location_on</span>現場</div>
-      <div class="nav-item" onclick="switchTab(4)"><span class="material-icons">people</span>メンバー</div>
-      <div class="nav-item" onclick="switchTab(5)"><span class="material-icons">receipt</span>請求</div>
-      <div class="nav-item" onclick="switchTab(6)"><span class="material-icons">settings</span>設定</div>
-    </div></div></div>
-  </div>
+<div class="pc-main" role="region">
+<!-- Tab 1: Calendar -->
+<div class="tab-panel active" id="tab1"></div>
+<!-- Tab 2: Summary -->
+<div class="tab-panel" id="tab2"></div>
+<!-- Tab 3: Sites -->
+<div class="tab-panel" id="tab3"></div>
+<!-- Tab 4: Members -->
+<div class="tab-panel" id="tab4"></div>
+<!-- Tab 5: Invoices -->
+<div class="tab-panel" id="tab5"></div>
+<!-- Tab 6: Settings -->
+<div class="tab-panel" id="tab6"></div>
+</div>
+</div>
 
-  <!-- Modals -->
-  <div id="addEntryModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">出勤記録を追加</div>
-      <div class="form-group">
-        <label>日付</label>
-        <input type="text" id="addEntryDate" readonly>
-      </div>
-      <div class="form-group">
-        <label>会社</label>
-        <select id="addEntryCompany" onchange="filterSitesByCompany()"></select>
-      </div>
-      <div class="form-group">
-        <label>現場</label>
-        <select id="addEntrySite"></select>
-        <input type="text" id="addEntryNewSite" placeholder="新しい現場名を入力" style="display:none;margin-top:4px;width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;">
-      </div>
-      <div class="form-group">
-        <label>勤務区分</label>
-        <select id="addEntryWorkType">
-          <option value="full">1日</option>
-          <option value="half">半日</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>メンバー</label>
-        <select id="addEntryMember"></select>
-      </div>
-      <div class="form-group">
-        <label>備考</label>
-        <textarea id="addEntryNote"></textarea>
-      </div>
-      <div class="btn-group">
-        <button class="btn btn-secondary" onclick="clModal()">キャンセル</button>
-        <button class="btn btn-primary" onclick="saveE()">保存</button>
-      </div>
-    </div>
-  </div>
+<!-- ==================== Modals ==================== -->
+<div class="modal" id="dayDetailModal">
+<div class="modal-box">
+<h3 id="ddTitle">出勤記録</h3>
+<div id="ddBody"></div>
+<div class="btn-group">
+<button class="btn btn-primary" onclick="showAddE()">＋ 追加</button>
+<button class="btn btn-secondary" onclick="clModal()">閉じる</button>
+</div>
+</div>
+</div>
 
-  <div id="dayDetailModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">出勤記録</div>
-      <div id="dayDetailList"></div>
-      <div class="btn-group">
-        <button class="btn btn-secondary" onclick="clModal()">閉じる</button>
-        <button class="btn btn-primary" onclick="showAddE()">追加</button>
-      </div>
-    </div>
-  </div>
+<div class="modal" id="addEntryModal">
+<div class="modal-box">
+<h3>出勤記録を追加</h3>
+<div class="form-row"><div class="form-grp"><label>日付</label><input type="date" id="aeDate"></div></div>
+<div class="form-row"><div class="form-grp"><label>メンバー</label><select id="aeMember"></select></div></div>
+<div class="form-row"><div class="form-grp"><label>取引先</label><select id="aeClient" onchange="filterSitesByClient()"></select></div></div>
+<div class="form-row"><div class="form-grp"><label>現場</label><select id="aeSite"></select></div></div>
+<div class="form-row"><div class="form-grp"><label>勤務区分</label><select id="aeType"><option value="full">1日（全日）</option><option value="half">半日</option></select></div></div>
+<div class="form-row"><div class="form-grp"><label>備考</label><textarea id="aeNote"></textarea></div></div>
+<div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">キャンセル</button><button class="btn btn-primary" onclick="saveEntry()">保存</button></div>
+</div>
+</div>
 
-  <div id="siteModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header" id="siteModalTitle">新規現場</div>
-      <div class="form-group">
-        <label>現場名</label>
-        <input type="text" id="siteName">
-      </div>
-      <div class="form-group">
-        <label>単価（円）</label>
-        <input type="number" id="sitePrice">
-      </div>
-      <div class="form-group">
-        <label>料金体系</label>
-        <select id="siteRateType">
-          <option value="daily">日給</option>
-          <option value="hourly">時給</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>色</label>
-        <select id="siteColor">
-          <option value="#3b82f6">青</option>
-          <option value="#ef4444">赤</option>
-          <option value="#10b981">緑</option>
-          <option value="#f59e0b">黄</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>請求先企業ID</label>
-        <input type="text" id="siteClientCompanyId" placeholder="（オプション）">
-      </div>
-      <div class="form-group">
-        <label>備考</label>
-        <textarea id="siteMemo"></textarea>
-      </div>
-      <div class="btn-group">
-        <button class="btn btn-secondary" onclick="clModal()">キャンセル</button>
-        <button class="btn btn-danger" id="siteDeletBtn" style="display: none;" onclick="deleteSite()">削除</button>
-        <button class="btn btn-primary" onclick="saveSite()">保存</button>
-      </div>
-    </div>
-  </div>
+<div class="modal" id="editEntryModal">
+<div class="modal-box">
+<h3>出勤記録を編集</h3>
+<input type="hidden" id="eeId">
+<div class="form-row"><div class="form-grp"><label>日付</label><input type="date" id="eeDate"></div></div>
+<div class="form-row"><div class="form-grp"><label>メンバー</label><select id="eeMember"></select></div></div>
+<div class="form-row"><div class="form-grp"><label>取引先</label><select id="eeClient" onchange="filterEditSites()"></select></div></div>
+<div class="form-row"><div class="form-grp"><label>現場</label><select id="eeSite"></select></div></div>
+<div class="form-row"><div class="form-grp"><label>勤務区分</label><select id="eeType"><option value="full">1日（全日）</option><option value="half">半日</option></select></div></div>
+<div class="form-row"><div class="form-grp"><label>備考</label><textarea id="eeNote"></textarea></div></div>
+<div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">キャンセル</button><button class="btn btn-primary" onclick="updateEntry()">更新</button></div>
+</div>
+</div>
 
-  <div id="memberModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header" id="memberModalTitle">新規メンバー</div>
-      <div class="form-group">
-        <label>名前</label>
-        <input type="text" id="memberName">
-      </div>
-      <div class="form-group">
-        <label>パスワード</label>
-        <input type="password" id="memberPassword">
-      </div>
-      <div class="form-group">
-        <label>役職</label>
-        <select id="memberRole">
-          <option value="master">経営</option>
-          <option value="submaster">職長</option>
-          <option value="worker">作業員</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>チーム</label>
-        <input type="text" id="memberTeam">
-      </div>
-      <div class="btn-group">
-        <button class="btn btn-secondary" onclick="clModal()">キャンセル</button>
-        <button class="btn btn-danger" id="memberDeleteBtn" style="display: none;" onclick="deleteMember()">削除</button>
-        <button class="btn btn-primary" onclick="saveMember()">保存</button>
-      </div>
-    </div>
-  </div>
+<div class="modal" id="siteModal">
+<div class="modal-box">
+<h3 id="smTitle">現場</h3>
+<input type="hidden" id="smId">
+<div class="form-row"><div class="form-grp"><label>取引先</label><select id="smClient"></select></div></div>
+<div class="form-row"><div class="form-grp"><label>現場名</label><input type="text" id="smName"></div></div>
+<div class="form-row"><div class="form-grp"><label>単価</label><input type="number" id="smPrice" value="25000"></div><div class="form-grp"><label>タイプ</label><select id="smType"><option value="人工">人工</option><option value="常傭">常傭</option><option value="請負">請負</option></select></div></div>
+<div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">キャンセル</button><button class="btn btn-primary" onclick="saveSite()">保存</button></div>
+</div>
+</div>
 
-  <div id="invoiceOverlay" class="invoice-overlay invoice-print-area">
-    <div class="toolbar no-print">
-      <button class="btn-close" onclick="closeInvoice()">閉じる</button>
-      <button class="btn-print" onclick="nichiPrint('invoice-print-area')">PDF作成</button>
-      <button class="btn-print" onclick="saveInvoice()" style="background:#16a34a;">保存</button>
-      <span style="flex:1"></span>
-      <span style="font-size:13px">請求書プレビュー</span>
-    </div>
-    <div class="inv-form no-print" oninput="renderInvoicePreview()" id="invForm">
-      <div class="form-row">
-        <div class="form-group"><label>請求書No.</label><input id="invNo" value=""></div>
-        <div class="form-group"><label>発行日</label><input id="invDate" type="date"></div>
-        <div class="form-group" style="grid-column:1/-1"><label style="display:block;margin-bottom:4px"><input type="checkbox" id="invDueShow" checked onchange="document.getElementById('invDue').disabled=!this.checked" style="margin-right:4px">振込期限</label><input id="invDue" type="date" style="width:100%"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group" style="flex:2"><label>宛先会社名</label><input id="invTo"></div>
-        <div class="form-group"><label>担当者名</label><input id="invTanto"></div>
-      </div>
+<div class="modal" id="clientModal">
+<div class="modal-box">
+<h3 id="cmTitle">取引先</h3>
+<input type="hidden" id="cmId">
+<div class="form-row"><div class="form-grp"><label>取引先名</label><input type="text" id="cmName"></div></div>
+<div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">キャンセル</button><button class="btn btn-primary" onclick="saveClient()">保存</button></div>
+</div>
+</div>
 
-      <div class="form-row">
-        <div class="form-group" style="flex:1"><label>工事名</label><input id="invSiteName"></div>
-      </div>      <div class="form-row">
-        <div class="form-group" style="flex:2"><label>発行元会社名</label><input id="invFrom"></div>
-        <div class="form-group"><label>発行元住所</label><input id="invAddr"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>発行元TEL</label><input id="invTel"></div>
-        <div class="form-group"><label>発行元FAX</label><input id="invFax"></div>
-        <div class="form-group"><label>登録番号</label><input id="invRegNo" placeholder="T0000000000000"></div>
-      </div>
-      <h4 style="margin:12px 0 6px;font-size:14px">明細</h4>
-      <table class="inv-detail-table" id="invDetailTable">
-        <thead><tr><th style="width:25%">名称</th><th style="width:20%">仕様</th><th style="width:8%">数量</th><th style="width:8%">単位</th><th style="width:12%">単価</th><th style="width:8%">税率</th><th style="width:14%">金額</th><th style="width:5%"></th></tr></thead>
-        <tbody id="invDetailBody"></tbody>
-      </table>
-      <button class="btn btn-secondary" onclick="addInvRow()" style="margin:6px 0">＋ 行追加</button>
-      <div class="form-row">
-        <div class="form-group" style="flex:2"><label>備考</label><textarea id="invRemarks" rows="2"></textarea></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>銀行名</label><input id="invBankName"></div>
-        <div class="form-group"><label>支店名</label><input id="invBankBranch"></div>
-        <div class="form-group"><label>口座種別</label><select id="invBankType"><option>普通</option><option>当座</option></select></div>
-        <div class="form-group"><label>口座番号</label><input id="invBankNo"></div>
-        <div class="form-group"><label>口座名義</label><input id="invBankHolder"></div>
-      </div>
-      <button class="btn btn-primary" onclick="renderInvoicePreview()" style="margin-top:10px">プレビュー更新</button>
-    </div>
-    <div class="invoice-page" id="invoice-print-area"></div>
-  </div>
-  <div id="receiptOverlay" class="invoice-overlay">
-    <div class="toolbar">
-      <button class="btn-close" onclick="closeReceipt()">閉じる</button>
-      <button class="btn-print" onclick="nichiPrint('receiptPage')">PDF作成</button>
-      <span style="flex:1"></span>
-      <span style="font-size:13px">領収書プレビュー</span>
-    </div>
-    <div class="receipt-page" id="receiptPage"></div>
-  </div>
+<div class="modal" id="memberModal">
+<div class="modal-box">
+<h3 id="mmTitle">メンバー</h3>
+<input type="hidden" id="mmId">
+<div class="form-row"><div class="form-grp"><label>名前</label><input type="text" id="mmName"></div></div>
+<div class="form-row"><div class="form-grp"><label>ロール</label><select id="mmRole"><option value="master">master</option><option value="admin">admin</option><option value="worker">worker</option></select></div><div class="form-grp"><label>チーム</label><input type="text" id="mmTeam"></div></div>
+<div class="form-row"><div class="form-grp"><label>新規パスワード（登録時のみ必須）</label><input type="password" id="mmPw" placeholder="変更しない場合は空欄"></div></div>
+<div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">キャンセル</button><button class="btn btn-primary" onclick="saveMember()">保存</button></div>
+</div>
+</div>
 
-  <script>
+<!-- ==================== Invoice Overlay ==================== -->
+<div class="inv-overlay" id="invoiceOverlay">
+<div class="toolbar">
+<button class="btn-close" onclick="closeInvoice()">閉じる</button>
+<button class="btn-print" onclick="saveInvoice()">保存</button>
+<button class="btn-print" onclick="nichiPrint('invoice-print-area')">PDF作成</button>
+<span style="flex:1"></span>
+<span style="font-size:13px">請求書</span>
+</div>
+<div class="inv-wrap">
+<div class="inv-form-panel">
+<h4>請求書入力</h4>
+<div class="form-row"><div class="form-grp"><label>請求番号</label><input id="invNo" type="text"></div><div class="form-grp"><label>発行日</label><input id="invDate" type="date"></div></div>
+<div class="form-row"><div class="form-grp"><label>支払期日</label><input id="invDue" type="date"></div><div class="form-grp"><label>ステータス</label><select id="invStatusSelect"><option value="下書き">下書き</option><option value="発行済">発行済</option><option value="入金済">入金済</option></select></div></div>
+<div class="form-row"><div class="form-grp"><label>宛先（取引先）</label><input id="invTo" type="text"></div><div class="form-grp"><label>担当者</label><input id="invTanto" type="text"></div></div>
+<div class="form-row"><div class="form-grp"><label>工事名</label><input id="invSiteName" type="text"></div><div class="form-grp"><label>差出人</label><input id="invFrom" type="text"></div></div>
+<h4 style="margin-top:12px">明細</h4>
+<table class="inv-detail-table" id="invDetailTable">
+<thead><tr><th style="width:30%">品名</th><th style="width:20%">仕様</th><th style="width:9%">数量</th><th style="width:12%">単位</th><th style="width:15%">単価</th><th style="width:9%">操作</th></tr></thead>
+<tbody id="invDetailBody"></tbody>
+</table>
+<button class="btn btn-secondary btn-sm" onclick="addInvRow()">＋ 行追加</button>
+<h4 style="margin-top:12px">振込先</h4>
+<div class="form-row"><div class="form-grp"><label>銀行名</label><input id="invBankName" type="text"></div><div class="form-grp"><label>支店</label><input id="invBankBranch" type="text"></div></div>
+<div class="form-row"><div class="form-grp"><label>種別</label><select id="invBankType"><option>普通</option><option>当座</option></select></div><div class="form-grp"><label>口座番号</label><input id="invBankNo" type="text"></div><div class="form-grp"><label>口座名義</label><input id="invBankHolder" type="text"></div></div>
+<div class="form-row"><div class="form-grp"><label>備考</label><textarea id="invRemarks"></textarea></div></div>
+</div>
+<div class="inv-preview-panel">
+<h4>プレビュー</h4>
+<div id="invoice-print-area"></div>
+</div>
+</div>
+</div>
 
+<!-- ==================== Receipt Overlay ==================== -->
+<div class="receipt-overlay" id="receiptOverlay">
+<div class="toolbar">
+<button class="btn-close" onclick="closeReceipt()">閉じる</button>
+<button class="btn-print" onclick="nichiPrint('receiptPage')">PDF作成</button>
+<span style="flex:1"></span>
+<span style="font-size:13px">領収書</span>
+</div>
+<div class="receipt-page" id="receiptPage"></div>
+</div>
+
+<script>
+// ============================================================
+// Supabase connection (copied verbatim from existing nichilog-pc.html which was copied from v2)
+// ============================================================
 function _d(s){return atob(s).split('').reverse().join('');}
-let invRows = [{name:'',spec:'',qty:1,unit:'人工',price:25000,taxRate:10}];
-function addInvRow(){
-invRows.push({name:'',spec:'',qty:1,unit:'人工',price:0,taxRate:10});
-renderInvForm();
-renderInvoicePreview();
-}
-function removeInvRow(i){
-invRows.splice(i,1);
-renderInvForm();
-}
-function updInvRow(i,key,val){
-invRows[i][key] = (key==='qty'||key==='price'||key==='taxRate') ? Number(val) : val;
-renderInvoicePreview(); }
-function renderInvForm(){
-const tb = document.getElementById('invDetailBody');
-tb.innerHTML = invRows.map((r,i) =>
-'<tr>' +
-'<td><input value="' + (r.name||'') + '" onchange="updInvRow('+i+',\'name\',this.value)"></td>' +
-'<td><input value="' + (r.spec||'') + '" onchange="updInvRow('+i+',\'spec\',this.value)"></td>' +
-'<td><input type="number" value="' + r.qty + '" onchange="updInvRow('+i+',\'qty\',this.value)" style="width:60px"></td>' +
-'<td><input value="' + (r.unit||'') + '" onchange="updInvRow('+i+',\'unit\',this.value)" style="width:60px"></td>' +
-'<td><input type="number" value="' + r.price + '" onchange="updInvRow('+i+',\'price\',this.value)"></td>' +
-'<td><select onchange="updInvRow('+i+',\'taxRate\',this.value)"><option value="10"' + (r.taxRate==10?' selected':'') + '>10%</option><option value="8"' + (r.taxRate==8?' selected':'') + '>8%</option></select></td>' +
-'<td class="right">' + (r.qty*r.price).toLocaleString() + '</td>' +
-'<td><button onclick="removeInvRow('+i+')" style="color:red;border:none;background:none;cursor:pointer">✕</button></td>' +
-'</tr>'
-).join('');
-}
-function renderInvoicePreview(){
-const no = document.getElementById('invNo').value;
-const date = document.getElementById('invDate').value;
-const due = document.getElementById('invDue').value;
-const to = document.getElementById('invTo').value;
-const tanto = document.getElementById('invTanto').value;
-const from = document.getElementById('invFrom').value;
-const addr = document.getElementById('invAddr').value;
-const tel = document.getElementById('invTel').value;
-const fax = document.getElementById('invFax').value;
-const regNo = document.getElementById('invRegNo').value;
-const remarks = document.getElementById('invRemarks').value;
-const bankName = document.getElementById('invBankName').value;
-const bankBranch = document.getElementById('invBankBranch').value;
-const bankType = document.getElementById('invBankType').value;
-const bankNo = document.getElementById('invBankNo').value;
-const bankHolder = document.getElementById('invBankHolder').value;
-const showDue = document.getElementById('invDueShow').checked;
-const rows = document.getElementById('invDetailBody');
-const trs = rows ? rows.querySelectorAll('tr') : [];
-let detailRows = '';
-let subtotal = 0;
-let tax8 = 0;
-let tax10 = 0;
-let rowIndex = 0;
-trs.forEach(tr => {
-const inputs = tr.querySelectorAll('input');
-const selects = tr.querySelectorAll('select');
-const name = inputs[0] ? inputs[0].value : '';
-const spec = inputs[1] ? inputs[1].value : '';
-const qty = inputs[2] ? parseFloat(inputs[2].value) || 0 : 0;
-const unit = inputs[3] ? inputs[3].value : '';
-const price = inputs[4] ? parseFloat(inputs[4].value) || 0 : 0;
-const taxRate = selects[0] ? parseFloat(selects[0].value) || 0.10 : 0.10;
-const amt = qty * price;
-subtotal += amt;
-if(taxRate === 0.08) tax8 += amt * 0.08;
-else tax10 += amt * 0.10;
-rowIndex++;
-detailRows += '<tr>'
-+ '<td style="padding:5px 8px;text-align:center;border:1px solid #333;">' + rowIndex + '</td>'
-+ '<td style="padding:5px 8px;border:1px solid #333;">' + name + '</td>'
-+ '<td style="padding:5px 8px;border:1px solid #333;">' + spec + '</td>'
-+ '<td style="padding:5px 8px;text-align:center;border:1px solid #333;">' + (qty || '') + '</td>'
-+ '<td style="padding:5px 8px;text-align:center;border:1px solid #333;">' + unit + '</td>'
-+ '<td style="padding:5px 8px;text-align:right;border:1px solid #333;">' + (price ? price.toLocaleString() : '') + '</td>'
-+ '<td style="padding:5px 8px;text-align:right;border:1px solid #333;">' + (amt ? amt.toLocaleString() : '') + '</td>'
-+ '</tr>';
-});
-const totalTax = Math.floor(tax8) + Math.floor(tax10);
-const total = subtotal + totalTax;
-const siteName = document.getElementById('invSiteName') ? document.getElementById('invSiteName').value : '';
-const dateFormatted = date ? date.replace(/-/g, '/') : '';
-const dueFormatted = due ? due.replace(/-/g, '/') : '';
-var F = "'Yu Mincho','Hiragino Mincho Pro','MS Mincho',serif";
-var pca = '-webkit-print-color-adjust:exact;print-color-adjust:exact;';
-document.getElementById('invoice-print-area').innerHTML =
-'<div style="max-width:190mm;margin:0 auto;padding:30px 0;font-family:' + F + ';font-size:10pt;color:#111;line-height:1.5;">'
-+ '<div style="text-align:right;font-size:8pt;color:#666;margin-bottom:2px;">1/1 \u30DA\u30FC\u30B8</div>'
-+ '<div style="text-align:right;font-size:9pt;color:#333;margin-bottom:10px;">No. ' + no + '</div>'
-+ '<div style="background:#2563eb;color:#fff;padding:10px 16px;font-size:18pt;font-weight:bold;letter-spacing:0.3em;margin-bottom:18px;' + pca + '">\u5FA1\u8ACB\u6C42\u66F8</div>'
-+ '<div style="font-size:14pt;font-weight:bold;margin-bottom:4px;border-bottom:2px solid #333;padding-bottom:6px;">' + to + ' \u3000\u5FA1\u4E2D</div>'
-+ '<div style="font-size:9pt;margin:8px 0 14px;">\u62C5\u5F53\uFF1A' + tanto + '</div>'
-+ '<div style="font-size:9pt;line-height:1.7;margin-bottom:14px;">\u5E73\u7D20\u306F\u683C\u5225\u306E\u304A\u5F15\u304D\u7ACB\u3066\u3092\u8CDC\u308A\u539A\u304F\u5FA1\u793C\u7533\u3057\u4E0A\u3052\u307E\u3059\u3002\u4E0B\u8A18\u306E\u901A\u308A\u3054\u8ACB\u6C42\u7533\u3057\u4E0A\u3052\u307E\u3059\u3002</div>'
-+ '<div style="font-size:9pt;line-height:1.8;margin-bottom:10px;">'
-+ '<div>\u8ACB\u6C42\u65E5\u3000\u3000\u3000' + dateFormatted + '</div>'
-+ ((due && showDue) ? '<div>\u632F\u8FBC\u671F\u9650\u3000' + dueFormatted + '</div>' : '')
-+ (siteName ? '<div>\u5DE5\u4E8B\u540D\u3000\u3000\u3000' + siteName + '</div>' : '')
-+ '</div>'
-+ '<div style="border:2px solid #333;padding:8px 16px;margin-bottom:18px;font-size:13pt;font-weight:bold;display:inline-block;">\u5FA1\u8ACB\u6C42\u91D1\u984D\uFF08\u7A0E\u8FBC\uFF09\u3000\u00A5' + total.toLocaleString() + '</div>'
-+ '<table style="width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:0;">'
-+ '<thead><tr>'
-+ '<th style="padding:6px 8px;text-align:center;font-weight:bold;border:1px solid #333;background:#e8e8e8;' + pca + '">No</th>'
-+ '<th style="padding:6px 8px;text-align:left;font-weight:bold;border:1px solid #333;background:#e8e8e8;' + pca + '">\u540D\u79F0</th>'
-+ '<th style="padding:6px 8px;text-align:left;font-weight:bold;border:1px solid #333;background:#e8e8e8;' + pca + '">\u4ED5\u69D8</th>'
-+ '<th style="padding:6px 8px;text-align:center;font-weight:bold;border:1px solid #333;background:#e8e8e8;' + pca + '">\u6570\u91CF</th>'
-+ '<th style="padding:6px 8px;text-align:center;font-weight:bold;border:1px solid #333;background:#e8e8e8;' + pca + '">\u5358\u4F4D</th>'
-+ '<th style="padding:6px 8px;text-align:right;font-weight:bold;border:1px solid #333;background:#e8e8e8;' + pca + '">\u5358\u4FA1</th>'
-+ '<th style="padding:6px 8px;text-align:right;font-weight:bold;border:1px solid #333;background:#e8e8e8;' + pca + '">\u91D1\u984D</th>'
-+ '</tr></thead>'
-+ '<tbody>' + detailRows + (function(){var e='';for(var i=rowIndex;i<15;i++){e+='<tr><td style="padding:5px 8px;text-align:center;border:1px solid #333;">&nbsp;</td><td style="padding:5px 8px;border:1px solid #333;">&nbsp;</td><td style="padding:5px 8px;border:1px solid #333;">&nbsp;</td><td style="padding:5px 8px;text-align:center;border:1px solid #333;">&nbsp;</td><td style="padding:5px 8px;text-align:center;border:1px solid #333;">&nbsp;</td><td style="padding:5px 8px;text-align:right;border:1px solid #333;">&nbsp;</td><td style="padding:5px 8px;text-align:right;border:1px solid #333;">&nbsp;</td></tr>';}return e;}()) + '</tbody>'
-+ '</table>'
-+ '<div style="display:flex;justify-content:space-between;margin-top:12px;gap:16px;">'
-+ '<div style="flex:1;font-size:9pt;display:flex;flex-direction:column;">'
-+ '<div style="font-weight:bold;margin-bottom:4px;border-bottom:1px solid #999;padding-bottom:2px;">\u5099\u8003</div>'
-+ '<div style="white-space:pre-wrap;line-height:1.6;font-size:8.5pt;">' + (remarks || '') + '</div>'
-+ (bankName ? '<div style="margin-top:10px;font-size:8.5pt;line-height:1.6;border-top:1px solid #ccc;padding-top:6px;">\u304A\u632F\u8FBC\u5148\uFF1A' + bankName + '\u3000' + bankBranch + '\u3000' + bankType + '\u3000' + bankNo + '<br>' + bankHolder + '</div>' : '')
-+ '<div style="margin-top:auto;padding-top:8px;font-size:9pt;line-height:1.7;">'
-+ '<div style="font-weight:bold;font-size:12pt;">' + from + '</div>'
-+ (regNo ? '<div style="font-size:8.5pt;margin-top:4px;">\u30A4\u30F3\u30DC\u30A4\u30B9\u767B\u9332\u756A\u53F7: ' + regNo + '</div>' : '')
-+ '</div>'+ '</div>'
-+ '<div style="width:220px;font-size:9pt;">'
-+ '<table style="width:100%;border-collapse:collapse;font-size:9pt;">'
-+ '<tr><td style="padding:5px 8px;border:1px solid #333;">\u2460\u5C0F\u8A08</td><td style="padding:5px 8px;text-align:right;border:1px solid #333;">\u00A5' + subtotal.toLocaleString() + '</td></tr>'
-+ '<tr><td style="padding:5px 8px;border:1px solid #333;">\u2461\u6D88\u8CBB\u7A0E(8%)</td><td style="padding:5px 8px;text-align:right;border:1px solid #333;">\u00A5' + Math.floor(tax8).toLocaleString() + '</td></tr>'
-+ '<tr><td style="padding:5px 8px;border:1px solid #333;">\u2462\u6D88\u8CBB\u7A0E(10%)</td><td style="padding:5px 8px;text-align:right;border:1px solid #333;">\u00A5' + Math.floor(tax10).toLocaleString() + '</td></tr>'
-+ '<tr><td style="padding:5px 8px;border:1px solid #333;">\u2463\u6D88\u8CBB\u7A0E\u7B49(\u2461+\u2462)</td><td style="padding:5px 8px;text-align:right;border:1px solid #333;">\u00A5' + totalTax.toLocaleString() + '</td></tr>'
-+ '<tr style="font-weight:bold;"><td style="padding:6px 8px;border:2px solid #333;background:#e8e8e8;' + pca + '">\u2464\u5408\u8A08(\u2460+\u2463)</td><td style="padding:6px 8px;text-align:right;border:2px solid #333;background:#e8e8e8;' + pca + '">\u00A5' + total.toLocaleString() + '</td></tr>'
-+ '</table>'
-+ '</div>'
-+ '</div>';
-}
-function openInvoice(prefill){currentInvoiceId=null;
-const d = new Date();
-const y = d.getFullYear();
-const m = String(d.getMonth()+1).padStart(2,'0');
-document.getElementById('invDate').value = localDateStr(d);
-document.getElementById('invNo').value = y + '-' + m + '-001';
-if(prefill){
-if(prefill.invNo) document.getElementById('invNo').value = prefill.invNo;
-if(prefill.invDate) document.getElementById('invDate').value = prefill.invDate;
-if(prefill.invDue) { document.getElementById('invDue').value = prefill.invDue; document.getElementById('invDueShow').checked = true; }
-if(prefill.invTo) document.getElementById('invTo').value = prefill.invTo;
-if(prefill.invTanto) document.getElementById('invTanto').value = prefill.invTanto;
-if(prefill.rows) { invRows = prefill.rows; }
-}
-if(company.name) document.getElementById('invFrom').value = company.name;
-renderInvForm();
-document.getElementById('invoiceOverlay').style.display = 'block';
-}
-function showToast(msg){var t=document.createElement('div');t.style.cssText='position:fixed;bottom:20px;right:20px;background:#333;color:#fff;padding:12px 24px;border-radius:8px;z-index:99999;font-size:14px;opacity:1;transition:opacity 0.3s';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove()},300)},2000)}
-var currentInvoiceId=null;
-async function saveInvoice(){
-var no=document.getElementById('invNo').value;
-var rows=document.getElementById('invDetailBody').querySelectorAll('tr');
-var items=[];var subtotal=0;
-rows.forEach(function(r){var inp=r.querySelectorAll('input,select');if(inp.length>=5){var nm=inp[0].value,sp=inp[1].value,qt=parseInt(inp[2].value)||0,un=inp[3].value,up=parseInt(inp[4].value)||0;if(nm){items.push({name:nm,spec:sp,qty:qt,unit:un,unitPrice:up,amount:qt*up});subtotal+=qt*up;}}});
-var tax10=Math.floor(subtotal*0.10);
-var payload={
-account_id:currentUser.id, invoice_no:no,
-issue_date:document.getElementById('invDate').value||null,
-due_date:document.getElementById('invDue').value||null,
-client_company:document.getElementById('invTo').value,
-person_in_charge:document.getElementById('invTanto').value,
-construction_name:document.getElementById('invSiteName').value,
-items:items,subtotal:subtotal,tax_8:0,tax_10:tax10,total:subtotal+tax10,
-memo:document.getElementById('invRemarks').value,
-bank_info:{name:document.getElementById('invBankName').value,branch:document.getElementById('invBankBranch').value,type:document.getElementById('invBankType').value,no:document.getElementById('invBankNo').value,holder:document.getElementById('invBankHolder').value},
-status:(document.getElementById('invStatusSelect')?document.getElementById('invStatusSelect').value:'\u4E0B\u66F8\u304D')
-};
-try{
-var res;
-if(currentInvoiceId){
-res=await fetch(SB+'/rest/v1/invoices?id=eq.'+currentInvoiceId,{method:'PATCH',headers:{...(await getH()),'Prefer':'return=representation'},body:JSON.stringify(payload)});
-}else{
-res=await fetch(SB+'/rest/v1/invoices',{method:'POST',headers:{...(await getH()),'Prefer':'return=representation'},body:JSON.stringify(payload)});
-}
-var data=await res.json();
-if(!res.ok)throw new Error(JSON.stringify(data));
-if(!currentInvoiceId&&data&&data[0])currentInvoiceId=data[0].id;
-showToast('\u4FDD\u5B58\u3057\u307E\u3057\u305F');
-if(typeof loadInvoiceList==='function')loadInvoiceList();
-}catch(e){console.error(e);showToast('\u4FDD\u5B58\u5931\u6557: '+e.message);}
-}
-function printInvoice(){nichiPrint('invoice-print-area')}
-function closeInvoice(){
-document.getElementById('invoiceOverlay').style.display = 'none';
-}
-var statusMap={'\u4E0B\u66F8\u304D':'\u672A\u78BA\u5B9A','\u78BA\u5B9A':'\u78BA\u5B9A\u6E08','\u9001\u4ED8\u6E08\u307F':'\u9001\u4ED8\u6E08'};
-var statusDbMap={'\u672A\u78BA\u5B9A':'\u4E0B\u66F8\u304D','\u78BA\u5B9A\u6E08':'\u78BA\u5B9A','\u9001\u4ED8\u6E08':'\u9001\u4ED8\u6E08\u307F'};
-function displayStatus(s){return statusMap[s]||s;}
-async function loadInvoiceList(){
-if(!currentUser)return;
-try{
-var res=await fetch(SB+'/rest/v1/invoices?account_id=eq.'+currentUser.id+'&order=created_at.desc',{headers:await getH()});
-var data=await res.json();
-var container=document.getElementById('invoiceListBody');
-var emptyMsg=document.getElementById('invoiceEmptyMsg');
-if(!container)return;
-container.innerHTML='';
-if(!data||data.length===0){if(emptyMsg)emptyMsg.style.display='block';return;}
-if(emptyMsg)emptyMsg.style.display='none';
-data.forEach(function(inv){
-var card=document.createElement('div');
-card.style.cssText='background:#1e1e1e;border:1px solid #333;border-radius:8px;padding:10px 12px;margin-bottom:8px';
-var ds=displayStatus(inv.status);
-var sc=ds==='\u78BA\u5B9A\u6E08'?'#16a34a':ds==='\u9001\u4ED8\u6E08'?'#2563eb':'#888';
-var row1='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:13px">'
-+'<span style="color:#fff;font-weight:bold">'+inv.invoice_no+'</span>'
-+'<span style="color:#aaa">'+(inv.issue_date||'-')+'</span>'
-+'<span style="color:#ccc;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(inv.client_company||'-')+'</span>'
-+'<span style="color:#fff;font-weight:bold">\u00A5'+(inv.total||0).toLocaleString()+'</span>'
-+'<span style="background:'+sc+';color:#fff;padding:1px 8px;border-radius:10px;font-size:11px">'+ds+'</span>'
-+'</div>';
-var btnS='padding:6px 14px;border:none;border-radius:4px;cursor:pointer;font-size:12px;';
-var row2='<div style="display:flex;gap:6px;margin-top:8px">'
-+'<button onclick="editInvoice(\''+inv.id+'\')" style="'+btnS+'background:#2563eb;color:#fff">\u7DE8\u96C6</button>'
-+'<button onclick="deleteInvoice(\''+inv.id+'\')" style="'+btnS+'background:#dc2626;color:#fff">\u524A\u9664</button>'
-+'</div>';
-card.innerHTML=row1+row2;
-container.appendChild(card);
-});
-}catch(e){console.error('loadInvoiceList error:',e);}
-}
-async function previewInvoice(invId){
-try{
-var res=await fetch(SB+'/rest/v1/invoices?id=eq.'+invId,{headers:await getH()});
-var data=await res.json();
-if(!data||data.length===0)return;
-var inv=data[0];currentInvoiceId=inv.id;
-var d={client_company:inv.client_company,person_in_charge:inv.person_in_charge,construction_name:inv.construction_name};
-openInvoice(d);
-currentInvoiceId=inv.id;
-document.getElementById('invNo').value=inv.invoice_no||'';
-document.getElementById('invDate').value=inv.issue_date||'';
-document.getElementById('invDue').value=inv.due_date||'';
-document.getElementById('invTo').value=inv.client_company||'';
-document.getElementById('invTanto').value=inv.person_in_charge||'';
-document.getElementById('invSiteName').value=inv.construction_name||'';
-document.getElementById('invRemarks').value=inv.memo||'';
-if(inv.bank_info){
-document.getElementById('invBankName').value=inv.bank_info.name||'';
-document.getElementById('invBankBranch').value=inv.bank_info.branch||'';
-document.getElementById('invBankType').value=inv.bank_info.type||'';
-document.getElementById('invBankNo').value=inv.bank_info.no||'';
-document.getElementById('invBankHolder').value=inv.bank_info.holder||'';
-}
-var items=inv.items||[];
-var rows=document.getElementById('invDetailBody').querySelectorAll('tr');
-items.forEach(function(it,i){if(i<rows.length){var inp=rows[i].querySelectorAll('input,select');if(inp.length>=5){inp[0].value=it.name||'';inp[1].value=it.spec||'';inp[2].value=it.qty||0;inp[3].value=it.unit||'';inp[4].value=it.unitPrice||0;}}});
-if(typeof renderInvoicePreview==='function') renderInvoicePreview();
-var toolbar=document.getElementById('invoiceOverlay').querySelector('.toolbar-area,div');
-var existingSel=document.getElementById('invStatusSelect');
-if(!existingSel){
-var wrap=document.createElement('div');
-wrap.style.cssText='display:inline-block;margin-left:12px;vertical-align:middle';
-wrap.innerHTML='<label style="color:#fff;font-size:13px;margin-right:4px">\u30B9\u30C6\u30FC\u30BF\u30B9:</label><select id="invStatusSelect" style="padding:4px 8px;border-radius:4px;border:1px solid #555;background:#222;color:#fff;font-size:13px"><option value="\u4E0B\u66F8\u304D">\u672A\u78BA\u5B9A</option><option value="\u78BA\u5B9A">\u78BA\u5B9A\u6E08</option><option value="\u9001\u4ED8\u6E08\u307F">\u9001\u4ED8\u6E08</option></select>';
-var saveBtn=document.getElementById('invoiceOverlay').querySelector('button[onclick*="saveInvoice"]');
-if(saveBtn)saveBtn.parentNode.insertBefore(wrap,saveBtn);
-else{var firstDiv=document.getElementById('invoiceOverlay').querySelector('div');if(firstDiv)firstDiv.appendChild(wrap);}
-}
-var sel=document.getElementById('invStatusSelect');
-if(sel)sel.value=inv.status||'\u4E0B\u66F8\u304D';
-document.getElementById('invoiceOverlay').scrollTop=0;
-}catch(e){console.error('previewInvoice error:',e);}
-}
-async function editInvoice(invId){previewInvoice(invId);}
-async function deleteInvoice(invId){
-if(!confirm('\u3053\u306E\u8ACB\u6C42\u66F8\u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F'))return;
-try{
-var res=await fetch(SB+'/rest/v1/invoices?id=eq.'+invId,{method:'DELETE',headers:H});
-if(!res.ok){var e=await res.text();throw new Error(e);}
-showToast('\u524A\u9664\u3057\u307E\u3057\u305F');
-loadInvoiceList();
-}catch(e){console.error(e);showToast('\u524A\u9664\u5931\u6557: '+e.message);}
-}
-function closeReceipt(){
-document.getElementById('receiptOverlay').style.display = 'none';
-}
 const SB=_d('b2MuZXNhYmFwdXMueWVpdnljc21pcHl3cnh1c3RtamgvLzpzcHR0aA==');
 const SK=_d('Z3lIR1JrcVp0Wk5IWnZUSHpkeFVDcFRPYlp2d0VmeXRzX2RnSVFMdnhSSS4wWE8xY1RPNFVUTzRBak02SUNjNFZtSXNrVE4zTVRNd1F6TjNFak9pUVhZcEpDTGk0MmJ1Rm1JNklTWnM5bWNpd2lJNVZXYTJsM1l6MVdhd2wzZHloWGR6UlhicWhtSTZJaVpsSm5Jc0lTWnpGbVloQlhkekppT2lNM2NwSnllLjlKQ1ZYcGtJNklDYzVSbklzSWlOMUl6VUlKaU9pY0diaEp5ZQ==');
-const sb = window.supabase.createClient(SB, SK, { auth: { persistSession: true, storageKey: 'nichilog-auth' } });
-async function getAuthToken() {
-const { data: { session } } = await sb.auth.getSession();
-return session?.access_token || SK;
-}
-async function getH(){var t=await getAuthToken();return{'apikey':SK,'Authorization':'Bearer '+t,'Content-Type':'application/json'};}
+const sb=window.supabase.createClient(SB,SK,{auth:{persistSession:true,storageKey:'nichilog-auth'}});
 
-let currentUser = null;
-let company = null;
+// ============================================================
+// Global state
+// ============================================================
+let currentUser=null, company=null;
+let entries=[], sites=[], clientCompanies=[], members=[], invoices=[];
+let viewMonth=new Date();
+let summaryYear=new Date().getFullYear(), summaryMonthNum=new Date().getMonth()+1;
+let selectedDate=null;
+let currentTab=1;
+let currentInvoiceId=null;
+let invRows=[{name:'',spec:'',qty:1,unit:'人工',price:25000}];
+
+// ============================================================
+// Helpers
+// ============================================================
 function localDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-let entries = [];
-let sites = [];
-let clientCompanies = [];
-let members = [];
-let selectedDate = localDateStr(new Date());
-let viewMonth = new Date();
-let currentTab = 1;
-let editingSiteId = null;
-let editingMemberId = null;
-async function sbGet(table, filters = '') {
-const token = await getAuthToken();
-const u = `${SB}/rest/v1/${table}?${filters}`;
-const res = await fetch(u, {
-headers: { 'apikey': SK, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
-});
-if (!res.ok) { console.error('sbGet error', res.status); return []; }
-return res.json();
-}
-async function sbPost(table, data) {
-const token = await getAuthToken();
-const res = await fetch(`${SB}/rest/v1/${table}`, {
-method: 'POST',
-headers: { 'apikey': SK, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-body: JSON.stringify(data)
-});
-if (!res.ok) { console.error('sbPost error', res.status); return null; }
-const arr = await res.json(); return arr[0] || arr;
-}
-async function sbPatch(table, filters, data) {
-const token = await getAuthToken();
-const res = await fetch(`${SB}/rest/v1/${table}?${filters}`, {
-method: 'PATCH',
-headers: { 'apikey': SK, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-body: JSON.stringify(data)
-});
-if (!res.ok) { console.error('sbPatch error', res.status); return null; }
-const arr = await res.json(); return arr[0] || arr;
-}
-async function sbDelete(table, filters) {
-const token = await getAuthToken();
-const res = await fetch(`${SB}/rest/v1/${table}?${filters}`, {
-method: 'DELETE',
-headers: { 'apikey': SK, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
-});
-return res.ok;
-}
-async function doLogin() {
-const comp = document.getElementById('loginCompany').value.trim();
-const nm = document.getElementById('loginName').value.trim();
-const pw = document.getElementById('loginPassword').value;
-if (!comp || !nm || !pw) { showLoginError('全項目を入力してください'); return; }
-try {
-const { data: email, error: luErr } = await sb.rpc('login_lookup', { p_company: comp, p_name: nm });
-if (luErr || !email) { showLoginError('会社名または名前が見つかりません'); return; }
-const { data: authData, error: authErr } = await sb.auth.signInWithPassword({ email, password: pw });
-if (authErr) { showLoginError('パスワードが正しくありません'); return; }
-const accs = await sbGet('accounts', 'name=eq.' + encodeURIComponent(nm));
-if (!accs || accs.length === 0) { showLoginError('アカウント情報の取得に失敗'); return; }
-currentUser = accs[0];
-const comps = await sbGet('companies', 'id=eq.' + currentUser.company_id);
-company = comps[0];
-document.getElementById('loginScreen').style.display = 'none';
-document.getElementById('appHeader').style.display = '';
-document.getElementById('navBar').style.display = '';
-await renderAll(); switchTab(1);
-} catch(e) { showLoginError('ログインエラー: ' + e.message); }
-}
-async function doRegister() {
-const comp = document.getElementById('regCompany').value.trim();
-const nm = document.getElementById('regName').value.trim();
-const pw = document.getElementById('regPassword').value;
-const role = document.getElementById('regRole').value;
-if (!comp || !nm || !pw) { showLoginError('全項目を入力してください'); return; }
-try {
-const tempEmail = crypto.randomUUID() + '@nichilog.app';
-const { data: authData, error: signUpErr } = await sb.auth.signUp({ email: tempEmail, password: pw });
-if (signUpErr) { showLoginError('登録エラー: ' + signUpErr.message); return; }
-const { data: regData, error: regErr } = await sb.rpc('complete_registration', {
-p_company: comp, p_name: nm, p_role: role, p_team: ''
-});
-if (regErr) { showLoginError('登録完了エラー: ' + regErr.message); return; }
-const accs = await sbGet('accounts', 'auth_uid=eq.' + authData.user.id);
-if (!accs || accs.length === 0) { showLoginError('アカウント取得失敗'); return; }
-currentUser = accs[0];
-const comps = await sbGet('companies', 'id=eq.' + currentUser.company_id);
-company = comps[0];
-document.getElementById('loginScreen').style.display = 'none';
-document.getElementById('appHeader').style.display = '';
-document.getElementById('navBar').style.display = '';
-await renderAll();
-showToast('登録完了');
-} catch(e) { showLoginError('登録エラー: ' + e.message); }
-}
-async function changeUserPassword() {
-const newPw = document.getElementById('newPassword')?.value;
-if (!newPw || newPw.length < 4) { showToast('パスワードは4文字以上'); return; }
-try {
-const { error } = await sb.auth.updateUser({ password: newPw });
-if (error) { showToast('変更失敗: ' + error.message); return; }
-showToast('パスワード変更完了');
-} catch(e) { showToast('エラー: ' + e.message); }
-}
-async function doLogout() {
-await sb.auth.signOut();
-currentUser = null;
-company = null;
-entries = []; sites = []; clientCompanies = []; members = [];
-document.getElementById('loginScreen').style.display = '';
-document.getElementById('appHeader').style.display = 'none';
-document.getElementById('navBar').style.display = 'none';
-document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-document.getElementById('loginPassword').value = '';
-}
-function showLoginError(msg) {
-const err = document.getElementById('loginError');
-err.textContent = msg;
-err.style.display = 'block';
-}
-async function sha256(msg) {
-const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
-return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-function isWorker() { return currentUser && currentUser.role === 'worker'; }
-function switchTab(n) {      if(n===5 && currentUser && currentUser.role==='worker') return;
-if(n===5) renderReport();
-document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-document.getElementById('t' + n).classList.add('active');
-document.querySelectorAll('.nav-item')[n - 1].classList.add('active');
-currentTab = n;
-if(n === 5 && isWorker()) { switchTab(1); return; }
-const renderMap = {1: renderCalendar, 2: renderSummary, 3: renderSites, 4: renderMembers, 5: renderReport, 6: renderSettings};
-if (renderMap[n]) renderMap[n]();
-}
-function clModal() {
-document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
-}
-async function renderAll() {
-members = await sbGet('accounts', `company_id=eq.${company.id}`);
-sites = await sbGet('work_sites', `company_id=eq.${company.id}`);
-clientCompanies = await sbGet('client_companies', 'company_id=eq.' + company.id);
-await ldMo();
-renderCalendar();
-renderSummary();
-renderSites();
-renderMembers();
-renderReport();
-renderSettings();
-const navItems = document.querySelectorAll('.nav-item');
-if(navItems[4]) navItems[4].style.display = isWorker() ? 'none' : '';
-}
-async function ldMo() {
-const yr = viewMonth.getFullYear();
-const mo = viewMonth.getMonth();
-const start = localDateStr(new Date(yr, mo, 1));
-const end = localDateStr(new Date(yr, mo + 1, 0));
-let aq = `company_id=eq.${company.id}&work_date=gte.${start}&work_date=lte.${end}`;
-if (isWorker()) aq += `&account_id=eq.${currentUser.id}`;
-entries = await sbGet('attendance', aq);
-}
-function gSN(d) {
-return ['日', '月', '火', '水', '木', '金', '土'][d];
-}
-function gMN(m) {
-return ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'][m];
-}
-async function chMo(delta) {
-viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + delta, 1);
-await ldMo();
-renderCalendar();
-}
-function renderCalendar() {
-const yr = viewMonth.getFullYear();
-const mo = viewMonth.getMonth();
-const first = new Date(yr, mo, 1);
-const last = new Date(yr, mo + 1, 0);
-const startDay = first.getDay();
-const daysInMonth = last.getDate();
-let html = `
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-<button class="btn btn-secondary" onclick="chMo(-1)">◀</button>
-<div style="font-weight: 600; font-size: 16px;">${yr}年 ${gMN(mo)}</div>
-<button class="btn btn-secondary" onclick="chMo(1)">▶</button>
-</div>
-<div class="calendar-grid">
-`;
-['日', '月', '火', '水', '木', '金', '土'].forEach((day, i) => {
-html += `<div class="calendar-day-header ${i === 0 ? 'sunday' : ''}">${day}</div>`;
-});
-for (let i = 0; i < startDay; i++) {
-html += '<div class="calendar-day calendar-day-empty"></div>';
-}
-for (let day = 1; day <= daysInMonth; day++) {
-const date = localDateStr(new Date(yr, mo, day));
-const hasEntry = entries.some(e => e.work_date === date);
-const isSunday = new Date(yr, mo, day).getDay() === 0;
-const isToday = date === localDateStr(new Date());
-html += `
-<div class="calendar-day ${isSunday ? 'sunday' : ''} ${isToday ? 'today' : ''}" onclick="dayDetail('${date}')">
-${day}
-${hasEntry ? '<div class="calendar-day-dot"></div>' : ''}
-</div>
-`;
-}
-html += '</div>';
-const monthDays = entries.filter(e => {
-const d = new Date(e.work_date);
-return d.getFullYear() === yr && d.getMonth() === mo;
-}).length;
-let totalAmount = 0;
-entries.forEach(e => {
-const site = sites.find(s => s.id === e.site_id);
-if (site) totalAmount += site.price || 0;
-});
-html += `
-<div class="card">
-<div class="card-row">
-<span class="card-label">今月の出勤日数</span>
-<span class="card-value">${monthDays}日</span>
-</div>
-<div class="card-row" style="${isWorker()?'display:none':''}">
-<span class="card-label">売上見込</span>
-<span class="card-value">¥${totalAmount.toLocaleString()}</span>
-</div>
-</div>
-`;
-document.getElementById('t1').innerHTML = html;
-}
-async function dayDetail(date) {
-selectedDate = date;
-const dayEntries = entries.filter(e => e.work_date === date);
-let html = '';
-if (dayEntries.length === 0) {
-html = '<p class="text-muted" style="text-align: center; padding: 20px;">出勤記録なし</p>';
-} else {
-dayEntries.forEach(e => {
-const member = members.find(m => m.id === e.account_id);
-const site = sites.find(s => s.id === e.site_id);
-html += `
-<div class="card">
-<div class="card-row">
-<span>${member ? member.name : 'N/A'} <span style="font-size:11px;padding:2px 6px;border-radius:4px;background:${e.work_type==='half'?'#ff9800':'#4caf50'};color:#fff;margin-left:4px;">${e.work_type==='half'?'半日':'1日'}</span></span>
-<span>${site ? ((clientCompanies.find(c => c.id === site.client_company_id) || {}).name || '') + '　' + site.name : 'N/A'}</span>
-</div>
-${e.note ? `<div class="card-row"><span class="text-muted">${e.note}</span></div>` : ''}
-<div style="display:flex;gap:8px;margin-top:8px;"><button class="btn" style="flex:1;background:#1976d2;color:#fff;border:none;padding:8px;border-radius:6px;" onclick="editE(${e.id})">編集</button><button class="btn btn-danger" style="flex:1;" onclick="delE(${e.id})">削除</button></div>
-</div>
-`;
-});
-}
-document.getElementById('dayDetailList').innerHTML = html;
-document.getElementById('dayDetailModal').classList.add('show');
-}
-function showAddE() {
-document.getElementById('dayDetailModal').classList.remove('show');
-document.getElementById('addEntryDate').value = selectedDate;
-let companyOpts = '<option value="">-- 選択 --</option>';
-clientCompanies.forEach(c => {
-companyOpts += `<option value="${c.id}">${c.name}</option>`;
-});
-document.getElementById('addEntryCompany').innerHTML = companyOpts;
-document.getElementById('addEntrySite').innerHTML = '<option value="">-- 先に会社を選択 --</option>';
-let memberOpts = '<option value="">-- 選択 --</option>';
-members.forEach(m => {
-memberOpts += `<option value="${m.id}">${m.name}</option>`;
-});
-document.getElementById('addEntryMember').innerHTML = memberOpts;
-document.getElementById('addEntryNote').value = '';
-document.getElementById('addEntryModal').classList.add('show');
-}
-function filterSitesByCompany() {
-const cid = document.getElementById('addEntryCompany').value;
-let opts = '<option value="">-- 選択 --</option>';
-if (cid) {
-sites.filter(s => String(s.client_company_id) === cid).forEach(s => {
-opts += `<option value="${s.id}">${s.name}</option>`;
-});
-}
-opts += '<option value="__new__">＋ 新規追加</option>';
-document.getElementById('addEntrySite').innerHTML = opts;
-document.getElementById('addEntryNewSite').style.display = 'none';
-document.getElementById('addEntrySite').onchange = function() {
-document.getElementById('addEntryNewSite').style.display = this.value === '__new__' ? '' : 'none';
-};    }
-async function saveE() {
-const date = document.getElementById('addEntryDate').value;
-let siteId;
-const siteVal = document.getElementById('addEntrySite').value;
-if (siteVal === '__new__') {
-const newName = document.getElementById('addEntryNewSite').value.trim();
-if (!newName) { alert('新しい現場名を入力してください'); return; }
-const cid = document.getElementById('addEntryCompany').value;
-const newSite = await sbPost('work_sites', { company_id: company.id, name: newName, client_company_id: cid ? parseInt(cid) : null, price: 0, rate_type: 'daily', color: '#f0f0f0' });
-if (!newSite || !newSite[0]) { alert('現場の追加に失敗しました'); return; }
-siteId = newSite[0].id;
-sites = await sbGet('work_sites', 'company_id=eq.' + company.id);
-} else {
-siteId = parseInt(siteVal);
-}      const memberId = parseInt(document.getElementById('addEntryMember').value);
-const note = document.getElementById('addEntryNote').value;
-const workType = document.getElementById('addEntryWorkType').value;
-if (!siteId || !memberId) {
-alert('現場とメンバーを選択してください');
-return;
-}
-const result = await sbPost('attendance', {
-company_id: company.id,
-account_id: memberId,
-site_id: siteId,
-work_date: date,
-note: note,
-work_type: workType
-});
-if (result) {
-clModal();
-await ldMo();
-renderCalendar();
-}
-}
-async function editE(id) {
-const entry = entries.find(e => e.id === id);
-if (!entry) return;
-const site = sites.find(s => s.id === entry.site_id);
-let companyOpts = '<option value="">-- 選択 --</option>';
-clientCompanies.forEach(c => {
-const sel = site && site.client_company_id === c.id ? ' selected' : '';
-companyOpts += '<option value="' + c.id + '"' + sel + '>' + c.name + '</option>';
-});
-let siteOpts = '<option value="">-- 選択 --</option>';
-if (site) {
-sites.filter(s => s.client_company_id === site.client_company_id).forEach(s => {
-const sel = s.id === entry.site_id ? ' selected' : '';
-siteOpts += '<option value="' + s.id + '"' + sel + '>' + s.name + '</option>';
-});
-}
-let memberOpts = '<option value="">-- 選択 --</option>';
-members.forEach(mb => {
-const sel = mb.id === entry.account_id ? ' selected' : '';
-memberOpts += '<option value="' + mb.id + '"' + sel + '>' + mb.name + '</option>';
-});
-document.getElementById('dayDetailList').innerHTML = `
-<div style="padding:10px;">
-<div class="form-group"><label>会社</label><select id="editCompany" onchange="filterEditSites()">${companyOpts}</select></div>
-<div class="form-group"><label>現場</label><select id="editSite">${siteOpts}</select></div>
-<div class="form-group"><label>勤務区分</label><select id="editWorkType"><option value="full"${entry.work_type !== 'half' ? ' selected' : ''}>1日</option><option value="half"${entry.work_type === 'half' ? ' selected' : ''}>半日</option></select></div>
-<div class="form-group"><label>メンバー</label><select id="editMember">${memberOpts}</select></div>
-<div class="form-group"><label>備考</label><input type="text" id="editNote" value="${entry.note || ''}"></div>
-<div style="display:flex;gap:8px;margin-top:12px;">
-<button class="btn" style="flex:1;background:#999;color:#fff;border:none;padding:10px;border-radius:6px;" onclick="dayDetail(selectedDate)">戻る</button>
-<button class="btn-primary" style="flex:1;padding:10px;" onclick="saveEditE(${id})">保存</button>
-</div>
-</div>`;
-}
-function filterEditSites() {
-const cid = document.getElementById('editCompany').value;
-let opts = '<option value="">-- 選択 --</option>';
-if (cid) {
-sites.filter(s => String(s.client_company_id) === cid).forEach(s => {
-opts += '<option value="' + s.id + '">' + s.name + '</option>';
-});
-}
-document.getElementById('editSite').innerHTML = opts;
-}
-async function saveEditE(id) {
-const siteId = parseInt(document.getElementById('editSite').value);
-const memberId = parseInt(document.getElementById('editMember').value);
-const workType = document.getElementById('editWorkType').value;
-const note = document.getElementById('editNote').value;
-if (!siteId || !memberId) { alert('現場とメンバーを選択してください'); return; }
-const res = await fetch(SB + '/rest/v1/attendance?id=eq.' + id, {
-method: 'PATCH',
-headers: { ...(await getH()), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-body: JSON.stringify({ site_id: siteId, account_id: memberId, work_type: workType, note: note })
-});
-if (res.ok) {
-await ldMo();
-dayDetail(selectedDate);
-renderCalendar();
-} else {
-alert('変更に失敗しました');
-}
-}
-async function delE(id) {
-if (!confirm('削除しますか？')) return;
-const ok = await sbDelete('attendance', id);
-if (ok) {
-await ldMo();
-dayDetail(selectedDate);
-renderCalendar();
-}
-}
-let summaryYear = new Date().getFullYear();
-let summaryMonthNum = new Date().getMonth() + 1;
-function prevSummaryMonth() { summaryMonthNum--; if(summaryMonthNum<1){summaryMonthNum=12;summaryYear--;} renderSummary(); }
-function nextSummaryMonth() { summaryMonthNum++; if(summaryMonthNum>12){summaryMonthNum=1;summaryYear++;} renderSummary(); }
-async function renderSummary() {
-const ym = summaryYear + '-' + String(summaryMonthNum).padStart(2, '0');
-const dayNames = ['\u65e5','\u6708','\u706b','\u6c34','\u6728','\u91d1','\u571f'];
-const masterName = currentUser.name;
-let mEntries = [];
-try {
-const nextM = summaryMonthNum < 12 ? summaryYear + '-' + String(summaryMonthNum + 1).padStart(2, '0') + '-01' : (summaryYear + 1) + '-01-01';
-let aq = 'company_id=eq.' + company.id + '&work_date=gte.' + ym + '-01&work_date=lt.' + nextM + '&select=*';
-if (isWorker()) aq += '&account_id=eq.' + currentUser.id;
-const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK };
-const res = await fetch(SB + '/rest/v1/attendance?' + aq, { headers: await getH() });
-if (res.ok) {
-mEntries = await res.json();
-}
-} catch(err) {
-mEntries = entries.filter(e => e.work_date.startsWith(ym));
-}
-const companyMap = {};
-mEntries.forEach(e => {
-const site = sites.find(s => s.id === e.site_id);
-if (!site) return;
-const cid = site.client_company_id;
-if (!cid) return;
-if (!companyMap[cid]) companyMap[cid] = [];
-companyMap[cid].push(e);
-});
-const noCompanyEntries = mEntries.filter(e => {
-const site = sites.find(s => s.id === e.site_id);
-return site && !site.client_company_id;
-});
-let html = '';
-html += '<div style="display:flex;align-items:center;justify-content:center;margin:16px 0 12px;gap:16px;">';
-html += '<button onclick="prevSummaryMonth()" style="background:none;border:1px solid #999;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:16px;">\u25c0</button>';
-html += '<span style="font-size:20px;font-weight:bold;">' + summaryYear + '\u5e74' + summaryMonthNum + '\u6708</span>';
-html += '<button onclick="nextSummaryMonth()" style="background:none;border:1px solid #999;padding:6px 14px;border-radius:4px;cursor:pointer;font-size:16px;">\u25b6</button>';
-html += '</div>';
-let grandTotalDays = 0;
-let grandTotalAmount = 0;
-const cids = Object.keys(companyMap);
-cids.forEach(cid => {
-const c = clientCompanies.find(cc => cc.id == cid);
-const cName = c ? c.name : '\u4e0d\u660e';
-const cEntries = companyMap[cid];
-const siteMap = {};
-cEntries.forEach(e => {
-const sid = e.site_id;
-if (!siteMap[sid]) siteMap[sid] = { entries: [], site: sites.find(s => s.id === sid) };
-siteMap[sid].entries.push(e);
-});
-let companyDays = 0;
-let companyAmount = 0;
-html += '<div style="margin:12px 0;border:1px solid #ddd;border-radius:8px;overflow:hidden;">';
-html += '<div style="background:#1976d2;color:#fff;padding:12px 16px;font-weight:bold;font-size:15px;">' + cName + '</div>';
-html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
-html += '<thead><tr style="background:#f5f5f5;"><th style="padding:8px 6px;border-bottom:1px solid #ddd;text-align:left;">\u73fe\u5834</th></tr></thead><tbody>';
-Object.values(siteMap).forEach(sd => {
-const s = sd.site;
-if (!s) return;
-let days = 0;
-sd.entries.forEach(e => { days += (e.work_type === 'half' ? 0.5 : 1); });
-const price = s.price || 0;
-const amount = days * price;
-companyDays += days;
-companyAmount += amount;
-html += '<tr>';
-html += '<td style="padding:8px 6px;border-bottom:1px solid #eee;">' + s.name + '</td>';
-html += '<td style="padding:8px 6px;border-bottom:1px solid #eee;text-align:center;">' + days + '\u65e5</td>';
-html += '</tr>';
-});
-html += '<tr style="background:#f5f5f5;font-weight:bold;">';
-html += '<td style="padding:8px 6px;text-align:right;">\u5c0f\u8a08</td>';
-html += '<td style="padding:8px 6px;text-align:center;">' + companyDays + '\u65e5</td>';
-html += '<td style="padding:8px 6px;"></td>';
-html += '</tr></tbody></table>';
-if (!isWorker()) {
-html += '<div style="padding:10px 16px;text-align:right;">';
-html += '<button onclick="generateKoujiNippo(\'' + cid + '\')" style="background:#2e7d32;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;">\ud83d\udcc4 \u5de5\u4e8b\u65e5\u5831PDF</button>';
-html += ' <button onclick="generateInvoiceFromReport(\'' + cid + '\')" style="background:#2563eb;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;margin-left:8px;">\ud83d\udcdd \u8acb\u6c42\u66f8\u4f5c\u6210</button>';
-html += '</div>';
-html += '</div>';
-}
-grandTotalDays += companyDays;
-grandTotalAmount += companyAmount;
-});
-if (noCompanyEntries.length > 0) {
-const ncSiteMap = {};
-noCompanyEntries.forEach(e => {
-const sid = e.site_id;
-if (!ncSiteMap[sid]) ncSiteMap[sid] = { entries: [], site: sites.find(s => s.id === sid) };
-ncSiteMap[sid].entries.push(e);
-});
-html += '<div style="margin:12px 0;border:1px solid #ddd;border-radius:8px;overflow:hidden;">';
-html += '<div style="background:#757575;color:#fff;padding:12px 16px;font-weight:bold;font-size:15px;">\u305d\u306e\u4ed6</div>';
-html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
-html += '<thead><tr style="background:#f5f5f5;"><th style="padding:8px 6px;border-bottom:1px solid #ddd;text-align:left;">\u73fe\u5834</th></tr></thead><tbody>';
-Object.values(ncSiteMap).forEach(sd => {
-const s = sd.site;
-if (!s) return;
-let days = 0;
-sd.entries.forEach(e => { days += (e.work_type === 'half' ? 0.5 : 1); });
-const price = s.price || 0;
-const amount = days * price;
-grandTotalDays += days;
-grandTotalAmount += amount;
-});
-html += '</tbody></table></div>';
-}
-if (cids.length > 0 || noCompanyEntries.length > 0) {
-html += '<div style="margin:12px 0;padding:12px 16px;background:#f5f5f5;border-radius:8px;display:flex;justify-content:space-between;font-weight:bold;">';
-html += '<span>\u6708\u9593\u5408\u8a08: ' + grandTotalDays + '\u65e5\u7a3c\u50cd</span>';
-html += '</div>';
-}
-if (mEntries.length === 0) {
-html += '<div style="text-align:center;padding:40px;color:#999;">\u3053\u306e\u6708\u306e\u51fa\u52e4\u30c7\u30fc\u30bf\u306f\u3042\u308a\u307e\u305b\u3093</div>';
-}
-document.getElementById('t2').innerHTML = html;
-}
-async function generateKoujiNippo(clientCompanyId) {
-let _ov=document.getElementById('nippo-overlay');if(!_ov){_ov=document.createElement('div');_ov.id='nippo-overlay';_ov.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:99999;display:flex;flex-direction:column';var _bar=document.createElement('div');_bar.style.cssText='display:flex;justify-content:flex-end;padding:8px 12px;background:#333;gap:8px';_bar.innerHTML='<button onclick="nichiPrint(\'nippo-content\')" style="padding:6px 16px;background:#4CAF50;color:#fff;border:none;border-radius:4px;font-size:14px">PDF\u4F5C\u6210</button><button onclick="document.getElementById(\'nippo-overlay\').style.display=\'none\'" style="padding:6px 16px;background:#f44336;color:#fff;border:none;border-radius:4px;font-size:14px">\u9589\u3058\u308b</button>';_ov.appendChild(_bar);var _nc=document.createElement('div');_nc.id='nippo-content';_nc.style.cssText='flex:1;overflow:auto;background:#fff;padding:4px';_ov.appendChild(_nc);document.body.appendChild(_ov)}else{_ov.style.display='flex'} var _nc=document.getElementById('nippo-content');
-_nc.innerHTML='<div style="padding:40px;text-align:center;color:#666;">読み込み中...</div>'
-const ym = summaryYear + '-' + String(summaryMonthNum).padStart(2, '0');
-const dayNames = ['\u65e5','\u6708','\u706b','\u6c34','\u6728','\u91d1','\u571f'];
-const masterName = currentUser.name;
-const c = clientCompanies.find(cc => cc.id == clientCompanyId);
-const cName = c ? c.name : '';
-let mEntries = [];
-try {
-const nextM = summaryMonthNum < 12 ? summaryYear + '-' + String(summaryMonthNum + 1).padStart(2, '0') + '-01' : (summaryYear + 1) + '-01-01';
-const aq = 'company_id=eq.' + company.id + '&work_date=gte.' + ym + '-01&work_date=lt.' + nextM + '&select=*';
-const H = { 'apikey': SK, 'Authorization': 'Bearer ' + SK };
-const res = await fetch(SB + '/rest/v1/attendance?' + aq, { headers: await getH() });
-if (res.ok) mEntries = await res.json();
-} catch(err) {
-mEntries = entries.filter(e => e.work_date.startsWith(ym));
-}
-const cSites = sites.filter(s => s.client_company_id == clientCompanyId);
-const cSiteIds = cSites.map(s => s.id);
-const cEntries = mEntries.filter(e => cSiteIds.includes(e.site_id));
-const dateMap = {};
-cEntries.forEach(e => {
-const site = sites.find(s => s.id === e.site_id);
-if (!site) return;
-const d = e.work_date;
-const member = members.find(m => m.id === e.account_id);
-const mName = member ? member.name : '\u4e0d\u660e';
-const wt = e.work_type || 'full';
-if (!dateMap[d]) dateMap[d] = {};
-const sKey = e.site_id;
-if (!dateMap[d][sKey]) dateMap[d][sKey] = { site_name: site.name, members: [], types: [], note: e.note || '' };
-dateMap[d][sKey].members.push(mName);
-dateMap[d][sKey].types.push(wt);
-if (e.note && !dateMap[d][sKey].note) dateMap[d][sKey].note = e.note;
-});
-const sortedDates = Object.keys(dateMap).sort();
-let totalPersonnel = 0;
-let rows = '';
-sortedDates.forEach(d => {
-const dt = new Date(d + 'T00:00:00');
-const dayNum = dt.getDate();
-const dow = dayNames[dt.getDay()];
-const isDowSun = dt.getDay() === 0;
-const isDowSat = dt.getDay() === 6;
-const dowColor = isDowSun ? '#e55' : isDowSat ? '#36c' : '#333';
-const siteEntries = Object.values(dateMap[d]);
-siteEntries.forEach((se, idx) => {
-const allHalf = se.types.every(t => t === 'half');
-const timeStr = allHalf ? '8:00\u301c12:00' : '8:00\u301c17:00';
-const personnelParts = se.members.map((name, i) => {
-return name + (se.types[i] === 'half' ? '(\u534a\u65e5)' : '');
-});
-const personnel = personnelParts.join('\u3001');
-let dayCount = 0;
-se.types.forEach(t => { dayCount += t === 'half' ? 0.5 : 1; });
-totalPersonnel += dayCount;
-rows += '<tr>';
-if (idx === 0) {
-rows += '<td style="border:1px solid #333;padding:2px;text-align:center;" rowspan="' + siteEntries.length + '">' + dayNum + '</td>';
-rows += '<td style="border:1px solid #333;padding:2px;text-align:center;color:' + dowColor + ';" rowspan="' + siteEntries.length + '">' + dow + '</td>';
-}
-rows += '<td style="border:1px solid #333;padding:2px;text-align:center;">' + timeStr + '</td>';
-rows += '<td style="border:1px solid #333;padding:2px;">' + se.site_name + '</td>';
-rows += '<td style="border:1px solid #333;padding:2px;color:#666;">' + (se.note || '-') + '</td>';
-rows += '<td style="border:1px solid #333;padding:2px;">' + personnel + '</td>';
-rows += '</tr>';
-});
-});
-if (sortedDates.length === 0) {
-rows = '<tr><td colspan="6" style="border:1px solid #333;padding:20px;text-align:center;color:#999;">\u30c7\u30fc\u30bf\u306a\u3057</td></tr>';
-}
-let phtml = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>\u5de5\u4e8b\u65e5\u5831 ' + cName + ' ' + summaryMonthNum + '\u6708</title>';
-phtml+='<style>.daily-report-table{width:100%;border-collapse:collapse;font-size:11pt;table-layout:fixed}.daily-report-table th,.daily-report-table td{word-break:break-all;overflow-wrap:break-word;padding:6px 4px}</style></head><body>';
-phtml += '<div style="text-align:center;font-size:22px;font-weight:bold;margin:0 0 4px;">\u5de5\u4e8b\u65e5\u5831\uff08' + summaryMonthNum + '\u6708\uff09</div>';
-phtml += '<div style="text-align:right;padding:4px 8px;font-size:14px;margin-bottom:8px;">\u62c5\u5f53\u3000' + (company.name || '') + '\u3000' + masterName + '</div>';
-phtml += '<div style="text-align:left;padding:4px 8px;font-size:14px;margin-bottom:8px;">\u5b9b\u5148: ' + cName + '</div>';
-phtml += '<table class="daily-report-table">';
-phtml += '<thead><tr style="background:#f0f0f0;">';
-phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:6%;">\u65e5</th>';
-phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:7%;">\u66dc\u65e5</th>';
-phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:16%;">\u6642\u9593</th>';
-phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:32%;">\u73fe\u5834\u540d</th>';
-phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:27%;">\u4f5c\u696d\u5185\u5bb9</th>';
-phtml += '<th style="border:1px solid #333;padding:2px;text-align:center;width:10%;">\u4eba\u54e1</th>';
-phtml += '</tr></thead>';
-phtml += '<tbody>' + rows + '</tbody>';
-if (sortedDates.length > 0) {
-phtml += '<tfoot><tr style="background:#f0f0f0;font-weight:bold;">';
-phtml += '<td colspan="5" style="border:1px solid #333;padding:2px;text-align:right;">\u5408\u8a08\u4eba\u5de5</td>';
-phtml += '<td style="border:1px solid #333;padding:2px;text-align:center;">' + totalPersonnel + ' \u4eba\u5de5</td>';
-phtml += '</tr></tfoot>';
-}
-phtml += '</table><script>
-function pcSwitchTab(n, el) { switchTab(n); document.querySelectorAll('.pc-sidebar .sb-item').forEach(function(e){e.classList.remove('active')}); if(el) el.classList.add('active'); }
-</script></body></html>';
-_nc.innerHTML=phtml;
+function gSN(i){return ['日','月','火','水','木','金','土'][i];}
+function gMN(m){return (m+1)+'月';}
+function isWorker(){return currentUser&&currentUser.role==='worker';}
+function canSeeRevenue(){return currentUser&&currentUser.role==='master';}
+function canManage(){return currentUser&&(currentUser.role==='master'||currentUser.role==='admin');}
+function showToast(msg){var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){t.remove();},300);},2200);}
+function escHtml(s){if(s==null)return '';return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function clModal(){document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('show');});}
+function showLoginError(msg){var el=document.getElementById('loginError');el.textContent=msg;el.style.display='block';}
+function showRegError(msg){var el=document.getElementById('regError');el.textContent=msg;el.style.display='block';}
+function toggleRegister(show){document.getElementById('loginForm').style.display=show?'none':'';document.getElementById('registerForm').style.display=show?'':'none';}
 
-}
-function renderSites() {
-if (!sites) return;
-const grouped = {};
-sites.forEach(site => {
-const ccId = site.client_company_id || '__none__';
-if (!grouped[ccId]) grouped[ccId] = [];
-grouped[ccId].push(site);
-});
-let html = '<div style="padding:20px;">';
-html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;"><h3 style="margin:0;">取引先企業 / 現場</h3>';
-html += '<button onclick="openClientCompanyModal(null)" style="padding:8px 15px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;">+ 取引先企業を追加</button></div>';
-if (clientCompanies) clientCompanies.forEach(cc => { const id = String(cc.id); if (!grouped[id]) grouped[id] = []; });
-const ccIds = Object.keys(grouped).sort((a,b) => a === '__none__' ? 1 : b === '__none__' ? -1 : 0);
-ccIds.forEach(ccId => {
-let groupTitle = ccId === '__none__' ? '未分類' : '';
-if (ccId !== '__none__') {
-const cc = clientCompanies && clientCompanies.find(c => String(c.id) === String(ccId));
-if (cc) groupTitle = cc.name; else groupTitle = '不明な企業';
-}
-const groupSites = grouped[ccId];
-html += '<div style="margin-bottom:25px;">';
-html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;border-bottom:2px solid #007bff;padding-bottom:8px;">';
-html += '<h4 style="margin:0;">' + groupTitle + '</h4>';
-html += '<div style="display:flex;gap:8px;align-items:center;">';
-html += '<span style="font-size:12px;color:#666;">サイト数: ' + groupSites.length + '</span>';
-if (ccId !== '__none__') {
-html += '<button onclick="openClientCompanyModal(' + ccId + ')" style="padding:4px 8px;background:#ffc107;color:#333;border:none;border-radius:3px;cursor:pointer;font-size:11px;">編集</button>';
-html += '<button onclick="deleteClientCompany(' + ccId + ')" style="padding:4px 8px;background:#dc3545;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;">削除</button>';
-}
-html += '</div></div>';
-html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:12px;">';
-groupSites.forEach(site => {
-const bg = site.color || '#f0f0f0';
-html += '<div style="border:1px solid #ddd;border-radius:4px;padding:12px;background:' + bg + ';">';
-html += '<div style="font-weight:bold;margin-bottom:5px;">' + site.name + '</div>';
-if (!isWorker() && (site.rate_type || site.price)) { html += '<div style="font-size:12px;color:#666;margin-bottom:8px;">'; if (site.rate_type) html += site.rate_type; if (site.price) html += ' / \u00a5' + Number(site.price).toLocaleString(); html += '</div>'; }
-if (site.memo) html += '<div style="font-size:11px;color:#999;margin-bottom:8px;border-top:1px solid #ddd;padding-top:5px;">' + site.memo + '</div>';
-html += '<div style="display:flex;gap:5px;">';
-html += '<button onclick="openSiteModal(' + site.id + ')" style="flex:1;padding:5px;background:#28a745;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;">編集</button>';
-html += '<button onclick="confirmDeleteSite(' + site.id + ')" style="flex:1;padding:5px;background:#dc3545;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;">削除</button>';
-html += '</div></div>';
-});
-html += '</div>';
-html += '<button onclick="openSiteModal(null,' + (ccId === '__none__' ? 'null' : ccId) + ')" style="width:100%;padding:8px;background:#17a2b8;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;">+ 現場を追加</button>';
-html += '</div>';
-});
-html += '</div>';
-document.getElementById('t3').innerHTML = html;
-}
-function openSiteModal(siteId, preselectedCcId) {
-const site = siteId ? sites.find(s => s.id == siteId) : null;
-const isEdit = !!site;
-let modal = document.getElementById('siteModal');
-if (!modal) { modal = document.createElement('div'); modal.id = 'siteModal'; modal.style.cssText = 'display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);'; document.body.appendChild(modal); }
-let ccOpts = '<option value="">未分類</option>';
-if (clientCompanies && clientCompanies.length > 0) { clientCompanies.forEach(cc => { ccOpts += '<option value="' + cc.id + '">' + cc.name + '</option>'; }); }
-modal.innerHTML = '<div style="position:relative;background:#fff;margin:8% auto;padding:20px;width:90%;max-width:600px;border-radius:4px;box-shadow:0 4px 8px rgba(0,0,0,0.2);max-height:80vh;overflow-y:auto;">'
-+ '<span style="position:absolute;color:#aaa;font-size:28px;font-weight:bold;cursor:pointer;top:10px;right:15px;" onclick="document.getElementById(\x27siteModal\x27).style.display=\x27none\x27">&times;</span>'
-+ '<h2 style="margin-top:0;">' + (isEdit ? '現場を編集' : '現場を追加') + '</h2>'
-+ '<input type="hidden" id="siteId" value="' + (site ? site.id : '') + '" />'
-+ '<div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:bold;">取引先企業</label><select id="siteClientCompanyId" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;">' + ccOpts + '</select></div>'
-+ '<div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:bold;">現場名 *</label><input type="text" id="siteName" value="' + (site ? site.name : '') + '" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;" /></div>'
-+ '<div style="margin-bottom:15px;' + (isWorker() ? 'display:none;' : '') + '"><label style="display:block;margin-bottom:5px;font-weight:bold;">金額</label><input type="number" id="sitePrice" value="' + (site ? (site.price||'') : '') + '" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;" /></div>'
-+ '<div style="margin-bottom:15px;' + (isWorker() ? 'display:none;' : '') + '"><label style="display:block;margin-bottom:5px;font-weight:bold;">色</label><input type="color" id="siteColor" value="' + (site ? (site.color||'#f0f0f0') : '#f0f0f0') + '" style="width:60px;height:40px;border:1px solid #ddd;border-radius:4px;cursor:pointer;" /></div>'
-+ '<div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:bold;">メモ</label><textarea id="siteMemo" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;height:80px;resize:vertical;">' + (site ? (site.memo||'') : '') + '</textarea></div>'
-+ '<div style="display:flex;gap:10px;"><button onclick="saveSite()" style="flex:1;padding:10px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;">保存</button><button onclick="document.getElementById(\x27siteModal\x27).style.display=\x27none\x27" style="flex:1;padding:10px;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;">キャンセル</button></div></div>';
-if (site && site.client_company_id) document.getElementById('siteClientCompanyId').value = site.client_company_id;
-else if (preselectedCcId) document.getElementById('siteClientCompanyId').value = preselectedCcId;
-modal.style.display = 'block';
-}
-async function saveSite() {
-const siteId = document.getElementById('siteId').value;
-const name = document.getElementById('siteName').value.trim();
-const price = document.getElementById('sitePrice').value;
-const rateType = '';
-const memo = document.getElementById('siteMemo').value.trim();
-const color = document.getElementById('siteColor').value;
-const ccId = document.getElementById('siteClientCompanyId').value;
-if (!name) { showToast('現場名を入力してください'); return; }
-if (!siteId && (!company || !company.id)) { showToast('ログインしてください'); return; }
-const body = { name, price: price ? parseInt(price) : 0, rate_type: rateType || 'daily', memo: memo || null, color, client_company_id: ccId ? parseInt(ccId) : null };
-try {
-if (siteId) { await sbPatch('work_sites', siteId, body); showToast('現場を更新しました'); }
-else { await sbPost('work_sites', { company_id: company.id, ...body }); showToast('現場を追加しました'); }
-document.getElementById('siteModal').style.display = 'none';
-await renderAll();
-} catch(e) { console.error('saveSite error:', e); showToast('エラー: ' + e.message); }
-}
-async function confirmDeleteSite(id) {
-if (!confirm('この現場を削除しますか？')) return;
-try { await sbDelete('work_sites', id); showToast('現場を削除しました'); await renderAll(); }
-catch(e) { console.error('deleteSite error:', e); showToast('削除エラー: ' + e.message); }
-}
-function renderMembers() {
-let html = '<h2 style="margin-bottom: 16px;">メンバー管理</h2>';
-html += '<button class="btn btn-primary" style="width: 100%; margin-bottom: 16px;" onclick="openMemberModal()">+ 新規メンバー</button>';
-members.forEach(m => {
-const roleBadges = { master: 'badge-master', submaster: 'badge-submaster', worker: 'badge-worker' };
-const roleNames = { master: '経営', submaster: '職長', worker: '作業員' };
-html += `
-<div class="card">
-<div class="card-row">
-<div>
-<div class="card-value" style="margin-bottom: 8px;">${m.name}</div>
-<span class="badge ${roleBadges[m.role] || 'badge-worker'}">${roleNames[m.role] || m.role}</span>
-</div>
-<div style="display: flex; gap: 8px;">
-<button class="btn btn-secondary" onclick="editMember(${m.id})" style="padding: 6px 12px; font-size: 12px;">編集</button>
-</div>
-</div>
-${m.team ? `<div class="card-row"><span class="text-muted">チーム: ${m.team}</span></div>` : ''}
-</div>
-`;
-});
-document.getElementById('t4').innerHTML = html;
-}
-function openMemberModal() {
-editingMemberId = null;
-document.getElementById('memberModalTitle').textContent = '新規メンバー';
-document.getElementById('memberName').value = '';
-document.getElementById('memberPassword').value = '';
-document.getElementById('memberRole').value = 'worker';
-document.getElementById('memberTeam').value = '';
-document.getElementById('memberDeleteBtn').style.display = 'none';
-document.getElementById('memberModal').classList.add('show');
-}
-function editMember(id) {
-const member = members.find(m => m.id === id);
-if (!member) return;
-editingMemberId = id;
-document.getElementById('memberModalTitle').textContent = 'メンバー編集';
-document.getElementById('memberName').value = member.name;
-document.getElementById('memberPassword').value = '';
-document.getElementById('memberRole').value = member.role;
-document.getElementById('memberTeam').value = member.team || '';
-document.getElementById('memberDeleteBtn').style.display = 'inline-block';
-document.getElementById('memberModal').classList.add('show');
-}
-async function saveMember() {
-const name = document.getElementById('memberName').value.trim();
-const password = document.getElementById('memberPassword').value;
-const role = document.getElementById('memberRole').value;
-const team = document.getElementById('memberTeam').value.trim();
-if (!name) {
-alert('名前を入力してください');
-return;
-}
-if (!editingMemberId && !password) {
-alert('パスワードを入力してください');
-return;
-}
-let data = { name, role, team: team || null, company_id: company.id };
-if (password) {
-data.password = await sha256(password);
-}
-let ok = false;
-if (editingMemberId) {
-ok = await sbPatch('accounts', editingMemberId, data);
-} else {
-data.email = `user_${Date.now()}@nichilog.local`;
-const res = await sbPost('accounts', data);
-ok = !!res;
-}
-if (ok) {
-await renderAll();
-clModal();
-members = await sbGet('accounts', `company_id=eq.${company.id}`);
-renderMembers();
-}
-}
-async function deleteMember() {
-if (!confirm('メンバーを削除しますか？')) return;
-const ok = await sbDelete('accounts', editingMemberId);
-if (ok) {
-clModal();
-members = await sbGet('accounts', `company_id=eq.${company.id}`);
-renderMembers();
-}
-}
-async function renderReport() {
-const el = document.getElementById('t5');
-var html = '<div style="padding:12px">';
-html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">';
-html += '<div style="display:flex;gap:8px">';
-html += '<button onclick="document.getElementById(\'invoiceSection\').style.display=\'block\';document.getElementById(\'receiptSection\').style.display=\'none\';this.style.background=\'#1a237e\';this.nextElementSibling.style.background=\'#555\'" style="padding:6px 16px;border:none;border-radius:6px;color:#fff;background:#1a237e;cursor:pointer;font-weight:600">\u8ACB\u6C42\u66F8\u4E00\u89A7</button>';
-html += '<button onclick="document.getElementById(\'receiptSection\').style.display=\'block\';document.getElementById(\'invoiceSection\').style.display=\'none\';this.style.background=\'#1a237e\';this.previousElementSibling.style.background=\'#555\'" style="padding:6px 16px;border:none;border-radius:6px;color:#fff;background:#555;cursor:pointer;font-weight:600">\u9818\u53CE\u66F8\u4E00\u89A7</button>';
-html += '</div>';
-html += '<button onclick="openRcptForm()" style="padding:6px 16px;border:none;border-radius:6px;color:#fff;background:#4CAF50;cursor:pointer;font-weight:600">\u9818\u53CE\u66F8\u4F5C\u6210</button>';
-html += '</div>';
-html += '<div id="invoiceSection">';
-html += '<h3 style="color:#fff;margin:0 0 12px 0">\u8ACB\u6C42\u66F8\u4E00\u89A7</h3>';
-html += '<div id="invoiceListBody"></div>';
-html += '<div id="invoiceEmptyMsg" style="text-align:center;color:#888;padding:32px 0;display:none">\u4FDD\u5B58\u6E08\u307F\u306E\u8ACB\u6C42\u66F8\u306F\u3042\u308A\u307E\u305B\u3093</div>';
-html += '</div>';
-html += '</div>'; 
-html += '<div id="receiptSection" style="display:none">';
-html += '<h3 style="color:#fff;margin:0 0 12px 0">\u9818\u53CE\u66F8\u4E00\u89A7</h3>';
-html += '<div id="receiptListBody" style="color:#ccc;text-align:center;padding:20px">\u9818\u53CE\u66F8\u6A5F\u80FD\u304C\u6709\u52B9\u3067\u3059\u3002\u300C\u9818\u53CE\u66F8\u4F5C\u6210\u300D\u30DC\u30BF\u30F3\u3092\u62BC\u3057\u3066\u304F\u3060\u3055\u3044\u3002</div>';
-html += '</div>'; 
-el.innerHTML = html;
-if(typeof loadInvoiceList==='function') loadInvoiceList();
-}
-async function generateInvoiceFromReport(clientCompanyId) {
-const yr = viewMonth.getFullYear();
-const mo = viewMonth.getMonth();
-const moStr = yr + '-' + String(mo+1).padStart(2,'0');
-const moEntries = entries.filter(e => e.work_date && e.work_date.startsWith(moStr));
-const siteMap = {};
-moEntries.forEach(e => {
-const sid = e.site_id;
-if(!siteMap[sid]) siteMap[sid] = [];
-siteMap[sid].push(e);
-});
-const rows = [];
-Object.keys(siteMap).forEach(siteId => {
-const site = sites.find(s => s.id == siteId);
-if(!site) return;
-if(clientCompanyId && site.client_company_id != clientCompanyId) return;
-const days = siteMap[siteId].length;
-const dueDate = new Date(yr, mo+1, 0);
-dueDate.setMonth(dueDate.getMonth() + 1);
-rows.push({
-name: site.name + ' \u4F5C\u696D',
-spec: yr + '\u5E74' + (mo+1) + '\u6708\u5206',
-qty: days,
-unit: site.rate_type === 'hourly' ? '\u6642\u9593' : '\u65E5',
-price: site.price || 0,
-taxRate: 10
-});
-});
-const cc = clientCompanies.find(c => c.id == clientCompanyId);
-const ccName = cc ? cc.name : '';
-var ym=new Date().toISOString().slice(0,7).replace('-','');var invNo=ym+'-001';fetch(SB+'/rest/v1/invoices?select=invoice_no&account_id=eq.'+currentUser.id+'&invoice_no=like.'+ym+'*&order=invoice_no.desc&limit=1',{headers:await getH()}).then(function(r){return r.json()}).then(function(data){if(data&&data[0]){var seq=parseInt(data[0].invoice_no.split('-')[1])||0;invNo=ym+'-'+String(seq+1).padStart(3,'0');}document.getElementById('invNo').value=invNo;});
-const today = localDateStr(new Date());
-openInvoice({
-invNo: invNo,
-invDate: today,
-invDue: '',
-invTo: ccName,
-invTanto: '',
-rows: rows
-});
-}
-async function downloadCSV(clientId) {
-let csv = 'メンバー,現場,日付,備考\n';
-entries.forEach(e => {
-const site = sites.find(s => s.id === e.site_id);
-const member = members.find(m => m.id === e.account_id);
-const siteClientId = site ? (site.client_company_id || 'internal') : 'internal';
-if (siteClientId === clientId) {
-csv += `"${member ? member.name : 'N/A'}","${site ? site.name : 'N/A'}","${e.work_date}","${(e.note || '').replace(/"/g, '""')}"\n`;
-}
-});
-const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-const link = document.createElement('a');
-const url = URL.createObjectURL(blob);
-link.setAttribute('href', url);
-link.setAttribute('download', `attendance_${clientId.slice(0, 8)}.csv`);
-document.body.appendChild(link);
-link.click();
-document.body.removeChild(link);
-}
-async function showInvoice(clientId) {
-const groupEntries = entries.filter(e => {
-const site = sites.find(s => s.id === e.site_id);
-const siteClientId = site ? (site.client_company_id || 'internal') : 'internal';
-return siteClientId === clientId;
-});
-let clientName = '自社作業';
-if (clientId !== 'internal') {
-const companies = await sbGet('companies', `id=eq.${clientId}`);
-if (companies && companies.length > 0) clientName = companies[0].name;
-}
-let totalAmount = 0;
-groupEntries.forEach(e => {
-const s = sites.find(x => x.id === e.site_id);
-if (s) totalAmount += s.price || 0;
-});
-const tax = Math.floor(totalAmount * 0.1);
-const totalWithTax = totalAmount + tax;
-const today = new Date();
-const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
-let html = `
-<div class="invoice-page">
-<div class="invoice-header">
-<div class="invoice-title">御　請　求　書</div>
-</div>
-<div class="invoice-info">
-<div class="invoice-info-block">
-<div class="invoice-info-block-label">請求日</div>
-<div>${dateStr}</div>
-</div>
-<div class="invoice-info-block">
-<div class="invoice-info-block-label">請求先</div>
-<div>${clientName}</div>
-</div>
-</div>
-<table class="invoice-detail-table">
-<thead>
-<tr>
-<th>日付</th>
-<th>現場</th>
-<th>メンバー</th>
-<th>備考</th>
-<th class="amount">単価</th>
-<th class="amount">金額</th>
-</tr>
-</thead>
-<tbody>
-`;
-groupEntries.forEach(e => {
-const site = sites.find(s => s.id === e.site_id);
-const member = members.find(m => m.id === e.account_id);
-const amount = site ? (site.price || 0) : 0;
-html += `
-<tr>
-<td>${e.work_date}</td>
-<td>${site ? site.name : 'N/A'}</td>
-<td>${member ? member.name : 'N/A'}</td>
-<td>${e.note || ''}</td>
-<td class="amount">¥${amount.toLocaleString()}</td>
-<td class="amount">¥${amount.toLocaleString()}</td>
-</tr>
-`;
-});
-html += `
-</tbody>
-</table>
-<div class="invoice-total">
-<div class="invoice-total-row">
-<div class="invoice-total-label">小計</div>
-<div class="invoice-total-value">¥${totalAmount.toLocaleString()}</div>
-</div>
-<div class="invoice-total-row">
-<div class="invoice-total-label">消費税（10%）</div>
-<div class="invoice-total-value">¥${tax.toLocaleString()}</div>
-</div>
-<div style="text-align: right; margin-top: 16px;">
-<span class="invoice-total-amount">¥${totalWithTax.toLocaleString()}</span>
-</div>
-</div>
-<div class="invoice-seal">
-印鑑欄
-</div>
-<div class="invoice-footer">
-<div style="margin-bottom: 20px;">
-<strong>支払方法</strong><br>
-銀行振込にてお支払いください。<br>
-<br>
-<strong>振込先</strong><br>
-銀行: 〇〇銀行<br>
-支店: 〇〇支店<br>
-口座種別: 普通預金<br>
-口座番号: 0000000<br>
-口座名義: ニチログ
-</div>
-</div>
-</div>
-`;
-document.getElementById('invoicePage').innerHTML = html;
-document.getElementById('invoiceOverlay').classList.add('show');
-}
-function showReceipt(amount, description) {
-const today = new Date();
-const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
-let html = `
-<div class="receipt-page">
-<div class="receipt-title">領　収　書</div>
-<div class="receipt-fields">
-<div class="receipt-field">
-<div class="receipt-field-label">金額</div>
-<div class="receipt-field-value">
-<div class="receipt-field-box" style="font-size: 24px; font-weight: 600;">¥${(amount || 0).toLocaleString()}</div>
-</div>
-</div>
-<div class="receipt-field">
-<div class="receipt-field-label">但し書き</div>
-<div class="receipt-field-value">
-<div class="receipt-field-box">${description || ''}</div>
-</div>
-</div>
-<div class="receipt-field">
-<div class="receipt-field-label">日付</div>
-<div class="receipt-field-value">
-<div class="receipt-field-box">${dateStr}</div>
-</div>
-</div>
-</div>
-<div class="receipt-seal-area">
-<div class="receipt-seal">印鑑</div>
-</div>
-<div style="text-align: center; margin-top: 40px; font-size: 12px; color: #6b7280;">
-発行者
-</div>
-</div>
-`;
-document.getElementById('receiptPage').innerHTML = html;
-document.getElementById('receiptOverlay').classList.add('show');
-}
-function renderSettings() {
-if (!company || !currentUser) return;
-const isMaster = currentUser.role === 'master';
-let html = '<div style="padding:20px;max-width:700px;margin:0 auto;">';
-if (isMaster) {
-html += '<div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;margin-bottom:20px;">';
-html += '<h3 style="margin-top:0;">アカウント管理</h3>';
-html += '<div style="margin-bottom:12px;"><label style="display:block;margin-bottom:4px;font-weight:bold;">ロール</label>';
-html += '<select id="newAccRole" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;">';
-html += '<option value="worker">worker（作業員）</option><option value="submaster">submaster（職長）</option><option value="master">master（管理者）</option>';
-html += '</select></div>';
-html += '<div style="margin-bottom:12px;"><label style="display:block;margin-bottom:4px;font-weight:bold;">アカウント名</label>';
-html += '<input type="text" id="newAccName" placeholder="例: 田中太郎" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;" /></div>';
-html += '<div style="margin-bottom:12px;"><label style="display:block;margin-bottom:4px;font-weight:bold;">チーム</label>';
-html += '<input type="text" id="newAccTeam" placeholder="例: 現場A" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;" /></div>';
-html += '<div style="margin-bottom:12px;"><label style="display:block;margin-bottom:4px;font-weight:bold;">パスワード（空欄で自動生成）</label>';
-html += '<input type="text" id="newAccPassword" placeholder="4桁以上" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;" /></div>';
-html += '<button onclick="createNewAccount()" style="width:100%;padding:10px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:15px;">パスワードを発行</button>';
-html += '</div>';
-html += '<div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;margin-bottom:20px;">';
-html += '<h3 style="margin-top:0;">発行済みアカウント</h3>';
-if (members && members.length > 0) {
-html += '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:14px;">';
-html += '<tr style="background:#f8f9fa;"><th style="padding:8px;border:1px solid #ddd;text-align:left;">名前</th><th style="padding:8px;border:1px solid #ddd;">ロール</th><th style="padding:8px;border:1px solid #ddd;">チーム</th><th style="padding:8px;border:1px solid #ddd;">パスワード</th><th style="padding:8px;border:1px solid #ddd;">操作</th></tr>';
-members.forEach(m => {
-const isSelf = m.id === currentUser.id;
-html += '<tr' + (isSelf ? ' style="background:#e8f4fd;"' : '') + '>';
-html += '<td style="padding:8px;border:1px solid #ddd;">' + m.name + (isSelf ? ' (自分)' : '') + '</td>';
-html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + (m.role || '-') + '</td>';
-html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + (m.team || '-') + '</td>';
-html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;"><div style="display:flex;align-items:center;justify-content:center;gap:6px;">' + (m.raw_password || '****') + '<span onclick="changeUserPassword(' + m.id + ')" style="writing-mode:vertical-rl;font-size:10px;color:#fff;background:#1976d2;border-radius:4px;padding:2px 3px;cursor:pointer;line-height:1.2;">変更</span></div></td>';
-html += '<td style="padding:8px;border:1px solid #ddd;text-align:center;">';
-if (!isSelf) html += '<button onclick="deleteAccount(' + m.id + ')" style="padding:4px 8px;background:#dc3545;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;">削除</button>';
-html += '</td></tr>';
-});
-html += '</table></div>';
-} else {
-html += '<p style="color:#999;">アカウントがありません</p>';
-}
-html += '</div>';
-}
-if (!isMaster) {
-html += '<div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.1);">';
-html += '<h3 style="margin:0 0 12px;font-size:16px;">パスワード</h3>';
-html += '<div style="display:flex;align-items:center;gap:12px;">';
-html += '<span style="font-size:20px;font-weight:bold;letter-spacing:2px;">' + (currentUser.raw_password || '****') + '</span>';
-html += '<span onclick="changeUserPassword(' + currentUser.id + ')" style="writing-mode:vertical-rl;font-size:10px;color:#fff;background:#1976d2;border-radius:4px;padding:2px 3px;cursor:pointer;line-height:1.2;">変更</span>';
-html += '</div></div>';
-}
-html += '<div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;margin-bottom:20px;">';
-html += '<button onclick="doLogout()" style="width:100%;padding:12px;background:#666;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer;margin-bottom:16px;">\u30ED\u30B0\u30A2\u30A6\u30C8</button>';
-html += '<div style="border-top:2px solid #dc3545;padding-top:16px;">';
-html += '<h4 style="margin-top:0;color:#dc3545;">\u30A2\u30AB\u30A6\u30F3\u30C8\u524A\u9664</h4>';
-html += '<p style="font-size:13px;color:#666;margin-bottom:12px;">\u3053\u306E\u64CD\u4F5C\u306F\u53D6\u308A\u6D88\u305B\u307E\u305B\u3093\u3002\u30D1\u30B9\u30EF\u30FC\u30C9\u3092\u5165\u529B\u3057\u3066\u78BA\u8A8D\u3057\u3066\u304F\u3060\u3055\u3044\u3002</p>';
-html += '<input id="deleteAccPw" type="password" placeholder="\u30D1\u30B9\u30EF\u30FC\u30C9\u3092\u5165\u529B" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;margin-bottom:10px;box-sizing:border-box;">';
-html += '<button onclick="confirmDeleteMyAccount()" style="width:100%;padding:12px;background:#dc3545;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer;">\u30A2\u30AB\u30A6\u30F3\u30C8\u3092\u524A\u9664\u3059\u308B</button>';
-html += '</div></div>';
-html += '</div>';
-document.getElementById('t6').innerHTML = html;
-}
-async function updateCompanyName() {
-const newName = document.getElementById('company.nameInput').value.trim();
-if (!newName) {
-alert('会社名を入力してください');
-return;
-}
-const ok = await sbPatch('companies', company.id, { name: newName });
-if (ok) {
-company.name = newName;
-renderSettings();
-}
-await renderAll();
-showToast('会社名を更新しました');
-}
-async function changePassword() {
-const newPwd = document.getElementById('newPassword').value;
-if (!newPwd || newPwd.length < 6) {
-alert('パスワードは6文字以上です');
-return;
-}
-const hash = await sha256(newPwd);
-const ok = await sbPatch('accounts', currentUser.id, { password: hash });
-if (ok) {
-alert('パスワードを変更しました');
-document.getElementById('newPassword').value = '';
-}
-}
-async function resetData() {
-if (!confirm('本当にすべての出勤データを削除しますか？この操作は取り消せません。')) return;
-if (!confirm('確認: すべての出勤データを削除します。本当によろしいですか？')) return;
-try {
-const res = await fetch(
-`${SB}/attendance?company_id=eq.${company.id}`,
-{ method: 'DELETE', headers: await getH() }
-);
-if (res.ok) {
-entries = [];
-await renderAll();
-alert('データを削除しました');
-}
-} catch (e) {
-console.error('Reset error:', e);
-}
-}
-function showToast(msg) {
-let c = document.getElementById('toastContainer');
-if (!c) { c = document.createElement('div'); c.id = 'toastContainer'; c.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:10000;display:flex;flex-direction:column;gap:10px;'; document.body.appendChild(c); }
-const t = document.createElement('div');
-t.textContent = msg;
-t.style.cssText = 'background:#333;color:#fff;padding:12px 20px;border-radius:4px;animation:fadeIn .3s;';
-c.appendChild(t);
-setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 2000);
-}
-function canSeeRevenue() { return currentUser && currentUser.role === 'master'; }
-function canManageSites() { return currentUser && (currentUser.role === 'master' || currentUser.role === 'admin'); }
-function openClientCompanyModal(ccId) {
-const cc = ccId ? clientCompanies.find(c => c.id === ccId) : null;
-let modal = document.getElementById('ccModal');
-if (!modal) { modal = document.createElement('div'); modal.id = 'ccModal'; modal.style.cssText = 'display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);'; document.body.appendChild(modal); }
-modal.innerHTML = '<div style="position:relative;background:#fff;margin:15% auto;padding:20px;width:80%;max-width:400px;border-radius:4px;box-shadow:0 4px 8px rgba(0,0,0,0.2);">'
-+ '<h2 style="margin-top:0;">' + (cc ? '取引先企業を編集' : '取引先企業を追加') + '</h2>'
-+ '<input type="hidden" id="ccEditId" value="' + (cc ? cc.id : '') + '" />'
-+ '<div style="margin-bottom:15px;"><label style="display:block;margin-bottom:5px;font-weight:bold;">企業名</label>'
-+ '<input type="text" id="ccEditName" value="' + (cc ? cc.name : '') + '" placeholder="例: 株式会社○○" style="width:100%;padding:8px;box-sizing:border-box;border:1px solid #ddd;border-radius:4px;" /></div>'
-+ '<div style="display:flex;gap:10px;">'
-+ '<button onclick="saveClientCompany()" style="flex:1;padding:10px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;">保存</button>'
-+ '<button onclick="document.getElementById(\x27ccModal\x27).style.display=\x27none\x27" style="flex:1;padding:10px;background:#6c757d;color:#fff;border:none;border-radius:4px;cursor:pointer;">キャンセル</button>'
-+ '</div></div>';
-modal.style.display = 'block';
-}
-async function saveClientCompany() {
-const id = document.getElementById('ccEditId').value;
-const name = document.getElementById('ccEditName').value.trim();
-if (!name) { showToast('企業名を入力してください'); return; }
-if (!id && (!company || !company.id)) { showToast('ログインしてください'); return; }
-try {
-let result;
-if (id) {
-result = await await sbPatch('client_companies', id, { name });
-} else {
-result = await await sbPost('client_companies', { company_id: company.id, name });
-}
-if (!result) { showToast('保存に失敗しました（API応答なし）'); return; }
-showToast(id ? '取引先企業を更新しました' : '取引先企業を追加しました');
-document.getElementById('ccModal').style.display = 'none';
-await renderAll();
-} catch(e) { console.error('saveClientCompany error:', e); showToast('エラー: ' + e.message); }
-}
-async function deleteClientCompany(ccId) {
-if (!confirm('この取引先企業を削除しますか？\n関連サイトは「未分類」に移動します。')) return;
-try { await sbDelete('client_companies', ccId); showToast('取引先企業を削除しました'); await renderAll(); }
-catch(e) { console.error('deleteCC error:', e); showToast('削除エラー: ' + e.message); }
-}
-async function createNewAccount() {
-const role = document.getElementById('newAccRole').value;
-const name = document.getElementById('newAccName').value.trim();
-const team = document.getElementById('newAccTeam').value.trim();
-let password = document.getElementById('newAccPassword').value.trim();
-if (!name) { showToast('アカウント名を入力してください'); return; }
-if (!password) { password = Math.random().toString(36).substring(2, 6).toUpperCase(); }
-if (password.length < 4) { showToast('パスワードは4桁以上にしてください'); return; }
-try {
-password = await sha256(password);
-const result = await sbPost('accounts', { company_id: company.id, name, role, team, password });
-if (!result) { showToast('アカウント作成に失敗しました'); return; }
-showToast('アカウントを作成しました');
-let modal = document.getElementById('inviteResultModal');
-if (!modal) { modal = document.createElement('div'); modal.id = 'inviteResultModal'; modal.style.cssText = 'display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);'; document.body.appendChild(modal); }
-const acc = Array.isArray(result) ? result[0] : result;
-modal.innerHTML = '<div style="position:relative;background:#fff;margin:15% auto;padding:20px;width:80%;max-width:400px;border-radius:8px;text-align:center;">'
-+ '<h2 style="margin-top:0;">アカウント発行完了</h2>'
-+ '<div style="background:#f8f9fa;padding:15px;border-radius:4px;margin-bottom:15px;text-align:left;">'
-+ '<p><strong>名前:</strong> ' + acc.name + '</p>'
-+ '<p><strong>ロール:</strong> ' + acc.role + '</p>'
-+ '<p><strong>パスワード:</strong> <span style="font-size:20px;font-weight:bold;color:#007bff;">' + acc.password + '</span></p>'
-+ '</div>'
-+ '<p style="font-size:12px;color:#666;">このパスワードをメンバーに伝えてください</p>'
-+ '<button onclick="document.getElementById(\x27inviteResultModal\x27).style.display=\x27none\x27" style="width:100%;padding:10px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;">閉じる</button>'
-+ '</div>';
-modal.style.display = 'block';
-document.getElementById('newAccName').value = '';
-document.getElementById('newAccTeam').value = '';
-document.getElementById('newAccPassword').value = '';
-await renderAll();
-} catch(e) { console.error('createNewAccount error:', e); showToast('エラー: ' + e.message); }
-}
-async function deleteAccount(accId) {
-if (!confirm('このアカウントを削除しますか？')) return;
-try {
-await sbDelete('accounts', accId);
-showToast('アカウントを削除しました');
-await renderAll();
-} catch(e) { console.error('deleteAccount error:', e); showToast('削除エラー: ' + e.message); }
-}
-async function handleDeleteAllData() {
-if (!confirm('本当に会社データを全て削除しますか？\n全アカウント・出勤記録・現場が完全に削除され、復元できません。')) return;
-if (!confirm('最終確認：この操作は取り消せません。本当に削除しますか？')) return;
-if (!company || !company.id) { showToast('ログインしてください'); return; }
-try {
-const cid = company.id;
-await fetch(SB + '/rest/v1/attendance?company_id=eq.' + cid, { method: 'DELETE', headers: await getH() });
-await fetch(SB + '/rest/v1/client_companies?company_id=eq.' + cid, { method: 'DELETE', headers: await getH() });
-await fetch(SB + '/rest/v1/work_sites?company_id=eq.' + cid, { method: 'DELETE', headers: await getH() });
-await fetch(SB + '/rest/v1/accounts?company_id=eq.' + cid, { method: 'DELETE', headers: await getH() });
-await fetch(SB + '/rest/v1/companies?id=eq.' + cid, { method: 'DELETE', headers: await getH() });
-showToast('全データを削除しました。ログアウトします。');
-setTimeout(() => { logout(); }, 1500);
-} catch(e) { console.error('deleteAllData error:', e); showToast('削除エラー: ' + e.message); }
-}
-async function confirmDeleteMyAccount() {
-const pw = document.getElementById('deleteAccPw')?.value;
-if (!pw) { showToast('\u30D1\u30B9\u30EF\u30FC\u30C9\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044'); return; }
-if (!currentUser || !currentUser.id) { showToast('\u30ED\u30B0\u30A4\u30F3\u3057\u3066\u304F\u3060\u3055\u3044'); return; }
-const enc = new TextEncoder();
-const hashBuf = await crypto.subtle.digest('SHA-256', enc.encode(pw));
-const hashHex = [...new Uint8Array(hashBuf)].map(b => b.toString(16).padStart(2,'0')).join('');
-if (hashHex !== currentUser.password) { showToast('\u30D1\u30B9\u30EF\u30FC\u30C9\u304C\u9055\u3044\u307E\u3059'); return; }
-if (!confirm('\u672C\u5F53\u306B\u30A2\u30AB\u30A6\u30F3\u30C8\u3092\u524A\u9664\u3057\u307E\u3059\u304B\uFF1F\\n\u3053\u306E\u64CD\u4F5C\u306F\u53D6\u308A\u6D88\u305B\u307E\u305B\u3093\u3002')) return;
-await handleDeleteMyAccount();
-}
-async function handleDeleteMyAccount() {
-if (!confirm('自分のアカウントを削除しますか？\nこの操作は取り消せません。')) return;
-if (!currentUser || !currentUser.id) { showToast('ログインしてください'); return; }
-try {
-await sbDelete('accounts', currentUser.id);
-showToast('アカウントを削除しました。ログアウトします。');
-setTimeout(() => { logout(); }, 1500);
-} catch(e) { console.error('deleteMyAccount error:', e); showToast('削除エラー: ' + e.message); }
-}
-(async () => {
-const saved = localStorage.getItem('nichilog_session');
-if (saved) {
-try {
-const s = JSON.parse(saved);
-document.getElementById('loginCompany').value = s.company.name;
-document.getElementById('loginName').value = s.userName;
-document.getElementById('loginPassword').value = s.pwd;
-await doLogin();
-} catch(e) { localStorage.removeItem('nichilog_session'); }
-}
-})();
+// ============================================================
+// REST helpers (Supabase REST, copied from existing pc.html)
+// ============================================================
+async function getAuthToken(){const{data:{session}}=await sb.auth.getSession();return session&&session.access_token||SK;}
+async function getH(){var t=await getAuthToken();return{'apikey':SK,'Authorization':'Bearer '+t,'Content-Type':'application/json'};}
+async function sbGet(table,filters){filters=filters||'';const token=await getAuthToken();const u=SB+'/rest/v1/'+table+(filters?'?'+filters:'');const res=await fetch(u,{headers:{'apikey':SK,'Authorization':'Bearer '+token,'Content-Type':'application/json'}});if(!res.ok){console.error('sbGet',table,res.status);return[];}return res.json();}
+async function sbPost(table,data){const token=await getAuthToken();const res=await fetch(SB+'/rest/v1/'+table,{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(data)});if(!res.ok){console.error('sbPost',table,res.status);return null;}const arr=await res.json();return arr[0]||arr;}
+async function sbPatch(table,filters,data){const token=await getAuthToken();const res=await fetch(SB+'/rest/v1/'+table+'?'+filters,{method:'PATCH',headers:{'apikey':SK,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(data)});if(!res.ok){console.error('sbPatch',table,res.status);return null;}const arr=await res.json();return arr[0]||arr;}
+async function sbDelete(table,filters){const token=await getAuthToken();const res=await fetch(SB+'/rest/v1/'+table+'?'+filters,{method:'DELETE',headers:{'apikey':SK,'Authorization':'Bearer '+token,'Content-Type':'application/json'}});return res.ok;}
 
-</script>
-<script>
+// ============================================================
+// Auth
+// ============================================================
+async function doLogin(){
+  const comp=document.getElementById('loginCompany').value.trim();
+  const nm=document.getElementById('loginName').value.trim();
+  const pw=document.getElementById('loginPassword').value;
+  if(!comp||!nm||!pw){showLoginError('全項目を入力してください');return;}
+  try{
+    const{data:email,error:luErr}=await sb.rpc('login_lookup',{p_company:comp,p_name:nm});
+    if(luErr||!email){showLoginError('会社名または名前が見つかりません');return;}
+    const{data:authData,error:authErr}=await sb.auth.signInWithPassword({email:email,password:pw});
+    if(authErr){showLoginError('パスワードが正しくありません');return;}
+    const accs=await sbGet('accounts','name=eq.'+encodeURIComponent(nm));
+    if(!accs||accs.length===0){showLoginError('アカウント情報の取得に失敗');return;}
+    currentUser=accs[0];
+    const comps=await sbGet('companies','id=eq.'+currentUser.company_id);
+    company=comps[0];
+    await enterApp();
+  }catch(e){showLoginError('ログインエラー: '+e.message);}
+}
+async function doRegister(){
+  const comp=document.getElementById('regCompany').value.trim();
+  const nm=document.getElementById('regName').value.trim();
+  const pw=document.getElementById('regPassword').value;
+  const role=document.getElementById('regRole').value;
+  if(!comp||!nm||!pw){showRegError('全項目を入力してください');return;}
+  try{
+    const tempEmail=crypto.randomUUID()+'@nichilog.app';
+    const{data:authData,error:signUpErr}=await sb.auth.signUp({email:tempEmail,password:pw});
+    if(signUpErr){showRegError('登録エラー: '+signUpErr.message);return;}
+    const{data:regData,error:regErr}=await sb.rpc('complete_registration',{p_company:comp,p_name:nm,p_role:role,p_team:''});
+    if(regErr){showRegError('登録完了エラー: '+regErr.message);return;}
+    const accs=await sbGet('accounts','auth_uid=eq.'+authData.user.id);
+    if(!accs||accs.length===0){showRegError('アカウント取得失敗');return;}
+    currentUser=accs[0];
+    const comps=await sbGet('companies','id=eq.'+currentUser.company_id);
+    company=comps[0];
+    await enterApp();
+    showToast('登録完了');
+  }catch(e){showRegError('登録エラー: '+e.message);}
+}
+async function doLogout(){
+  try{await sb.auth.signOut();}catch(e){}
+  currentUser=null;company=null;entries=[];sites=[];clientCompanies=[];members=[];invoices=[];
+  document.body.classList.remove('logged-in');document.body.classList.add('logged-out');
+  document.getElementById('loginPassword').value='';
+  document.getElementById('loginError').style.display='none';
+}
+async function enterApp(){
+  document.body.classList.remove('logged-out');document.body.classList.add('logged-in');
+  document.getElementById('sbCompany').textContent=(company&&company.name)||'-';
+  document.getElementById('sbUser').textContent=(currentUser&&currentUser.name)||'-';
+  // Hide tab 5 (invoices) menu for worker
+  const navInvoice=document.querySelector('.sb-item[data-tab="5"]');
+  if(navInvoice)navInvoice.style.display=isWorker()?'none':'';
+  await renderAll();
+  switchTab(1);
+}
 
-    // Supabase Auth session restore on page load
-    (async function restoreSession() {
-      const _h = new URLSearchParams(window.location.hash.slice(1));
-      const _at = _h.get('access_token');
-      const _rt = _h.get('refresh_token');
-      if (_at && _rt) {
-        await sb.auth.setSession({ access_token: _at, refresh_token: _rt });
-        history.replaceState(null, '', window.location.pathname);
-      }
-      const page = hash.get('page');
-      if (page === 'invoice') {
-        setTimeout(function() { if(typeof showTab==='function') showTab('t5'); if(typeof showInvoice==='function') showInvoice(); }, 800);
-      } else if (page === 'nippo') {
-        setTimeout(function() { if(typeof showTab==='function') showTab('t2'); if(typeof generateKoujiNippo==='function') generateKoujiNippo(); }, 800);
-      } else if (page === 'receipt') {
-        setTimeout(function() { if(typeof showTab==='function') showTab('t5'); if(typeof openReceiptForm==='function') openReceiptForm(); }, 800);
-      }
-      const { data: { session } } = await sb.auth.getSession();
-      if (session && session.user) {
-        try {
-          const accs = await sbGet('accounts', 'auth_uid=eq.' + session.user.id);
-          if (accs && accs.length > 0) {
-            currentUser = accs[0];
-            const comps = await sbGet('companies', 'id=eq.' + currentUser.company_id);
-            if (comps && comps.length > 0) {
-              company = comps[0];
-              document.getElementById('loginScreen').style.display = 'none';
-              document.getElementById('appHeader').style.display = '';
-              document.getElementById('navBar').style.display = '';
-              await renderAll(); switchTab(1);
-              return;
-            }
-          }
-        } catch(e) { console.error('Session restore failed', e); }
-      }
-      document.getElementById('loginScreen').style.display = '';
-    })();
-function openWithSession(page) {
-  sb.auth.getSession().then(function(result) {
-    var session = result.data.session;
-    var base = 'https://nichilog.vercel.app/nichilog-v2.html';
-    var fragment = '';
-    if (session) {
-      fragment = '#access_token=' + session.access_token
-               + '&refresh_token=' + session.refresh_token
-               + '&token_type=bearer';
+// ============================================================
+// Tabs
+// ============================================================
+function switchTab(n){
+  if(n===5&&isWorker()){n=1;}
+  document.querySelectorAll('.tab-panel').forEach(function(el){el.classList.remove('active');});
+  document.querySelectorAll('.sb-item').forEach(function(el){el.classList.remove('active');});
+  const panel=document.getElementById('tab'+n);if(panel)panel.classList.add('active');
+  const item=document.querySelector('.sb-item[data-tab="'+n+'"]');if(item)item.classList.add('active');
+  currentTab=n;
+  if(n===1)renderCalendar();
+  else if(n===2)renderSummary();
+  else if(n===3)renderSites();
+  else if(n===4)renderMembers();
+  else if(n===5)renderInvoices();
+  else if(n===6)renderSettings();
+}
+
+// ============================================================
+// Data loading
+// ============================================================
+async function renderAll(){
+  if(!company)return;
+  members=await sbGet('accounts','company_id=eq.'+company.id);
+  sites=await sbGet('work_sites','company_id=eq.'+company.id);
+  clientCompanies=await sbGet('client_companies','company_id=eq.'+company.id);
+  await ldMo();
+  if(!isWorker()){
+    try{invoices=await sbGet('invoices','account_id=eq.'+currentUser.id+'&order=issue_date.desc');}catch(e){invoices=[];}
+  }
+}
+async function ldMo(){
+  const yr=viewMonth.getFullYear(), mo=viewMonth.getMonth();
+  const start=localDateStr(new Date(yr,mo,1));
+  const end=localDateStr(new Date(yr,mo+1,0));
+  let aq='company_id=eq.'+company.id+'&work_date=gte.'+start+'&work_date=lte.'+end;
+  if(isWorker())aq+='&account_id=eq.'+currentUser.id;
+  entries=await sbGet('attendance',aq);
+}
+async function chMo(delta){
+  viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+delta,1);
+  await ldMo();
+  renderCalendar();
+}
+
+// ============================================================
+// Tab 1: Calendar
+// ============================================================
+function renderCalendar(){
+  const yr=viewMonth.getFullYear(), mo=viewMonth.getMonth();
+  const first=new Date(yr,mo,1);
+  const last=new Date(yr,mo+1,0);
+  const startDay=first.getDay();
+  const daysInMonth=last.getDate();
+  let html='<h2>カレンダー</h2>';
+  html+='<div class="cal-nav">';
+  html+='<button class="btn btn-secondary" onclick="chMo(-1)">◀ 前月</button>';
+  html+='<div class="mon">'+yr+'年 '+gMN(mo)+'</div>';
+  html+='<button class="btn btn-secondary" onclick="chMo(1)">次月 ▶</button>';
+  html+='<button class="btn btn-secondary" onclick="viewMonth=new Date();ldMo().then(renderCalendar)">今月</button>';
+  html+='</div>';
+  html+='<table class="cal-table"><thead><tr>';
+  for(let i=0;i<7;i++){const cls=(i===0?'sun':(i===6?'sat':''));html+='<th class="'+cls+'">'+gSN(i)+'</th>';}
+  html+='</tr></thead><tbody>';
+  let row='<tr>';
+  for(let i=0;i<startDay;i++){row+='<td><div class="cal-cell empty"></div></td>';}
+  let col=startDay;
+  for(let day=1;day<=daysInMonth;day++){
+    const dstr=localDateStr(new Date(yr,mo,day));
+    const dayOfWeek=new Date(yr,mo,day).getDay();
+    const dayEntries=entries.filter(function(e){return e.work_date===dstr;});
+    const isToday=dstr===localDateStr(new Date());
+    const cls=(dayOfWeek===0?'sun ':(dayOfWeek===6?'sat ':''))+(isToday?'today':'');
+    let mini='';
+    if(dayEntries.length>0){
+      const nmList=dayEntries.slice(0,2).map(function(e){const m=members.find(function(x){return x.id===e.account_id;});return m?m.name:'';}).join('、');
+      mini='<div class="mini">'+escHtml(nmList)+(dayEntries.length>2?' +'+(dayEntries.length-2):'')+'</div>';
     }
-    var pageParam = page ? '&page=' + page : '';
-    var url = base + fragment + pageParam;
-    if (window.flutter_inappwebview) {
-      window.flutter_inappwebview.callHandler('openExternal', url);
-    } else {
-      window.print();
-    }
+    row+='<td><div class="cal-cell '+cls+'" onclick="dayDetail(\''+dstr+'\')"><span class="d">'+day+'</span>'+(dayEntries.length>0?'<span class="dot"></span>':'')+mini+'</div></td>';
+    col++;
+    if(col%7===0){row+='</tr>';html+=row;row='<tr>';}
+  }
+  if(col%7!==0){while(col%7!==0){row+='<td><div class="cal-cell empty"></div></td>';col++;}row+='</tr>';html+=row;}
+  html+='</tbody></table>';
+  const monthDays=entries.length;
+  let totalAmount=0;
+  entries.forEach(function(e){const s=sites.find(function(x){return x.id===e.site_id;});if(s){totalAmount+=(s.price||0)*(e.work_type==='half'?0.5:1);}});
+  html+='<div class="stat-row">';
+  html+='<div class="stat-card"><div class="lbl">今月の出勤日数</div><div class="val">'+monthDays+' 日</div></div>';
+  if(canSeeRevenue()){html+='<div class="stat-card"><div class="lbl">売上見込</div><div class="val">¥'+totalAmount.toLocaleString()+'</div></div>';}
+  html+='</div>';
+  document.getElementById('tab1').innerHTML=html;
+}
+function dayDetail(dstr){
+  selectedDate=dstr;
+  const dayEntries=entries.filter(function(e){return e.work_date===dstr;});
+  document.getElementById('ddTitle').textContent=dstr+' の出勤記録';
+  let body='';
+  if(dayEntries.length===0){body='<div class="empty">記録なし</div>';}
+  else{
+    body='<table><thead><tr><th>メンバー</th><th>現場</th><th>区分</th><th>備考</th><th>操作</th></tr></thead><tbody>';
+    dayEntries.forEach(function(e){
+      const mb=members.find(function(x){return x.id===e.account_id;});
+      const st=sites.find(function(x){return x.id===e.site_id;});
+      const cc=st?clientCompanies.find(function(x){return x.id===st.client_company_id;}):null;
+      body+='<tr><td>'+escHtml(mb?mb.name:'-')+'</td>';
+      body+='<td>'+escHtml(cc?cc.name:'')+' '+escHtml(st?st.name:'-')+'</td>';
+      body+='<td><span class="badge '+(e.work_type==='half'?'badge-half':'badge-full')+'">'+(e.work_type==='half'?'半日':'1日')+'</span></td>';
+      body+='<td>'+escHtml(e.note||'')+'</td>';
+      body+='<td><button class="btn btn-sm btn-secondary" onclick="editE('+e.id+')">編集</button> <button class="btn btn-sm btn-danger" onclick="delE('+e.id+')">削除</button></td></tr>';
+    });
+    body+='</tbody></table>';
+  }
+  document.getElementById('ddBody').innerHTML=body;
+  document.getElementById('dayDetailModal').classList.add('show');
+}
+function buildMemberOpts(selId){var s='<option value="">-- 選択 --</option>';members.forEach(function(m){s+='<option value="'+m.id+'"'+(m.id===selId?' selected':'')+'>'+escHtml(m.name)+'</option>';});return s;}
+function buildClientOpts(selId){var s='<option value="">-- 選択 --</option>';clientCompanies.forEach(function(c){s+='<option value="'+c.id+'"'+(c.id===selId?' selected':'')+'>'+escHtml(c.name)+'</option>';});return s;}
+function buildSiteOpts(clientId,selId){var s='<option value="">-- 選択 --</option>';sites.filter(function(x){return !clientId||x.client_company_id===clientId;}).forEach(function(st){s+='<option value="'+st.id+'"'+(st.id===selId?' selected':'')+'>'+escHtml(st.name)+'</option>';});return s;}
+function showAddE(){
+  clModal();
+  document.getElementById('aeDate').value=selectedDate||localDateStr(new Date());
+  document.getElementById('aeMember').innerHTML=buildMemberOpts(currentUser?currentUser.id:null);
+  document.getElementById('aeClient').innerHTML=buildClientOpts();
+  document.getElementById('aeSite').innerHTML=buildSiteOpts();
+  document.getElementById('aeType').value='full';
+  document.getElementById('aeNote').value='';
+  document.getElementById('addEntryModal').classList.add('show');
+}
+function filterSitesByClient(){var cid=document.getElementById('aeClient').value;document.getElementById('aeSite').innerHTML=buildSiteOpts(cid);}
+function filterEditSites(){var cid=document.getElementById('eeClient').value;document.getElementById('eeSite').innerHTML=buildSiteOpts(cid);}
+async function saveEntry(){
+  const payload={
+    company_id:company.id,
+    work_date:document.getElementById('aeDate').value,
+    account_id:document.getElementById('aeMember').value||currentUser.id,
+    site_id:document.getElementById('aeSite').value||null,
+    work_type:document.getElementById('aeType').value,
+    note:document.getElementById('aeNote').value
+  };
+  if(!payload.work_date){showToast('日付を入力してください');return;}
+  const r=await sbPost('attendance',payload);
+  if(r){showToast('保存しました');clModal();await ldMo();renderCalendar();}
+  else{showToast('保存失敗');}
+}
+function editE(id){
+  const e=entries.find(function(x){return x.id===id;});if(!e)return;
+  const st=sites.find(function(x){return x.id===e.site_id;});
+  clModal();
+  document.getElementById('eeId').value=e.id;
+  document.getElementById('eeDate').value=e.work_date;
+  document.getElementById('eeMember').innerHTML=buildMemberOpts(e.account_id);
+  document.getElementById('eeClient').innerHTML=buildClientOpts(st?st.client_company_id:null);
+  document.getElementById('eeSite').innerHTML=buildSiteOpts(st?st.client_company_id:null,e.site_id);
+  document.getElementById('eeType').value=e.work_type||'full';
+  document.getElementById('eeNote').value=e.note||'';
+  document.getElementById('editEntryModal').classList.add('show');
+}
+async function updateEntry(){
+  const id=document.getElementById('eeId').value;
+  const payload={
+    work_date:document.getElementById('eeDate').value,
+    account_id:document.getElementById('eeMember').value,
+    site_id:document.getElementById('eeSite').value||null,
+    work_type:document.getElementById('eeType').value,
+    note:document.getElementById('eeNote').value
+  };
+  const r=await sbPatch('attendance','id=eq.'+id,payload);
+  if(r){showToast('更新しました');clModal();await ldMo();renderCalendar();}
+  else{showToast('更新失敗');}
+}
+async function delE(id){
+  if(!confirm('この記録を削除しますか？'))return;
+  const r=await sbDelete('attendance','id=eq.'+id);
+  if(r){showToast('削除しました');clModal();await ldMo();renderCalendar();}
+  else{showToast('削除失敗');}
+}
+
+// ============================================================
+// Tab 2: Summary
+// ============================================================
+function prevSummaryMonth(){summaryMonthNum--;if(summaryMonthNum<1){summaryMonthNum=12;summaryYear--;}renderSummary();}
+function nextSummaryMonth(){summaryMonthNum++;if(summaryMonthNum>12){summaryMonthNum=1;summaryYear++;}renderSummary();}
+async function renderSummary(){
+  const y=summaryYear, m=summaryMonthNum;
+  const start=y+'-'+String(m).padStart(2,'0')+'-01';
+  const endDate=new Date(y,m,0);
+  const end=localDateStr(endDate);
+  let aq='company_id=eq.'+company.id+'&work_date=gte.'+start+'&work_date=lte.'+end;
+  if(isWorker())aq+='&account_id=eq.'+currentUser.id;
+  const list=await sbGet('attendance',aq);
+  // Aggregate by site
+  const agg={};let totalDays=0,totalAmt=0;
+  list.forEach(function(e){
+    const k=e.site_id||'0';
+    if(!agg[k])agg[k]={site_id:e.site_id,days:0,amount:0};
+    const days=e.work_type==='half'?0.5:1;
+    agg[k].days+=days;
+    const st=sites.find(function(x){return x.id===e.site_id;});
+    const price=st?(st.price||0):0;
+    agg[k].amount+=price*days;
+    totalDays+=days;totalAmt+=price*days;
+  });
+  let html='<h2>サマリー</h2>';
+  html+='<div class="btn-row">';
+  html+='<button class="btn btn-secondary" onclick="prevSummaryMonth()">◀ 前月</button>';
+  html+='<div style="font-weight:700;font-size:16px;min-width:140px;text-align:center">'+y+'年 '+m+'月</div>';
+  html+='<button class="btn btn-secondary" onclick="nextSummaryMonth()">次月 ▶</button>';
+  html+='<span style="flex:1"></span>';
+  if(canSeeRevenue()){
+    html+='<button class="btn btn-primary" onclick="generateKoujiNippo('+y+','+m+')">工事日報PDF</button>';
+    html+='<button class="btn btn-success" onclick="openInvoicePrefill('+y+','+m+')">＋ 請求書作成</button>';
+  }
+  html+='</div>';
+  html+='<table><thead><tr><th>現場名</th><th>取引先</th><th style="text-align:right">日数</th><th style="text-align:right">単価</th><th style="text-align:right">小計</th></tr></thead><tbody>';
+  Object.values(agg).forEach(function(a){
+    const st=sites.find(function(x){return x.id===a.site_id;});
+    const cc=st?clientCompanies.find(function(x){return x.id===st.client_company_id;}):null;
+    html+='<tr><td>'+escHtml(st?st.name:'(未設定)')+'</td><td>'+escHtml(cc?cc.name:'-')+'</td>';
+    html+='<td style="text-align:right">'+a.days+'</td>';
+    html+='<td style="text-align:right">¥'+(st?(st.price||0):0).toLocaleString()+'</td>';
+    html+='<td style="text-align:right">¥'+a.amount.toLocaleString()+'</td></tr>';
+  });
+  if(Object.keys(agg).length===0)html+='<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:30px">該当月の出勤記録はありません</td></tr>';
+  html+='</tbody>';
+  html+='<tfoot><tr style="font-weight:700;background:#f3f4f6"><td colspan="2">合計</td><td style="text-align:right">'+totalDays+'</td><td></td><td style="text-align:right">¥'+totalAmt.toLocaleString()+'</td></tr></tfoot>';
+  html+='</table>';
+  document.getElementById('tab2').innerHTML=html;
+}
+async function generateKoujiNippo(y,m){
+  // Simple PDF of the summary table
+  try{
+    const el=document.getElementById('tab2');
+    if(typeof html2canvas==='undefined'||typeof window.jspdf==='undefined'){showToast('ライブラリ未読込');return;}
+    const canvas=await html2canvas(el,{scale:2,backgroundColor:'#ffffff'});
+    const imgData=canvas.toDataURL('image/jpeg',0.92);
+    const{jsPDF}=window.jspdf;
+    const pageWidth=210;const imgH=(canvas.height*pageWidth)/canvas.width;
+    const pdf=new jsPDF('p','mm',[pageWidth,Math.max(imgH,297)]);
+    pdf.addImage(imgData,'JPEG',0,0,pageWidth,imgH);
+    pdf.save('工事日報_'+y+'_'+String(m).padStart(2,'0')+'.pdf');
+  }catch(e){showToast('PDF生成失敗: '+e.message);}
+}
+function openInvoicePrefill(y,m){
+  const title=y+'年'+m+'月分 請求書';
+  openInvoice({invNo:y+'-'+String(m).padStart(2,'0')+'-001',invDate:localDateStr(new Date()),construction_name:title});
+}
+
+// ============================================================
+// Tab 3: Sites / Client Companies
+// ============================================================
+function renderSites(){
+  let html='<h2>現場・取引先</h2>';
+  html+='<div class="btn-row"><button class="btn btn-primary" onclick="openClientModal()">＋ 取引先追加</button><button class="btn btn-primary" onclick="openSiteModal()">＋ 現場追加</button></div>';
+  html+='<h3 style="font-size:15px;margin:12px 0 8px;color:#374151">取引先一覧</h3>';
+  html+='<table><thead><tr><th>取引先名</th><th>操作</th></tr></thead><tbody>';
+  clientCompanies.forEach(function(c){
+    html+='<tr><td>'+escHtml(c.name)+'</td><td><button class="btn btn-sm btn-secondary" onclick="openClientModal('+c.id+')">編集</button> <button class="btn btn-sm btn-danger" onclick="deleteClient('+c.id+')">削除</button></td></tr>';
+  });
+  if(clientCompanies.length===0)html+='<tr><td colspan="2" style="text-align:center;color:#9ca3af;padding:20px">取引先なし</td></tr>';
+  html+='</tbody></table>';
+  html+='<h3 style="font-size:15px;margin:20px 0 8px;color:#374151">現場一覧</h3>';
+  html+='<table><thead><tr><th>取引先</th><th>現場名</th><th style="text-align:right">単価</th><th>タイプ</th><th>操作</th></tr></thead><tbody>';
+  sites.forEach(function(s){
+    const cc=clientCompanies.find(function(x){return x.id===s.client_company_id;});
+    html+='<tr><td>'+escHtml(cc?cc.name:'-')+'</td><td>'+escHtml(s.name)+'</td>';
+    html+='<td style="text-align:right">¥'+(s.price||0).toLocaleString()+'</td>';
+    html+='<td>'+escHtml(s.type||'人工')+'</td>';
+    html+='<td><button class="btn btn-sm btn-secondary" onclick="openSiteModal('+s.id+')">編集</button> <button class="btn btn-sm btn-danger" onclick="deleteSite('+s.id+')">削除</button></td></tr>';
+  });
+  if(sites.length===0)html+='<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:20px">現場なし</td></tr>';
+  html+='</tbody></table>';
+  document.getElementById('tab3').innerHTML=html;
+}
+function openSiteModal(id){
+  clModal();
+  document.getElementById('smTitle').textContent=id?'現場を編集':'現場を追加';
+  document.getElementById('smId').value=id||'';
+  document.getElementById('smClient').innerHTML=buildClientOpts(id?(sites.find(function(x){return x.id===id;})||{}).client_company_id:null);
+  const s=id?sites.find(function(x){return x.id===id;}):null;
+  document.getElementById('smName').value=s?(s.name||''):'';
+  document.getElementById('smPrice').value=s?(s.price||25000):25000;
+  document.getElementById('smType').value=s?(s.type||'人工'):'人工';
+  document.getElementById('siteModal').classList.add('show');
+}
+async function saveSite(){
+  const id=document.getElementById('smId').value;
+  const payload={
+    company_id:company.id,
+    client_company_id:document.getElementById('smClient').value||null,
+    name:document.getElementById('smName').value.trim(),
+    price:parseInt(document.getElementById('smPrice').value)||0,
+    type:document.getElementById('smType').value
+  };
+  if(!payload.name){showToast('現場名を入力してください');return;}
+  let r;
+  if(id)r=await sbPatch('work_sites','id=eq.'+id,payload);
+  else r=await sbPost('work_sites',payload);
+  if(r){showToast('保存しました');clModal();await renderAll();renderSites();}
+  else{showToast('保存失敗');}
+}
+async function deleteSite(id){
+  if(!confirm('この現場を削除しますか？'))return;
+  const r=await sbDelete('work_sites','id=eq.'+id);
+  if(r){showToast('削除しました');await renderAll();renderSites();}
+}
+function openClientModal(id){
+  clModal();
+  const c=id?clientCompanies.find(function(x){return x.id===id;}):null;
+  document.getElementById('cmTitle').textContent=id?'取引先を編集':'取引先を追加';
+  document.getElementById('cmId').value=id||'';
+  document.getElementById('cmName').value=c?(c.name||''):'';
+  document.getElementById('clientModal').classList.add('show');
+}
+async function saveClient(){
+  const id=document.getElementById('cmId').value;
+  const payload={company_id:company.id,name:document.getElementById('cmName').value.trim()};
+  if(!payload.name){showToast('取引先名を入力してください');return;}
+  let r;
+  if(id)r=await sbPatch('client_companies','id=eq.'+id,payload);
+  else r=await sbPost('client_companies',payload);
+  if(r){showToast('保存しました');clModal();await renderAll();renderSites();}
+  else{showToast('保存失敗');}
+}
+async function deleteClient(id){
+  if(!confirm('この取引先を削除しますか？'))return;
+  const r=await sbDelete('client_companies','id=eq.'+id);
+  if(r){showToast('削除しました');await renderAll();renderSites();}
+}
+
+// ============================================================
+// Tab 4: Members
+// ============================================================
+function renderMembers(){
+  let html='<h2>メンバー</h2>';
+  if(canManage())html+='<div class="btn-row"><button class="btn btn-primary" onclick="openMemberModal()">＋ メンバー追加</button></div>';
+  html+='<table><thead><tr><th>名前</th><th>ロール</th><th>チーム</th><th>操作</th></tr></thead><tbody>';
+  members.forEach(function(m){
+    const roleCls=m.role==='master'?'badge-master':(m.role==='worker'?'badge-worker':'badge-admin');
+    html+='<tr><td>'+escHtml(m.name)+'</td>';
+    html+='<td><span class="badge '+roleCls+'">'+escHtml(m.role||'-')+'</span></td>';
+    html+='<td>'+escHtml(m.team||'-')+'</td>';
+    html+='<td>'+(canManage()?'<button class="btn btn-sm btn-secondary" onclick="openMemberModal('+m.id+')">編集</button> <button class="btn btn-sm btn-danger" onclick="deleteMember('+m.id+')">削除</button>':'')+'</td></tr>';
+  });
+  if(members.length===0)html+='<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px">メンバーなし</td></tr>';
+  html+='</tbody></table>';
+  document.getElementById('tab4').innerHTML=html;
+}
+function openMemberModal(id){
+  clModal();
+  const m=id?members.find(function(x){return x.id===id;}):null;
+  document.getElementById('mmTitle').textContent=id?'メンバーを編集':'メンバーを追加';
+  document.getElementById('mmId').value=id||'';
+  document.getElementById('mmName').value=m?(m.name||''):'';
+  document.getElementById('mmRole').value=m?(m.role||'worker'):'worker';
+  document.getElementById('mmTeam').value=m?(m.team||''):'';
+  document.getElementById('mmPw').value='';
+  document.getElementById('memberModal').classList.add('show');
+}
+async function saveMember(){
+  const id=document.getElementById('mmId').value;
+  const name=document.getElementById('mmName').value.trim();
+  const role=document.getElementById('mmRole').value;
+  const team=document.getElementById('mmTeam').value.trim();
+  const pw=document.getElementById('mmPw').value;
+  if(!name){showToast('名前を入力してください');return;}
+  if(id){
+    const r=await sbPatch('accounts','id=eq.'+id,{name:name,role:role,team:team});
+    if(r){showToast('更新しました');clModal();await renderAll();renderMembers();}
+    else{showToast('更新失敗');}
+  }else{
+    if(!pw){showToast('新規追加時はパスワードが必要です');return;}
+    try{
+      const tempEmail=crypto.randomUUID()+'@nichilog.app';
+      const{data:authData,error:signUpErr}=await sb.auth.signUp({email:tempEmail,password:pw});
+      if(signUpErr){showToast('登録失敗: '+signUpErr.message);return;}
+      const{error:regErr}=await sb.rpc('complete_registration',{p_company:company.name,p_name:name,p_role:role,p_team:team});
+      if(regErr){showToast('登録エラー: '+regErr.message);return;}
+      showToast('追加しました');clModal();await renderAll();renderMembers();
+    }catch(e){showToast('エラー: '+e.message);}
+  }
+}
+async function deleteMember(id){
+  if(!confirm('このメンバーを削除しますか？'))return;
+  const r=await sbDelete('accounts','id=eq.'+id);
+  if(r){showToast('削除しました');await renderAll();renderMembers();}
+}
+
+// ============================================================
+// Tab 5: Invoices (+ Receipt)
+// ============================================================
+const statusMap={'下書き':'draft','発行済':'issued','入金済':'paid'};
+function displayStatus(s){return s||'下書き';}
+function statusBadgeCls(s){if(s==='発行済')return'badge-issued';if(s==='入金済')return'badge-paid';return'badge-draft';}
+function renderInvoices(){
+  let html='<h2>請求・領収書</h2>';
+  html+='<div class="btn-row"><button class="btn btn-primary" onclick="openInvoice()">＋ 請求書作成</button><button class="btn btn-success" onclick="openReceiptForm()">＋ 領収書作成</button></div>';
+  html+='<h3 style="font-size:15px;margin:12px 0 8px">請求書一覧</h3>';
+  html+='<table><thead><tr><th>請求番号</th><th>発行日</th><th>宛先</th><th>工事名</th><th style="text-align:right">金額</th><th>ステータス</th><th>操作</th></tr></thead><tbody>';
+  if(!invoices||invoices.length===0)html+='<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:20px">請求書なし</td></tr>';
+  else{
+    invoices.forEach(function(iv){
+      html+='<tr><td>'+escHtml(iv.invoice_no||'-')+'</td>';
+      html+='<td>'+escHtml(iv.issue_date||'-')+'</td>';
+      html+='<td>'+escHtml(iv.client_company||'-')+'</td>';
+      html+='<td>'+escHtml(iv.construction_name||'-')+'</td>';
+      html+='<td style="text-align:right">¥'+(iv.total||0).toLocaleString()+'</td>';
+      html+='<td><span class="badge '+statusBadgeCls(iv.status)+'">'+escHtml(displayStatus(iv.status))+'</span></td>';
+      html+='<td><button class="btn btn-sm btn-secondary" onclick="openInvoiceEdit('+iv.id+')">開く</button> <button class="btn btn-sm btn-danger" onclick="deleteInvoice('+iv.id+')">削除</button></td></tr>';
+    });
+  }
+  html+='</tbody></table>';
+  document.getElementById('tab5').innerHTML=html;
+}
+async function loadInvoiceList(){
+  try{invoices=await sbGet('invoices','account_id=eq.'+currentUser.id+'&order=issue_date.desc');}catch(e){invoices=[];}
+  if(currentTab===5)renderInvoices();
+}
+function addInvRow(){invRows.push({name:'',spec:'',qty:1,unit:'人工',price:0});renderInvForm();renderInvoicePreview();}
+function removeInvRow(i){invRows.splice(i,1);if(invRows.length===0)invRows.push({name:'',spec:'',qty:1,unit:'人工',price:0});renderInvForm();renderInvoicePreview();}
+function updInvRow(i,key,val){invRows[i][key]=(key==='qty'||key==='price')?(parseInt(val)||0):val;renderInvoicePreview();}
+function renderInvForm(){
+  let html='';
+  invRows.forEach(function(r,i){
+    html+='<tr>';
+    html+='<td><input type="text" value="'+escHtml(r.name||'')+'" oninput="updInvRow('+i+',\'name\',this.value)"></td>';
+    html+='<td><input type="text" value="'+escHtml(r.spec||'')+'" oninput="updInvRow('+i+',\'spec\',this.value)"></td>';
+    html+='<td><input type="number" value="'+(r.qty||0)+'" oninput="updInvRow('+i+',\'qty\',this.value)"></td>';
+    html+='<td><select onchange="updInvRow('+i+',\'unit\',this.value)"><option'+(r.unit==='人工'?' selected':'')+'>人工</option><option'+(r.unit==='式'?' selected':'')+'>式</option><option'+(r.unit==='個'?' selected':'')+'>個</option><option'+(r.unit==='日'?' selected':'')+'>日</option></select></td>';
+    html+='<td><input type="number" value="'+(r.price||0)+'" oninput="updInvRow('+i+',\'price\',this.value)"></td>';
+    html+='<td><button class="btn-sm" onclick="removeInvRow('+i+')">削除</button></td>';
+    html+='</tr>';
+  });
+  document.getElementById('invDetailBody').innerHTML=html;
+}
+function renderInvoicePreview(){
+  const no=document.getElementById('invNo').value||'';
+  const date=document.getElementById('invDate').value||'';
+  const due=document.getElementById('invDue').value||'';
+  const to=document.getElementById('invTo').value||'';
+  const tanto=document.getElementById('invTanto').value||'';
+  const siteNm=document.getElementById('invSiteName').value||'';
+  const from=document.getElementById('invFrom').value||'';
+  const remarks=document.getElementById('invRemarks').value||'';
+  const bankName=document.getElementById('invBankName').value||'';
+  const bankBr=document.getElementById('invBankBranch').value||'';
+  const bankTp=document.getElementById('invBankType').value||'';
+  const bankNo=document.getElementById('invBankNo').value||'';
+  const bankHd=document.getElementById('invBankHolder').value||'';
+  let subtotal=0;let rowHtml='';
+  invRows.forEach(function(r){
+    const amt=(r.qty||0)*(r.price||0);subtotal+=amt;
+    rowHtml+='<tr><td>'+escHtml(r.name||'')+'</td><td>'+escHtml(r.spec||'')+'</td><td style="text-align:right">'+(r.qty||0)+'</td><td>'+escHtml(r.unit||'')+'</td><td style="text-align:right">¥'+(r.price||0).toLocaleString()+'</td><td style="text-align:right">¥'+amt.toLocaleString()+'</td></tr>';
+  });
+  const tax=Math.floor(subtotal*0.10);
+  const total=subtotal+tax;
+  let html='<div class="invoice-page"><div class="title-line">請求書</div>';
+  html+='<div class="ln">請求番号：'+escHtml(no)+'　発行日：'+escHtml(date)+'　支払期日：'+escHtml(due)+'</div>';
+  html+='<div class="ln"><b style="font-size:12pt">'+escHtml(to)+' 御中</b>　'+escHtml(tanto)+' 様</div>';
+  html+='<div class="ln">件名：'+escHtml(siteNm)+'</div>';
+  html+='<div class="ln" style="text-align:right">'+escHtml(from)+'</div>';
+  html+='<div class="ln" style="text-align:center;font-size:14pt;margin:6mm 0">合計金額 ¥'+total.toLocaleString()+'（税込）</div>';
+  html+='<table class="inv-pre"><thead><tr><th>品名</th><th>仕様</th><th>数量</th><th>単位</th><th>単価</th><th>金額</th></tr></thead><tbody>'+rowHtml+'</tbody>';
+  html+='<tfoot><tr><td colspan="5" style="text-align:right">小計</td><td style="text-align:right">¥'+subtotal.toLocaleString()+'</td></tr>';
+  html+='<tr><td colspan="5" style="text-align:right">消費税(10%)</td><td style="text-align:right">¥'+tax.toLocaleString()+'</td></tr>';
+  html+='<tr><td colspan="5" style="text-align:right;font-weight:700">合計</td><td style="text-align:right;font-weight:700">¥'+total.toLocaleString()+'</td></tr></tfoot></table>';
+  html+='<div class="ln" style="margin-top:6mm">振込先：'+escHtml(bankName)+' '+escHtml(bankBr)+' '+escHtml(bankTp)+' '+escHtml(bankNo)+' '+escHtml(bankHd)+'</div>';
+  html+='<div class="ln">備考：'+escHtml(remarks)+'</div></div>';
+  document.getElementById('invoice-print-area').innerHTML=html;
+}
+function openInvoice(prefill){
+  currentInvoiceId=null;
+  const d=new Date();
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0');
+  document.getElementById('invDate').value=localDateStr(d);
+  document.getElementById('invNo').value=(prefill&&prefill.invNo)||(y+'-'+m+'-001');
+  document.getElementById('invDue').value=(prefill&&prefill.invDue)||'';
+  document.getElementById('invTo').value=(prefill&&prefill.invTo)||'';
+  document.getElementById('invTanto').value=(prefill&&prefill.invTanto)||'';
+  document.getElementById('invSiteName').value=(prefill&&prefill.construction_name)||'';
+  document.getElementById('invFrom').value=(company&&company.name)||'';
+  document.getElementById('invRemarks').value='';
+  document.getElementById('invStatusSelect').value='下書き';
+  document.getElementById('invBankName').value='';
+  document.getElementById('invBankBranch').value='';
+  document.getElementById('invBankType').value='普通';
+  document.getElementById('invBankNo').value='';
+  document.getElementById('invBankHolder').value='';
+  invRows=(prefill&&prefill.rows)||[{name:'',spec:'',qty:1,unit:'人工',price:25000}];
+  renderInvForm();renderInvoicePreview();
+  // attach change listeners to preview inputs
+  ['invNo','invDate','invDue','invTo','invTanto','invSiteName','invFrom','invRemarks','invBankName','invBankBranch','invBankType','invBankNo','invBankHolder'].forEach(function(k){var el=document.getElementById(k);if(el)el.oninput=renderInvoicePreview;});
+  document.getElementById('invoiceOverlay').classList.add('show');
+}
+function openInvoiceEdit(id){
+  const iv=invoices.find(function(x){return x.id===id;});if(!iv)return;
+  currentInvoiceId=id;
+  document.getElementById('invNo').value=iv.invoice_no||'';
+  document.getElementById('invDate').value=iv.issue_date||'';
+  document.getElementById('invDue').value=iv.due_date||'';
+  document.getElementById('invTo').value=iv.client_company||'';
+  document.getElementById('invTanto').value=iv.person_in_charge||'';
+  document.getElementById('invSiteName').value=iv.construction_name||'';
+  document.getElementById('invFrom').value=(company&&company.name)||'';
+  document.getElementById('invRemarks').value=iv.memo||'';
+  document.getElementById('invStatusSelect').value=iv.status||'下書き';
+  const bi=iv.bank_info||{};
+  document.getElementById('invBankName').value=bi.name||'';
+  document.getElementById('invBankBranch').value=bi.branch||'';
+  document.getElementById('invBankType').value=bi.type||'普通';
+  document.getElementById('invBankNo').value=bi.no||'';
+  document.getElementById('invBankHolder').value=bi.holder||'';
+  invRows=(iv.items||[]).map(function(it){return{name:it.name,spec:it.spec,qty:it.qty,unit:it.unit,price:it.unitPrice};});
+  if(invRows.length===0)invRows=[{name:'',spec:'',qty:1,unit:'人工',price:0}];
+  renderInvForm();renderInvoicePreview();
+  ['invNo','invDate','invDue','invTo','invTanto','invSiteName','invFrom','invRemarks','invBankName','invBankBranch','invBankType','invBankNo','invBankHolder'].forEach(function(k){var el=document.getElementById(k);if(el)el.oninput=renderInvoicePreview;});
+  document.getElementById('invoiceOverlay').classList.add('show');
+}
+function closeInvoice(){document.getElementById('invoiceOverlay').classList.remove('show');}
+async function saveInvoice(){
+  renderInvoicePreview();
+  let subtotal=0;const items=[];
+  invRows.forEach(function(r){if(r.name){const amt=(r.qty||0)*(r.price||0);items.push({name:r.name,spec:r.spec,qty:r.qty,unit:r.unit,unitPrice:r.price,amount:amt});subtotal+=amt;}});
+  const tax=Math.floor(subtotal*0.10);
+  const payload={
+    account_id:currentUser.id,
+    invoice_no:document.getElementById('invNo').value,
+    issue_date:document.getElementById('invDate').value||null,
+    due_date:document.getElementById('invDue').value||null,
+    client_company:document.getElementById('invTo').value,
+    person_in_charge:document.getElementById('invTanto').value,
+    construction_name:document.getElementById('invSiteName').value,
+    items:items,subtotal:subtotal,tax_8:0,tax_10:tax,total:subtotal+tax,
+    memo:document.getElementById('invRemarks').value,
+    bank_info:{name:document.getElementById('invBankName').value,branch:document.getElementById('invBankBranch').value,type:document.getElementById('invBankType').value,no:document.getElementById('invBankNo').value,holder:document.getElementById('invBankHolder').value},
+    status:document.getElementById('invStatusSelect').value
+  };
+  try{
+    let r;
+    if(currentInvoiceId)r=await sbPatch('invoices','id=eq.'+currentInvoiceId,payload);
+    else r=await sbPost('invoices',payload);
+    if(r){if(!currentInvoiceId&&r.id)currentInvoiceId=r.id;showToast('保存しました');loadInvoiceList();}
+    else showToast('保存失敗');
+  }catch(e){showToast('保存失敗: '+e.message);}
+}
+async function deleteInvoice(id){
+  if(!confirm('この請求書を削除しますか？'))return;
+  const r=await sbDelete('invoices','id=eq.'+id);
+  if(r){showToast('削除しました');loadInvoiceList();}
+}
+function openReceiptForm(){
+  const amt=prompt('領収書の金額は？');if(!amt)return;
+  const desc=prompt('但し書きは？','サービス料として')||'';
+  showReceipt(parseInt(amt)||0,desc);
+}
+function showReceipt(amount,description){
+  const d=new Date();
+  const html='<div style="text-align:center;font-size:20pt;letter-spacing:8px;border-bottom:2px solid #333;padding-bottom:4mm;margin-bottom:6mm">領 収 書</div>'+
+    '<div style="font-size:11pt;margin-bottom:6mm">発行日：'+localDateStr(d)+'</div>'+
+    '<div style="margin-bottom:8mm"><span style="font-size:13pt;border-bottom:1px solid #999;padding-bottom:1mm"> 様</span></div>'+
+    '<div style="text-align:center;font-size:18pt;font-weight:700;border-top:1px solid #333;border-bottom:1px solid #333;padding:4mm 0;margin-bottom:6mm">金 ¥'+(amount||0).toLocaleString()+' 也</div>'+
+    '<div style="font-size:11pt;margin-bottom:4mm">但し　'+escHtml(description||'')+' として</div>'+
+    '<div style="font-size:11pt">上記正に領収いたしました。</div>'+
+    '<div style="text-align:right;margin-top:16mm;font-size:12pt">'+escHtml((company&&company.name)||'')+'</div>';
+  document.getElementById('receiptPage').innerHTML=html;
+  document.getElementById('receiptOverlay').classList.add('show');
+}
+function closeReceipt(){document.getElementById('receiptOverlay').classList.remove('show');}
+
+// ============================================================
+// Tab 6: Settings
+// ============================================================
+function renderSettings(){
+  let html='<h2>設定</h2>';
+  html+='<div class="form-card"><h3>ユーザー情報</h3>';
+  html+='<div class="form-row"><div class="form-grp"><label>会社名</label><input type="text" value="'+escHtml((company&&company.name)||'')+'" disabled></div><div class="form-grp"><label>お名前</label><input type="text" value="'+escHtml((currentUser&&currentUser.name)||'')+'" disabled></div></div>';
+  html+='<div class="form-row"><div class="form-grp"><label>ロール</label><input type="text" value="'+escHtml((currentUser&&currentUser.role)||'')+'" disabled></div><div class="form-grp"><label>チーム</label><input type="text" value="'+escHtml((currentUser&&currentUser.team)||'')+'" disabled></div></div>';
+  html+='</div>';
+  html+='<div class="form-card"><h3>パスワード変更</h3>';
+  html+='<div class="form-row"><div class="form-grp"><label>新しいパスワード</label><input type="password" id="stNewPw"></div></div>';
+  html+='<div class="btn-row"><button class="btn btn-primary" onclick="changeUserPassword()">パスワード変更</button></div></div>';
+  if(currentUser&&currentUser.role==='master'){
+    html+='<div class="form-card"><h3>会社設定（master）</h3>';
+    html+='<div class="form-row"><div class="form-grp"><label>会社名</label><input type="text" id="stCoName" value="'+escHtml((company&&company.name)||'')+'"></div></div>';
+    html+='<div class="btn-row"><button class="btn btn-primary" onclick="updateCompany()">会社情報を保存</button></div></div>';
+    html+='<div class="form-card"><h3>新規アカウント追加（master）</h3>';
+    html+='<div class="form-row"><div class="form-grp"><label>名前</label><input type="text" id="stNewName"></div><div class="form-grp"><label>ロール</label><select id="stNewRole"><option value="worker">worker</option><option value="admin">admin</option><option value="master">master</option></select></div></div>';
+    html+='<div class="form-row"><div class="form-grp"><label>チーム</label><input type="text" id="stNewTeam"></div><div class="form-grp"><label>初期パスワード</label><input type="password" id="stNewPw2"></div></div>';
+    html+='<div class="btn-row"><button class="btn btn-success" onclick="createNewAccount()">アカウント追加</button></div></div>';
+  }
+  document.getElementById('tab6').innerHTML=html;
+}
+async function changeUserPassword(){
+  const newPw=document.getElementById('stNewPw').value;
+  if(!newPw||newPw.length<4){showToast('パスワードは4文字以上');return;}
+  try{
+    const{error}=await sb.auth.updateUser({password:newPw});
+    if(error){showToast('変更失敗: '+error.message);return;}
+    showToast('パスワード変更完了');document.getElementById('stNewPw').value='';
+  }catch(e){showToast('エラー: '+e.message);}
+}
+async function updateCompany(){
+  const nm=document.getElementById('stCoName').value.trim();
+  if(!nm){showToast('会社名を入力してください');return;}
+  const r=await sbPatch('companies','id=eq.'+company.id,{name:nm});
+  if(r){company.name=nm;document.getElementById('sbCompany').textContent=nm;showToast('保存しました');}
+  else{showToast('保存失敗');}
+}
+async function createNewAccount(){
+  const name=document.getElementById('stNewName').value.trim();
+  const role=document.getElementById('stNewRole').value;
+  const team=document.getElementById('stNewTeam').value.trim();
+  const pw=document.getElementById('stNewPw2').value;
+  if(!name||!pw){showToast('名前とパスワードは必須');return;}
+  try{
+    const tempEmail=crypto.randomUUID()+'@nichilog.app';
+    const{data:authData,error:signUpErr}=await sb.auth.signUp({email:tempEmail,password:pw});
+    if(signUpErr){showToast('登録失敗: '+signUpErr.message);return;}
+    const{error:regErr}=await sb.rpc('complete_registration',{p_company:company.name,p_name:name,p_role:role,p_team:team});
+    if(regErr){showToast('登録エラー: '+regErr.message);return;}
+    showToast('追加しました');document.getElementById('stNewName').value='';document.getElementById('stNewTeam').value='';document.getElementById('stNewPw2').value='';
+    await renderAll();
+  }catch(e){showToast('エラー: '+e.message);}
+}
+
+// ============================================================
+// Print / PDF (copied pattern from existing pc.html)
+// ============================================================
+async function nichiPrint(id){
+  try{
+    const element=document.getElementById(id);if(!element){alert('要素が見つかりません: '+id);return;}
+    if(typeof html2canvas==='undefined'){alert('html2canvas未読込');return;}
+    if(typeof window.jspdf==='undefined'){alert('jsPDF未読込');return;}
+    const canvas=await html2canvas(element,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+    const imgData=canvas.toDataURL('image/jpeg',0.95);
+    const{jsPDF}=window.jspdf;
+    const pageWidth=210;const imgHeight=(canvas.height*pageWidth)/canvas.width;
+    const pdf=new jsPDF('p','mm',[pageWidth,Math.max(imgHeight,297)]);
+    pdf.addImage(imgData,'JPEG',0,0,pageWidth,imgHeight);
+    showPdfPreview(pdf,'nichilog_'+id+'_'+new Date().toISOString().slice(0,10)+'.pdf');
+  }catch(e){alert('エラー: '+e.message);}
+}
+function showPdfPreview(pdf,filename){
+  const dataUrl=pdf.output('datauristring');
+  const w=window.open('','_blank');
+  if(w){w.document.write('<html><head><title>'+filename+'<\/title><\/head><body style="margin:0;padding:0;"><embed src="'+dataUrl+'" type="application/pdf" width="100%" height="100%"><\/body><\/html>');}
+  else{pdf.save(filename);}
+}
+function openWithSession(page){
+  sb.auth.getSession().then(function(result){
+    var session=result.data.session;
+    var base='https://nichilog.vercel.app/nichilog-pc.html';
+    var fragment='';
+    if(session){fragment='#access_token='+session.access_token+'&refresh_token='+session.refresh_token+'&token_type=bearer';}
+    var pageParam=page?'&page='+page:'';
+    var url=base+fragment+pageParam;
+    if(window.flutter_inappwebview){window.flutter_inappwebview.callHandler('openExternal',url);}
+    else{window.open(url,'_blank');}
   });
 }
 
-async function nichiPrint(id){try{const element=document.getElementById(id);if(!element){alert('\u8981\u7D20\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093: '+id);return;}if(typeof html2canvas==='undefined'){alert('html2canvas\u672A\u8AAD\u307F\u8FBC\u307F');return;}if(typeof window.jspdf==='undefined'){alert('jsPDF\u672A\u8AAD\u307F\u8FBC\u307F');return;}const canvas=await html2canvas(element,{scale:2,useCORS:true,backgroundColor:'#ffffff'});const imgData=canvas.toDataURL('image/jpeg',0.95);const{jsPDF}=window.jspdf;const pageWidth=210;const imgHeight=(canvas.height*pageWidth)/canvas.width;const pdf=new jsPDF('p','mm',[pageWidth,Math.max(imgHeight,297)]);pdf.addImage(imgData,'JPEG',0,0,pageWidth,imgHeight);showPdfPreview(pdf,'nichilog_'+id+'_'+new Date().toISOString().slice(0,10)+'.pdf');}catch(e){alert('\u30A8\u30E9\u30FC: '+e.message);}}
-function showPdfPreview(pdf,filename){const dataUrl=pdf.output('datauristring');const w=window.open('','_blank');if(w){w.document.write('<html><head><title>'+filename+'</title></head><body style="margin:0;padding:0;"><embed src="'+dataUrl+'" type="application/pdf" width="100%" height="100%"></body></html>');}}
+// ============================================================
+// Session restore on page load (copied pattern from existing pc.html)
+// ============================================================
+(async function restoreSession(){
+  const _h=new URLSearchParams(window.location.hash.slice(1));
+  const _at=_h.get('access_token');
+  const _rt=_h.get('refresh_token');
+  if(_at&&_rt){
+    try{await sb.auth.setSession({access_token:_at,refresh_token:_rt});}catch(e){}
+    history.replaceState(null,'',window.location.pathname);
+  }
+  try{
+    const{data:{session}}=await sb.auth.getSession();
+    if(session&&session.user){
+      const accs=await sbGet('accounts','auth_uid=eq.'+session.user.id);
+      if(accs&&accs.length>0){
+        currentUser=accs[0];
+        const comps=await sbGet('companies','id=eq.'+currentUser.company_id);
+        if(comps&&comps.length>0){
+          company=comps[0];
+          await enterApp();
+          return;
+        }
+      }
+    }
+  }catch(e){console.error('Session restore failed',e);}
+})();
+
+// Hint: Allow Enter key on login
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&document.body.classList.contains('logged-out')){
+    if(document.getElementById('registerForm').style.display!=='none')doRegister();
+    else doLogin();
+  }
+});
 </script>
 <script src="receipt-feature.js"></script>
 </body>
-      </html>
+</html>
