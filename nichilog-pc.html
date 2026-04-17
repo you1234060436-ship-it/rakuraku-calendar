@@ -1284,7 +1284,9 @@ phtml += '<td colspan="5" style="border:1px solid #333;padding:2px;text-align:ri
 phtml += '<td style="border:1px solid #333;padding:2px;text-align:center;">' + totalPersonnel + ' \u4eba\u5de5</td>';
 phtml += '</tr></tfoot>';
 }
-phtml += '</table><script>\nfunction pcSwitchTab(n, el) { switchTab(n); document.querySelectorAll(\'.pc-sidebar .sb-item\').forEach(function(e){e.classList.remove(\'active\')}); if(el) el.classList.add(\'active\'); }\n<\/script><\/body><\/html>';
+phtml += '</table><script>
+function pcSwitchTab(n, el) { switchTab(n); document.querySelectorAll('.pc-sidebar .sb-item').forEach(function(e){e.classList.remove('active')}); if(el) el.classList.add('active'); }
+</script></body></html>';
 _nc.innerHTML=phtml;
 
 }
