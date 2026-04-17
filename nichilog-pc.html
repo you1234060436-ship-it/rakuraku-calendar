@@ -182,7 +182,7 @@ body{background:#fff!important}
 <div class="fg"><label>会社名</label><input id="regCompany" type="text"></div>
 <div class="fg"><label>お名前</label><input id="regName" type="text"></div>
 <div class="fg"><label>パスワード</label><input id="regPassword" type="password"></div>
-<div class="fg"><label>ロール</label><select id="regRole"><option value="master">master（管理者）</option><option value="admin">admin（副管理者）</option><option value="worker">worker（作業員）</option></select></div>
+<div class="fg"><label>ロール</label><select id="regRole"><option value="master">社長</option><option value="admin">管理者</option><option value="worker">作業員</option></select></div>
 <div class="err" id="regError"></div>
 <button class="login-btn" onclick="doRegister()">登録</button>
 <div class="toggle"><a onclick="toggleRegister(false)">ログイン画面に戻る</a></div>
@@ -284,7 +284,7 @@ body{background:#fff!important}
 <h3 id="mmTitle">メンバー</h3>
 <input type="hidden" id="mmId">
 <div class="form-row"><div class="form-grp"><label>名前</label><input type="text" id="mmName"></div></div>
-<div class="form-row"><div class="form-grp"><label>ロール</label><select id="mmRole"><option value="master">master</option><option value="admin">admin</option><option value="worker">worker</option></select></div><div class="form-grp"><label>チーム</label><input type="text" id="mmTeam"></div></div>
+<div class="form-row"><div class="form-grp"><label>ロール</label><select id="mmRole"><option value="master">社長</option><option value="admin">管理者</option><option value="worker">作業員</option></select></div><div class="form-grp"><label>チーム</label><input type="text" id="mmTeam"></div></div>
 <div class="form-row"><div class="form-grp"><label>新規パスワード（登録時のみ必須）</label><input type="password" id="mmPw" placeholder="変更しない場合は空欄"></div></div>
 <div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">キャンセル</button><button class="btn btn-primary" onclick="saveMember()">保存</button></div>
 </div>
@@ -365,6 +365,7 @@ function gMN(m){return (m+1)+'月';}
 function isWorker(){return currentUser&&currentUser.role==='worker';}
 function canSeeRevenue(){return currentUser&&currentUser.role==='master';}
 function canManage(){return currentUser&&(currentUser.role==='master'||currentUser.role==='admin');}
+function roleLabel(r){return{master:'社長',admin:'管理者',worker:'作業員'}[r]||r||'-';}
 function showToast(msg){var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){t.remove();},300);},2200);}
 function escHtml(s){if(s==null)return '';return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function clModal(){document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('show');});}
@@ -782,7 +783,7 @@ function renderMembers(){
   members.forEach(function(m){
     const roleCls=m.role==='master'?'badge-master':(m.role==='worker'?'badge-worker':'badge-admin');
     html+='<tr><td>'+escHtml(m.name)+'</td>';
-    html+='<td><span class="badge '+roleCls+'">'+escHtml(m.role||'-')+'</span></td>';
+    html+='<td><span class="badge '+roleCls+'">'+escHtml(roleLabel(m.role))+'</span></td>';
     html+='<td>'+escHtml(m.team||'-')+'</td>';
     html+='<td>'+(canManage()?'<button class="btn btn-sm btn-secondary" onclick="openMemberModal(\''+m.id+'\')">編集</button> <button class="btn btn-sm btn-danger" onclick="deleteMember(\''+m.id+'\')">削除</button>':'')+'</td></tr>';
   });
@@ -1018,7 +1019,7 @@ function renderSettings(){
   let html='<h2>設定</h2>';
   html+='<div class="form-card"><h3>ユーザー情報</h3>';
   html+='<div class="form-row"><div class="form-grp"><label>会社名</label><input type="text" value="'+escHtml((company&&company.name)||'')+'" disabled></div><div class="form-grp"><label>お名前</label><input type="text" value="'+escHtml((currentUser&&currentUser.name)||'')+'" disabled></div></div>';
-  html+='<div class="form-row"><div class="form-grp"><label>ロール</label><input type="text" value="'+escHtml((currentUser&&currentUser.role)||'')+'" disabled></div><div class="form-grp"><label>チーム</label><input type="text" value="'+escHtml((currentUser&&currentUser.team)||'')+'" disabled></div></div>';
+  html+='<div class="form-row"><div class="form-grp"><label>ロール</label><input type="text" value="'+escHtml(roleLabel(currentUser&&currentUser.role))+'" disabled></div><div class="form-grp"><label>チーム</label><input type="text" value="'+escHtml((currentUser&&currentUser.team)||'')+'" disabled></div></div>';
   html+='</div>';
   html+='<div class="form-card"><h3>パスワード変更</h3>';
   html+='<div class="form-row"><div class="form-grp"><label>新しいパスワード</label><input type="password" id="stNewPw"></div></div>';
@@ -1028,7 +1029,7 @@ function renderSettings(){
     html+='<div class="form-row"><div class="form-grp"><label>会社名</label><input type="text" id="stCoName" value="'+escHtml((company&&company.name)||'')+'"></div></div>';
     html+='<div class="btn-row"><button class="btn btn-primary" onclick="updateCompany()">会社情報を保存</button></div></div>';
     html+='<div class="form-card"><h3>新規アカウント追加（master）</h3>';
-    html+='<div class="form-row"><div class="form-grp"><label>名前</label><input type="text" id="stNewName"></div><div class="form-grp"><label>ロール</label><select id="stNewRole"><option value="worker">worker</option><option value="admin">admin</option><option value="master">master</option></select></div></div>';
+    html+='<div class="form-row"><div class="form-grp"><label>名前</label><input type="text" id="stNewName"></div><div class="form-grp"><label>ロール</label><select id="stNewRole"><option value="worker">作業員</option><option value="admin">管理者</option><option value="master">社長</option></select></div></div>';
     html+='<div class="form-row"><div class="form-grp"><label>チーム</label><input type="text" id="stNewTeam"></div><div class="form-grp"><label>初期パスワード</label><input type="password" id="stNewPw2"></div></div>';
     html+='<div class="btn-row"><button class="btn btn-success" onclick="createNewAccount()">アカウント追加</button></div></div>';
   }
