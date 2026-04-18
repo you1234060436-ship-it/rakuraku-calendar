@@ -290,16 +290,6 @@ body{background:#fff!important}
 </div>
 </div>
 
-<!-- Invoice items master picker -->
-<div class="modal" id="masterPickerModal">
-<div class="modal-box" style="max-width:640px">
-<h3>マスターから選ぶ</h3>
-<div class="form-row"><div class="form-grp"><input type="text" id="miSearch" placeholder="品名で絞り込み" oninput="filterMasterList()"></div></div>
-<div id="miList" style="max-height:360px;overflow:auto;border:1px solid #e5e7eb;border-radius:4px"></div>
-<div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">閉じる</button></div>
-</div>
-</div>
-
 <!-- ==================== Invoice Overlay ==================== -->
 <div class="inv-overlay" id="invoiceOverlay">
 <div class="toolbar">
@@ -327,10 +317,7 @@ body{background:#fff!important}
 <thead><tr><th style="width:30%">品名</th><th style="width:20%">仕様</th><th style="width:9%">数量</th><th style="width:12%">単位</th><th style="width:15%">単価</th><th style="width:9%">操作</th></tr></thead>
 <tbody id="invDetailBody"></tbody>
 </table>
-<div class="btn-row" style="margin-top:6px;gap:8px;display:flex;flex-wrap:wrap">
-<button class="btn btn-primary btn-sm" onclick="openMasterPickerModal()">＋ マスターから追加</button>
-<button class="btn btn-secondary btn-sm" onclick="addInvRowManual()">＋ 手入力で追加</button>
-</div>
+<button class="btn btn-secondary btn-sm" style="margin-top:6px" onclick="addInvRowManual()">＋ 行を追加</button>
 <h4 style="margin-top:12px">振込先</h4>
 <div class="form-row"><div class="form-grp"><label>銀行名</label><input id="invBankName" type="text"></div><div class="form-grp"><label>支店</label><input id="invBankBranch" type="text"></div></div>
 <div class="form-row"><div class="form-grp"><label>種別</label><select id="invBankType"><option>普通</option><option>当座</option></select></div><div class="form-grp"><label>口座番号</label><input id="invBankNo" type="text"></div><div class="form-grp"><label>口座名義</label><input id="invBankHolder" type="text"></div></div>
@@ -1051,122 +1038,12 @@ function renderInvForm(){
     html+='<td><input type="number" value="'+(r.qty||0)+'" oninput="updInvRow('+i+',\'qty\',this.value)"></td>';
     html+='<td><select onchange="updInvRow('+i+',\'unit\',this.value)">'+buildUnitOptions(r.unit||'人')+'</select></td>';
     html+='<td><input type="number" value="'+(r.price||0)+'" oninput="updInvRow('+i+',\'price\',this.value)"></td>';
-    html+='<td style="white-space:nowrap"><button class="btn-sm" style="background:#f59e0b;color:#fff;margin-right:4px" title="この行をマスター登録" onclick="saveRowAsMaster('+i+')">★</button><button class="btn-sm" onclick="removeInvRow('+i+')">削除</button></td>';
+    html+='<td style="white-space:nowrap"><button class="btn-sm" onclick="removeInvRow('+i+')">削除</button></td>';
     html+='</tr>';
   });
   document.getElementById('invDetailBody').innerHTML=html;
 }
 
-// =========================================================
-// invoice_items_master 連携（Step 3-c）
-// =========================================================
-let _masterCache=[];
-
-// 現在の行をマスターに登録（同社の同名行が既にあれば追加しない）
-async function saveRowAsMaster(i){
-  const r=invRows[i];if(!r){return;}
-  const name=(r.name||'').trim();
-  if(!name){showToast('品名が空の行は登録できません');return;}
-  if(!confirm('この行をマスターに登録しますか？\n\n品名: '+name+'\n単位: '+(r.unit||'')+'\n単価: ¥'+((r.price||0).toLocaleString())))return;
-  try{
-    // 重複チェック
-    const dup=await sbGet('invoice_items_master','company_id=eq.'+company.id+'&name=eq.'+encodeURIComponent(name));
-    if(Array.isArray(dup)&&dup.length>0){showToast('同名のマスターが既に存在します');return;}
-    const payload={
-      company_id:company.id,
-      name:name,
-      spec:r.spec||null,
-      unit:r.unit||'人',
-      default_price:parseInt(r.price)||0,
-      sort_order:0
-    };
-    const res=await sbPost('invoice_items_master',payload);
-    if(res){showToast('マスターに登録しました');_masterCache=[];}
-    else{showToast('登録に失敗しました');}
-  }catch(e){
-    console.error(e);
-    showToast('マスター登録エラー: '+(e&&e.message?e.message:e));
-  }
-}
-
-// マスター選択モーダルを開く
-async function openMasterPickerModal(){
-  const sEl=document.getElementById('miSearch');if(sEl)sEl.value='';
-  const listEl=document.getElementById('miList');
-  if(listEl)listEl.innerHTML='<div style="padding:16px;text-align:center;color:#9ca3af">読み込み中...</div>';
-  document.getElementById('masterPickerModal').classList.add('show');
-  try{
-    _masterCache=await sbGet('invoice_items_master','company_id=eq.'+company.id+'&order=sort_order.asc,name.asc')||[];
-    renderMasterList(_masterCache);
-  }catch(e){
-    console.error(e);
-    if(listEl)listEl.innerHTML='<div style="padding:16px;text-align:center;color:#dc2626">読み込み失敗: '+escHtml(e&&e.message?e.message:String(e))+'</div>';
-  }
-}
-
-function renderMasterList(items){
-  const el=document.getElementById('miList');if(!el)return;
-  if(!items||items.length===0){
-    el.innerHTML='<div style="padding:16px;text-align:center;color:#9ca3af">マスター未登録<br><span style="font-size:11px">明細行の★ボタンで登録できます</span></div>';return;
-  }
-  let html='<table style="width:100%;border-collapse:collapse;font-size:13px">';
-  html+='<thead><tr style="background:#f3f4f6"><th style="padding:6px;text-align:left">品名</th><th style="padding:6px;text-align:left">仕様</th><th style="padding:6px;text-align:center">単位</th><th style="padding:6px;text-align:right">単価</th><th style="padding:6px;width:1%"></th></tr></thead><tbody>';
-  items.forEach(function(m){
-    html+='<tr style="border-top:1px solid #e5e7eb;cursor:pointer" onclick="addRowFromMaster(\''+m.id+'\')" onmouseover="this.style.background=\'#eff6ff\'" onmouseout="this.style.background=\'\'">';
-    html+='<td style="padding:6px">'+escHtml(m.name||'')+'</td>';
-    html+='<td style="padding:6px;color:#6b7280">'+escHtml(m.spec||'')+'</td>';
-    html+='<td style="padding:6px;text-align:center">'+escHtml(m.unit||'')+'</td>';
-    html+='<td style="padding:6px;text-align:right">¥'+((m.default_price||0).toLocaleString())+'</td>';
-    html+='<td style="padding:6px"><button class="btn-sm" style="background:#dc2626;color:#fff" title="削除" onclick="event.stopPropagation();deleteMasterItem(\''+m.id+'\')">×</button></td>';
-    html+='</tr>';
-  });
-  html+='</tbody></table>';
-  el.innerHTML=html;
-}
-
-function filterMasterList(){
-  const q=(document.getElementById('miSearch').value||'').trim().toLowerCase();
-  if(!q){renderMasterList(_masterCache);return;}
-  const filtered=_masterCache.filter(function(m){
-    return(m.name||'').toLowerCase().indexOf(q)>=0||(m.spec||'').toLowerCase().indexOf(q)>=0;
-  });
-  renderMasterList(filtered);
-}
-
-// マスター項目を明細行に投入（モーダルは閉じる）
-function addRowFromMaster(id){
-  const m=_masterCache.find(function(x){return x.id===id;});if(!m)return;
-  invRows.push({
-    name:m.name||'',
-    spec:m.spec||'',
-    qty:1,
-    unit:m.unit||'人',
-    price:parseInt(m.default_price)||0
-  });
-  clModal();
-  renderInvForm();
-  renderInvoicePreview();
-  showToast('明細に追加しました');
-}
-
-// マスターから削除
-async function deleteMasterItem(id){
-  const m=_masterCache.find(function(x){return x.id===id;});
-  if(!m)return;
-  if(!confirm('マスターから「'+(m.name||'')+'」を削除しますか？'))return;
-  try{
-    const r=await sbDelete('invoice_items_master','id=eq.'+id);
-    if(r){
-      _masterCache=_masterCache.filter(function(x){return x.id!==id;});
-      renderMasterList(_masterCache);
-      showToast('削除しました');
-    }else{
-      showToast('削除失敗');
-    }
-  }catch(e){
-    console.error(e);showToast('削除エラー: '+(e&&e.message?e.message:e));
-  }
-}
 // プレビューは ReportFeature._internals.buildInvoiceHtml を使って PDF と完全一致させる
 function renderInvoicePreview(){
   const RF=window.ReportFeature;
