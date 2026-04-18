@@ -99,6 +99,10 @@ body.logged-in .login-wrap{display:none}
 .form-grp label{display:block;font-size:12px;color:#6b7280;margin-bottom:3px;font-weight:500}
 .form-grp input,.form-grp select,.form-grp textarea{width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:14px}
 .form-grp input:focus,.form-grp select:focus,.form-grp textarea:focus{outline:none;border-color:#1976D2}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:40px!important}
+.pw-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;padding:4px 8px;color:#555;line-height:1;user-select:none}
+.pw-toggle:hover{color:#000}
 .form-grp textarea{resize:vertical;min-height:60px}
 
 /* ===== Modal ===== */
@@ -285,7 +289,7 @@ body{background:#fff!important}
 <input type="hidden" id="mmId">
 <div class="form-row"><div class="form-grp"><label>名前</label><input type="text" id="mmName"></div></div>
 <div class="form-row"><div class="form-grp"><label>ロール</label><select id="mmRole"><option value="master">社長</option><option value="admin">管理者</option><option value="worker">作業員</option></select></div><div class="form-grp"><label>チーム</label><input type="text" id="mmTeam"></div></div>
-<div class="form-row"><div class="form-grp"><label>新規パスワード（登録時のみ必須）</label><input type="password" id="mmPw" placeholder="変更しない場合は空欄"></div></div>
+<div class="form-row"><div class="form-grp"><label>新規パスワード（登録時のみ必須・4文字以上）</label><div class="pw-wrap"><input type="password" id="mmPw" placeholder="変更しない場合は空欄"><button type="button" class="pw-toggle" onclick="togglePw('mmPw',this)" title="表示/非表示" aria-label="パスワード表示切替">👁</button></div></div></div>
 <div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">キャンセル</button><button class="btn btn-primary" onclick="saveMember()">保存</button></div>
 </div>
 </div>
@@ -390,6 +394,12 @@ function roleLabel(r){return{master:'社長',admin:'管理者',worker:'作業員
 function showToast(msg){var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){t.remove();},300);},2200);}
 function escHtml(s){if(s==null)return '';return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function clModal(){document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('show');});}
+// パスワード表示/非表示トグル（type属性 password ↔ text）
+function togglePw(inputId,btn){
+  var el=document.getElementById(inputId);if(!el)return;
+  if(el.type==='password'){el.type='text';if(btn)btn.textContent='🙈';}
+  else{el.type='password';if(btn)btn.textContent='👁';}
+}
 function showLoginError(msg){var el=document.getElementById('loginError');el.textContent=msg;el.style.display='block';}
 function showRegError(msg){var el=document.getElementById('regError');el.textContent=msg;el.style.display='block';}
 function toggleRegister(show){document.getElementById('loginForm').style.display=show?'none':'';document.getElementById('registerForm').style.display=show?'':'none';}
@@ -431,6 +441,7 @@ async function doRegister(){
   const pw=document.getElementById('regPassword').value;
   const role=document.getElementById('regRole').value;
   if(!comp||!nm||!pw){showRegError('全項目を入力してください');return;}
+  if(pw.length<4){showRegError('パスワードは4文字以上で入力してください');return;}
   try{
     const tempEmail=crypto.randomUUID()+'@nichilog.app';
     const{data:authData,error:signUpErr}=await sb.auth.signUp({email:tempEmail,password:pw});
@@ -963,6 +974,7 @@ async function saveMember(){
     else{showToast('更新失敗');}
   }else{
     if(!pw){showToast('新規追加時はパスワードが必要です');return;}
+    if(pw.length<4){showToast('パスワードは4文字以上で入力してください');return;}
     try{
       const tempEmail=crypto.randomUUID()+'@nichilog.app';
       const{data:authData,error:signUpErr}=await sb.auth.signUp({email:tempEmail,password:pw});
@@ -1361,6 +1373,7 @@ async function createNewAccount(){
   const team=document.getElementById('stNewTeam').value.trim();
   const pw=document.getElementById('stNewPw2').value;
   if(!name||!pw){showToast('名前とパスワードは必須');return;}
+  if(pw.length<4){showToast('パスワードは4文字以上で入力してください');return;}
   try{
     const tempEmail=crypto.randomUUID()+'@nichilog.app';
     const{data:authData,error:signUpErr}=await sb.auth.signUp({email:tempEmail,password:pw});
