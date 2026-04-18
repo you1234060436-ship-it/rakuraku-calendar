@@ -595,7 +595,21 @@ function dayDetail(dstr){
 }
 function buildMemberOpts(selId){var s='<option value="">-- 選択 --</option>';members.forEach(function(m){s+='<option value="'+m.id+'"'+(m.id===selId?' selected':'')+'>'+escHtml(m.name)+'</option>';});return s;}
 function buildClientOpts(selId){var s='<option value="">-- 選択 --</option>';clientCompanies.forEach(function(c){s+='<option value="'+c.id+'"'+(c.id===selId?' selected':'')+'>'+escHtml(c.name)+'</option>';});return s;}
-function buildSiteOpts(clientId,selId){var s='<option value="">-- 選択 --</option>';sites.filter(function(x){return !clientId||x.client_company_id===clientId;}).forEach(function(st){s+='<option value="'+st.id+'"'+(st.id===selId?' selected':'')+'>'+escHtml(st.name)+'</option>';});return s;}
+// 型セーフ化: HTML select の .value は常に string を返すが、
+// DB の client_company_id / id が bigint 型（数値）だと厳密比較 === で一致しなくなる。
+// 両辺を String() に寄せて比較する。
+function buildSiteOpts(clientId,selId){
+  var cid=(clientId==null||clientId==='')?'':String(clientId);
+  var sid=(selId==null||selId==='')?'':String(selId);
+  var s='<option value="">-- 選択 --</option>';
+  sites.filter(function(x){
+    if(!cid)return true;
+    return String(x.client_company_id)===cid;
+  }).forEach(function(st){
+    s+='<option value="'+escHtml(st.id)+'"'+(String(st.id)===sid?' selected':'')+'>'+escHtml(st.name)+'</option>';
+  });
+  return s;
+}
 function showAddE(){
   clModal();
   document.getElementById('aeDate').value=selectedDate||localDateStr(new Date());
