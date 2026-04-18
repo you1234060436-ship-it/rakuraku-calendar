@@ -410,9 +410,51 @@ function toggleRegister(show){document.getElementById('loginForm').style.display
 async function getAuthToken(){const{data:{session}}=await sb.auth.getSession();return session&&session.access_token||SK;}
 async function getH(){var t=await getAuthToken();return{'apikey':SK,'Authorization':'Bearer '+t,'Content-Type':'application/json'};}
 async function sbGet(table,filters){filters=filters||'';const token=await getAuthToken();const u=SB+'/rest/v1/'+table+(filters?'?'+filters:'');const res=await fetch(u,{headers:{'apikey':SK,'Authorization':'Bearer '+token,'Content-Type':'application/json'}});if(!res.ok){console.error('sbGet',table,res.status);return[];}return res.json();}
-async function sbPost(table,data){const token=await getAuthToken();const res=await fetch(SB+'/rest/v1/'+table,{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(data)});if(!res.ok){console.error('sbPost',table,res.status);return null;}const arr=await res.json();return arr[0]||arr;}
-async function sbPatch(table,filters,data){const token=await getAuthToken();const res=await fetch(SB+'/rest/v1/'+table+'?'+filters,{method:'PATCH',headers:{'apikey':SK,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(data)});if(!res.ok){console.error('sbPatch',table,res.status);return null;}const arr=await res.json();return arr[0]||arr;}
-async function sbDelete(table,filters){const token=await getAuthToken();const res=await fetch(SB+'/rest/v1/'+table+'?'+filters,{method:'DELETE',headers:{'apikey':SK,'Authorization':'Bearer '+token,'Content-Type':'application/json'}});return res.ok;}
+// 直近のSupabaseエラーを保持（UIで原因表示するため）
+window._lastSbError=null;
+async function sbPost(table,data){
+  const token=await getAuthToken();
+  const res=await fetch(SB+'/rest/v1/'+table,{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(data)});
+  if(!res.ok){
+    const body=await res.text().catch(function(){return '';});
+    console.error('sbPost FAIL',{table:table,status:res.status,body:body,payload:data});
+    window._lastSbError={method:'POST',table:table,status:res.status,body:body,payload:data};
+    return null;
+  }
+  window._lastSbError=null;
+  const arr=await res.json();return arr[0]||arr;
+}
+async function sbPatch(table,filters,data){
+  const token=await getAuthToken();
+  const res=await fetch(SB+'/rest/v1/'+table+'?'+filters,{method:'PATCH',headers:{'apikey':SK,'Authorization':'Bearer '+token,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(data)});
+  if(!res.ok){
+    const body=await res.text().catch(function(){return '';});
+    console.error('sbPatch FAIL',{table:table,filters:filters,status:res.status,body:body,payload:data});
+    window._lastSbError={method:'PATCH',table:table,filters:filters,status:res.status,body:body,payload:data};
+    return null;
+  }
+  window._lastSbError=null;
+  const arr=await res.json();return arr[0]||arr;
+}
+async function sbDelete(table,filters){
+  const token=await getAuthToken();
+  const res=await fetch(SB+'/rest/v1/'+table+'?'+filters,{method:'DELETE',headers:{'apikey':SK,'Authorization':'Bearer '+token,'Content-Type':'application/json'}});
+  if(!res.ok){
+    const body=await res.text().catch(function(){return '';});
+    console.error('sbDelete FAIL',{table:table,filters:filters,status:res.status,body:body});
+    window._lastSbError={method:'DELETE',table:table,filters:filters,status:res.status,body:body};
+    return false;
+  }
+  window._lastSbError=null;
+  return true;
+}
+// エラー表示ヘルパ: Supabase エラーの詳細を toast + alert + console に出す
+function sbErrMsg(prefix){
+  const e=window._lastSbError;
+  if(!e)return prefix||'エラー';
+  let detail=(e.body||'').slice(0,240);
+  return (prefix||'エラー')+' ['+e.status+'] '+detail;
+}
 
 // ============================================================
 // Auth
@@ -889,9 +931,10 @@ function openSiteModal(id){
 }
 async function saveSite(){
   const id=document.getElementById('smId').value;
+  const clientId=document.getElementById('smClient').value;
   const payload={
     company_id:company.id,
-    client_company_id:document.getElementById('smClient').value||null,
+    client_company_id:clientId||null,
     name:document.getElementById('smName').value.trim(),
     price:parseInt(document.getElementById('smPrice').value)||0,
     type:document.getElementById('smType').value
@@ -901,7 +944,12 @@ async function saveSite(){
   if(id)r=await sbPatch('work_sites','id=eq.'+id,payload);
   else r=await sbPost('work_sites',payload);
   if(r){showToast('保存しました');clModal();await renderAll();renderSites();}
-  else{showToast('保存失敗');}
+  else{
+    const msg=sbErrMsg('保存失敗');
+    showToast(msg);
+    // 詳細も alert で即見れるように（toast は自動で消えるため）
+    alert('保存失敗しました。\n\n原因: '+msg+'\n\n送信したデータ:\n'+JSON.stringify(payload,null,2)+'\n\n（このダイアログの内容をそのまま報告してください）');
+  }
 }
 async function deleteSite(id){
   if(!confirm('この現場を削除しますか？'))return;
