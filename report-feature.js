@@ -6,6 +6,7 @@
  *
  * Step 1 : nichiPrint / showPdfPreview 移設、ReportFeature 名前空間
  * Step 2 : generateKoujiNippo 実装（A4固定・28行最小・プレビュー）
+ * Step 3 : generateInvoicePdf 実装（A4固定・1ページ・明細行padding）
  *
  * 依存ライブラリ（nichilog-pc.html 側で読込）:
  *   - jsPDF 2.5.1
@@ -305,17 +306,217 @@
   }
 
   // ============================================================
+  // 請求書 PDF
+  //   A4縦固定（210×297mm）、1ページ固定、明細行は15行に満たない
+  //   場合は空行でpadding。showPdfPreview で新規タブ表示。
+  //
+  //   params = {
+  //     invoiceNo, issueDate, dueDate,          // string
+  //     clientCompany, clientTanto,             // string
+  //     subject,                                // 件名
+  //     from,                                   // 自社名
+  //     fromAddress,                            // 任意の自社住所/連絡先
+  //     remarks,                                // 備考
+  //     taxRate,                                // 既定 0.10
+  //     bank: { name, branch, type, no, holder },
+  //     rows: [{ name, spec, qty, unit, price }, ...]
+  //   }
+  // ============================================================
+  var INVOICE_MIN_ROWS = 15;
+
+  function yenFmt(n) {
+    return '¥' + Math.round(Number(n) || 0).toLocaleString();
+  }
+
+  function ensureInvoiceStyles() {
+    if (document.getElementById('rf-invoice-styles')) return;
+    var s = document.createElement('style');
+    s.id = 'rf-invoice-styles';
+    s.textContent = [
+      '.rf-invoice-host{position:fixed;top:-10000px;left:-10000px;z-index:-1;pointer-events:none}',
+      '.rf-invoice-page{width:210mm;min-height:297mm;padding:14mm 12mm;background:#fff;color:#222;',
+      'font-family:"Hiragino Mincho ProN","Yu Mincho","MS Mincho",serif;font-size:10pt;box-sizing:border-box}',
+      '.rf-iv-title{font-size:22pt;letter-spacing:8px;text-align:center;',
+      'border-bottom:2px solid #333;padding-bottom:3mm;margin-bottom:6mm}',
+      '.rf-iv-meta{display:flex;justify-content:space-between;font-size:9pt;margin-bottom:4mm}',
+      '.rf-iv-addr-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:4mm;gap:8mm}',
+      '.rf-iv-to{flex:1}',
+      '.rf-iv-to .rf-iv-co{font-size:14pt;font-weight:700;border-bottom:1.2px solid #222;',
+      'padding:0 4mm 1mm 0;display:inline-block;min-width:90mm}',
+      '.rf-iv-to .rf-iv-tanto{margin-left:3mm}',
+      '.rf-iv-from{text-align:right;font-size:9pt;line-height:1.55}',
+      '.rf-iv-subject{margin:3mm 0;font-size:10pt}',
+      '.rf-iv-total-line{text-align:center;font-size:14pt;font-weight:700;padding:3mm;',
+      'border:1.2px solid #333;margin:4mm 0}',
+      '.rf-iv-table{width:100%;border-collapse:collapse;font-size:9pt;table-layout:fixed}',
+      '.rf-iv-table th,.rf-iv-table td{border:0.35mm solid #333;padding:1.6mm 1.4mm;',
+      'vertical-align:middle;overflow:hidden;word-break:break-all}',
+      '.rf-iv-table th{background:#f3f4f6;text-align:center;font-weight:600}',
+      '.rf-iv-table td.rf-n{text-align:right}',
+      '.rf-iv-table td.rf-c{text-align:center}',
+      '.rf-iv-table tr.rf-empty td{height:7mm}',
+      '.rf-iv-table th:nth-child(1),.rf-iv-table td:nth-child(1){width:28%}',
+      '.rf-iv-table th:nth-child(2),.rf-iv-table td:nth-child(2){width:22%}',
+      '.rf-iv-table th:nth-child(3),.rf-iv-table td:nth-child(3){width:8%;text-align:right}',
+      '.rf-iv-table th:nth-child(4),.rf-iv-table td:nth-child(4){width:8%;text-align:center}',
+      '.rf-iv-table th:nth-child(5),.rf-iv-table td:nth-child(5){width:16%;text-align:right}',
+      '.rf-iv-table th:nth-child(6),.rf-iv-table td:nth-child(6){width:18%;text-align:right}',
+      '.rf-iv-table tfoot td{font-weight:600;background:#fafafa}',
+      '.rf-iv-table tfoot tr.rf-iv-total td{font-weight:700;background:#f3f4f6;font-size:10pt}',
+      '.rf-iv-footer{margin-top:5mm;font-size:9pt;line-height:1.6}',
+      '.rf-iv-footer .rf-iv-lbl{font-weight:700;margin-right:2mm;display:inline-block;min-width:16mm}'
+    ].join('');
+    document.head.appendChild(s);
+  }
+
+  function buildInvoiceHtml(p, subtotal, tax, total) {
+    var rows = Array.isArray(p.rows) ? p.rows : [];
+    var rowHtml = '';
+
+    rows.forEach(function (r) {
+      var qty = Number(r.qty) || 0;
+      var price = Number(r.price) || 0;
+      var amt = qty * price;
+      rowHtml +=
+        '<tr>' +
+          '<td>' + escHtml(r.name || '') + '</td>' +
+          '<td>' + escHtml(r.spec || '') + '</td>' +
+          '<td class="rf-n">' + qty + '</td>' +
+          '<td class="rf-c">' + escHtml(r.unit || '') + '</td>' +
+          '<td class="rf-n">' + yenFmt(price) + '</td>' +
+          '<td class="rf-n">' + yenFmt(amt) + '</td>' +
+        '</tr>';
+    });
+
+    var padCount = Math.max(0, INVOICE_MIN_ROWS - rows.length);
+    for (var i = 0; i < padCount; i++) {
+      rowHtml +=
+        '<tr class="rf-empty">' +
+        '<td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td>' +
+        '</tr>';
+    }
+
+    var bank = p.bank || {};
+    var bankParts = [bank.name, bank.branch, bank.type, bank.no, bank.holder]
+      .filter(function (x) { return x; })
+      .map(function (x) { return escHtml(x); });
+
+    var taxPct = Math.round(((typeof p.taxRate === 'number') ? p.taxRate : 0.10) * 100);
+
+    var metaRight =
+      '発行日：' + escHtml(p.issueDate || '') +
+      (p.dueDate ? '　支払期日：' + escHtml(p.dueDate) : '');
+
+    var clientLine =
+      '<span class="rf-iv-co">' + escHtml(p.clientCompany || '') + '</span>' +
+      ' 御中' +
+      (p.clientTanto ? '<span class="rf-iv-tanto">' + escHtml(p.clientTanto) + ' 様</span>' : '');
+
+    var fromBlock =
+      '<div>' + escHtml(p.from || '') + '</div>' +
+      (p.fromAddress ? '<div>' + escHtml(p.fromAddress) + '</div>' : '');
+
+    return '' +
+      '<div class="rf-invoice-page">' +
+        '<div class="rf-iv-title">請　求　書</div>' +
+        '<div class="rf-iv-meta">' +
+          '<div>請求番号：' + escHtml(p.invoiceNo || '') + '</div>' +
+          '<div>' + metaRight + '</div>' +
+        '</div>' +
+        '<div class="rf-iv-addr-row">' +
+          '<div class="rf-iv-to">' + clientLine + '</div>' +
+          '<div class="rf-iv-from">' + fromBlock + '</div>' +
+        '</div>' +
+        '<div class="rf-iv-subject">件名：' + escHtml(p.subject || '') + '</div>' +
+        '<div class="rf-iv-total-line">合計金額 ' + yenFmt(total) + '（税込）</div>' +
+        '<table class="rf-iv-table">' +
+          '<thead><tr>' +
+            '<th>品名</th><th>仕様</th><th>数量</th>' +
+            '<th>単位</th><th>単価</th><th>金額</th>' +
+          '</tr></thead>' +
+          '<tbody>' + rowHtml + '</tbody>' +
+          '<tfoot>' +
+            '<tr><td colspan="5" class="rf-n">小計</td><td class="rf-n">' + yenFmt(subtotal) + '</td></tr>' +
+            '<tr><td colspan="5" class="rf-n">消費税(' + taxPct + '%)</td><td class="rf-n">' + yenFmt(tax) + '</td></tr>' +
+            '<tr class="rf-iv-total"><td colspan="5" class="rf-n">合計</td><td class="rf-n">' + yenFmt(total) + '</td></tr>' +
+          '</tfoot>' +
+        '</table>' +
+        '<div class="rf-iv-footer">' +
+          (bankParts.length ? '<div><span class="rf-iv-lbl">振込先</span>' + bankParts.join(' ') + '</div>' : '') +
+          (p.remarks ? '<div><span class="rf-iv-lbl">備考</span>' + escHtml(p.remarks) + '</div>' : '') +
+        '</div>' +
+      '</div>';
+  }
+
+  async function generateInvoicePdf(params) {
+    var p = params || {};
+    var rows = Array.isArray(p.rows) ? p.rows : [];
+    var subtotal = 0;
+    rows.forEach(function (r) {
+      subtotal += (Number(r.qty) || 0) * (Number(r.price) || 0);
+    });
+    var taxRate = (typeof p.taxRate === 'number') ? p.taxRate : 0.10;
+    var tax = Math.floor(subtotal * taxRate);
+    var total = subtotal + tax;
+
+    if (typeof html2canvas === 'undefined') { alert('html2canvas未読込'); return; }
+    if (typeof global.jspdf === 'undefined') { alert('jsPDF未読込'); return; }
+
+    ensureInvoiceStyles();
+
+    var host = document.createElement('div');
+    host.className = 'rf-invoice-host';
+    host.innerHTML = buildInvoiceHtml(p, subtotal, tax, total);
+    document.body.appendChild(host);
+
+    try {
+      var page = host.querySelector('.rf-invoice-page');
+      var canvas = await html2canvas(page, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+      var imgData = canvas.toDataURL('image/jpeg', 0.95);
+      var jsPDF = global.jspdf.jsPDF;
+      var pdf = new jsPDF('p', 'mm', 'a4');
+      var pageWidth = 210;
+      var pageHeight = 297;
+      var imgHeight = (canvas.height * pageWidth) / canvas.width;
+      var drawWidth = pageWidth;
+      var drawHeight = imgHeight;
+      // 高さオーバー時はA4に収まるよう縮小（1ページ固定）
+      if (imgHeight > pageHeight) {
+        drawHeight = pageHeight;
+        drawWidth = (canvas.width * pageHeight) / canvas.height;
+      }
+      var offsetX = (pageWidth - drawWidth) / 2;
+      pdf.addImage(imgData, 'JPEG', offsetX, 0, drawWidth, drawHeight);
+
+      var safeNo = (p.invoiceNo || new Date().toISOString().slice(0, 10))
+        .replace(/[\/\\:*?"<>|]/g, '_');
+      showPdfPreview(pdf, '請求書_' + safeNo + '.pdf');
+    } catch (e) {
+      console.error('[ReportFeature] generateInvoicePdf failed:', e);
+      alert('PDF生成に失敗しました: ' + (e && e.message ? e.message : e));
+    } finally {
+      host.remove();
+    }
+  }
+
+  // ============================================================
   // 名前空間エクスポート
   // ============================================================
   var ReportFeature = {
-    version: '0.2.0',
+    version: '0.3.0',
     showPdfPreview: showPdfPreview,
     nichiPrint: nichiPrint,
     generateKoujiNippo: generateKoujiNippo,
+    generateInvoicePdf: generateInvoicePdf,
     _internals: {
       aggregateEntries: aggregateEntries,
       formatTimeRange: formatTimeRange,
-      buildKoujiNippoHtml: buildKoujiNippoHtml
+      buildKoujiNippoHtml: buildKoujiNippoHtml,
+      buildInvoiceHtml: buildInvoiceHtml
     }
   };
 

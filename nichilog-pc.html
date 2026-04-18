@@ -295,7 +295,7 @@ body{background:#fff!important}
 <div class="toolbar">
 <button class="btn-close" onclick="closeInvoice()">閉じる</button>
 <button class="btn-print" onclick="saveInvoice()">保存</button>
-<button class="btn-print" onclick="nichiPrint('invoice-print-area')">PDF作成</button>
+<button class="btn-print" onclick="onClickInvoicePdf()">PDF作成</button>
 <span style="flex:1"></span>
 <span style="font-size:13px">請求書</span>
 </div>
@@ -715,6 +715,37 @@ async function onClickKoujiNippoPdf(y,m){
 function openInvoicePrefill(y,m){
   const title=y+'年'+m+'月分 請求書';
   openInvoice({invNo:y+'-'+String(m).padStart(2,'0')+'-001',invDate:localDateStr(new Date()),construction_name:title});
+}
+// 請求書PDF: report-feature.js の ReportFeature.generateInvoicePdf を呼ぶ。
+// 現状の請求書入力フォームと invRows を構造化して渡す。
+function onClickInvoicePdf(){
+  try{
+    if(!window.ReportFeature||typeof window.ReportFeature.generateInvoicePdf!=='function'){
+      showToast('report-feature.js 未読込');return;
+    }
+    const v=function(id){const el=document.getElementById(id);return el?el.value:'';};
+    window.ReportFeature.generateInvoicePdf({
+      invoiceNo:v('invNo'),
+      issueDate:v('invDate'),
+      dueDate:v('invDue'),
+      clientCompany:v('invTo'),
+      clientTanto:v('invTanto'),
+      subject:v('invSiteName'),
+      from:v('invFrom'),
+      remarks:v('invRemarks'),
+      bank:{
+        name:v('invBankName'),
+        branch:v('invBankBranch'),
+        type:v('invBankType'),
+        no:v('invBankNo'),
+        holder:v('invBankHolder')
+      },
+      rows:(typeof invRows!=='undefined'&&Array.isArray(invRows))?invRows:[]
+    });
+  }catch(e){
+    console.error(e);
+    showToast('請求書PDF生成失敗: '+(e&&e.message?e.message:e));
+  }
 }
 
 // ============================================================
