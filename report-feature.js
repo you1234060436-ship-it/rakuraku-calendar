@@ -349,45 +349,46 @@
     s.id = 'rf-invoice-styles';
     s.textContent = [
       '.rf-invoice-host{position:fixed;top:-10000px;left:-10000px;z-index:-1;pointer-events:none}',
-      // base: flexible（プレビューでも使える）
-      '.rf-invoice-page{background:#fff;color:#222;padding:12mm 14mm;',
+      // base: flexible（プレビューでも使える）/ 余白は A4 をフルに使えるよう絞る
+      '.rf-invoice-page{background:#fff;color:#222;padding:8mm 10mm;',
       'font-family:"Hiragino Mincho ProN","Yu Mincho","MS Mincho",serif;font-size:10pt;box-sizing:border-box;position:relative}',
       // PDF出力時のみ A4 固定
       '.rf-invoice-host .rf-invoice-page{width:210mm;min-height:297mm}',
       // 右上: ページ / No
-      '.rf-iv-top-right{position:absolute;top:8mm;right:14mm;text-align:right;font-size:9.5pt;line-height:1.55}',
-      '.rf-iv-page-num{margin-bottom:1.5mm}',
-      '.rf-iv-no-line{border-bottom:0.4mm solid #222;padding:0 2mm 1mm 2mm;display:inline-block;min-width:40mm}',
+      '.rf-iv-top-right{position:absolute;top:5mm;right:10mm;text-align:right;font-size:9.5pt;line-height:1.5}',
+      '.rf-iv-page-num{margin-bottom:1mm}',
+      '.rf-iv-no-line{border-bottom:0.4mm solid #222;padding:0 2mm 0.8mm 2mm;display:inline-block;min-width:38mm}',
       // タイトル (青帯・白文字・左寄せ・横長)
-      '.rf-iv-title-bar{background:#1a4b8c;color:#fff;font-size:18pt;font-weight:700;padding:3.5mm 8mm;letter-spacing:6px;text-align:left;margin:14mm 0 7mm 0}',
+      '.rf-iv-title-bar{background:#1a4b8c;color:#fff;font-size:18pt;font-weight:700;padding:3mm 8mm;letter-spacing:6px;text-align:left;margin:10mm 0 5mm 0}',
       // 宛先 (中央・下線)
-      '.rf-iv-to-center{text-align:center;margin:4mm 0 7mm 0}',
-      '.rf-iv-to-name{font-size:16pt;font-weight:700;border-bottom:0.4mm solid #222;padding:0 6mm 1.8mm 6mm;display:inline-block;min-width:120mm;letter-spacing:2px}',
+      '.rf-iv-to-center{text-align:center;margin:3mm 0 5mm 0}',
+      '.rf-iv-to-name{font-size:16pt;font-weight:700;border-bottom:0.4mm solid #222;padding:0 6mm 1.5mm 6mm;display:inline-block;min-width:120mm;letter-spacing:2px}',
       // 発行者 (右寄せ・下線)
-      '.rf-iv-from-right{text-align:right;margin-bottom:6mm;font-size:10pt;line-height:1.8}',
-      '.rf-iv-from-line{border-bottom:0.3mm solid #666;padding:0 3mm 0.8mm 3mm;display:inline-block;min-width:55mm;margin-bottom:1mm}',
+      '.rf-iv-from-right{text-align:right;margin-bottom:4mm;font-size:10pt;line-height:1.6}',
+      '.rf-iv-from-line{border-bottom:0.3mm solid #666;padding:0 3mm 0.6mm 3mm;display:inline-block;min-width:55mm;margin-bottom:0.8mm}',
       // 挨拶文
-      '.rf-iv-greeting{font-size:10pt;line-height:1.85;margin:5mm 0 6mm 0}',
+      '.rf-iv-greeting{font-size:10pt;line-height:1.6;margin:3mm 0 4mm 0}',
       // ヘッダー情報（縦1列・各行下線）
-      '.rf-iv-header-info{margin:5mm 0 5mm 0}',
-      '.rf-iv-hi-row{display:flex;border-bottom:0.3mm solid #666;padding:1.5mm 0;font-size:10pt;line-height:1.4}',
+      '.rf-iv-header-info{margin:3mm 0 3mm 0}',
+      '.rf-iv-hi-row{display:flex;border-bottom:0.3mm solid #666;padding:1.2mm 0;font-size:10pt;line-height:1.35}',
       '.rf-iv-hi-label{width:40mm;font-weight:600}',
       '.rf-iv-hi-value{flex:1}',
       '.rf-iv-hi-row.rf-iv-hi-total .rf-iv-hi-value{font-weight:700;font-size:12pt}',
       // 明細テーブル
-      '.rf-iv-table{width:100%;border-collapse:collapse;font-size:9pt;margin-top:4mm;table-layout:fixed}',
-      '.rf-iv-table th,.rf-iv-table td{border:0.35mm solid #333;padding:1.6mm 1.5mm;',
+      '.rf-iv-table{width:100%;border-collapse:collapse;font-size:9pt;margin-top:3mm;table-layout:fixed}',
+      '.rf-iv-table th,.rf-iv-table td{border:0.35mm solid #333;padding:1.4mm 1.3mm;',
       'vertical-align:middle;overflow:hidden;word-break:break-all}',
       '.rf-iv-table th{background:#e8eef5;text-align:center;font-weight:600}',
       '.rf-iv-table td.rf-n{text-align:right}',
       '.rf-iv-table td.rf-c{text-align:center}',
-      '.rf-iv-table tr.rf-empty td{height:6mm}',
-      '.rf-iv-table th:nth-child(1),.rf-iv-table td:nth-child(1){width:24%}',
-      '.rf-iv-table th:nth-child(2),.rf-iv-table td:nth-child(2){width:20%}',
+      '.rf-iv-table tr.rf-empty td{height:5.5mm}',
+      // 列幅 (サンプル準拠: 名称33 / 仕様27 / 数量8 / 単位7 / 単価12 / 金額13)
+      '.rf-iv-table th:nth-child(1),.rf-iv-table td:nth-child(1){width:33%}',
+      '.rf-iv-table th:nth-child(2),.rf-iv-table td:nth-child(2){width:27%}',
       '.rf-iv-table th:nth-child(3),.rf-iv-table td:nth-child(3){width:8%;text-align:right}',
-      '.rf-iv-table th:nth-child(4),.rf-iv-table td:nth-child(4){width:8%;text-align:center}',
-      '.rf-iv-table th:nth-child(5),.rf-iv-table td:nth-child(5){width:20%;text-align:right}',
-      '.rf-iv-table th:nth-child(6),.rf-iv-table td:nth-child(6){width:20%;text-align:right}',
+      '.rf-iv-table th:nth-child(4),.rf-iv-table td:nth-child(4){width:7%;text-align:center}',
+      '.rf-iv-table th:nth-child(5),.rf-iv-table td:nth-child(5){width:12%;text-align:right}',
+      '.rf-iv-table th:nth-child(6),.rf-iv-table td:nth-child(6){width:13%;text-align:right}',
       // tfoot: 備考 (colspan4) + 合計ラベル + 値
       '.rf-iv-table tfoot .rf-iv-remark{vertical-align:top;text-align:left;background:#fafafa;padding:2mm 2.5mm}',
       '.rf-iv-table tfoot .rf-iv-remark .rf-iv-remark-lbl{font-weight:700;margin-bottom:1mm;font-size:9.5pt}',
@@ -461,7 +462,6 @@
         '<div class="rf-iv-header-info">' +
           '<div class="rf-iv-hi-row"><span class="rf-iv-hi-label">請求日</span><span class="rf-iv-hi-value">' + escHtml(dateSlash(p.issueDate || '')) + '</span></div>' +
           '<div class="rf-iv-hi-row"><span class="rf-iv-hi-label">振込期限</span><span class="rf-iv-hi-value">' + escHtml(dateSlash(p.dueDate || '')) + '</span></div>' +
-          '<div class="rf-iv-hi-row"><span class="rf-iv-hi-label">工事名</span><span class="rf-iv-hi-value">' + escHtml(p.subject || '') + '</span></div>' +
           '<div class="rf-iv-hi-row rf-iv-hi-total"><span class="rf-iv-hi-label">御請求金額（税込）</span><span class="rf-iv-hi-value">' + yenFmt(total) + '</span></div>' +
         '</div>' +
         // 明細テーブル
