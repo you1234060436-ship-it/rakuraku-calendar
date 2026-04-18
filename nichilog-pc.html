@@ -316,6 +316,7 @@ body{background:#fff!important}
 <div class="form-row"><div class="form-grp"><label>支払期日</label><input id="invDue" type="date"></div><div class="form-grp"><label>ステータス</label><select id="invStatusSelect"><option value="下書き">下書き</option><option value="発行済">発行済</option><option value="入金済">入金済</option></select></div></div>
 <div class="form-row"><div class="form-grp"><label>宛先（取引先）</label><input id="invTo" type="text"></div><div class="form-grp"><label>担当者</label><input id="invTanto" type="text"></div></div>
 <div class="form-row"><div class="form-grp"><label>工事名</label><input id="invSiteName" type="text"></div><div class="form-grp"><label>差出人</label><input id="invFrom" type="text"></div></div>
+<div class="form-row"><div class="form-grp"><label>インボイス登録番号</label><input id="invRegNo" type="text" placeholder="T0000000000000"></div></div>
 <h4 style="margin-top:12px">カレンダーから自動反映</h4>
 <div class="form-row">
 <div class="form-grp"><label>取引先を選択</label><select id="invCalClient"></select></div>
@@ -771,25 +772,10 @@ function onClickInvoicePdf(){
     if(!window.ReportFeature||typeof window.ReportFeature.generateInvoicePdf!=='function'){
       showToast('report-feature.js 未読込');return;
     }
-    const v=function(id){const el=document.getElementById(id);return el?el.value:'';};
-    window.ReportFeature.generateInvoicePdf({
-      invoiceNo:v('invNo'),
-      issueDate:v('invDate'),
-      dueDate:v('invDue'),
-      clientCompany:v('invTo'),
-      clientTanto:v('invTanto'),
-      subject:v('invSiteName'),
-      from:v('invFrom'),
-      remarks:v('invRemarks'),
-      bank:{
-        name:v('invBankName'),
-        branch:v('invBankBranch'),
-        type:v('invBankType'),
-        no:v('invBankNo'),
-        holder:v('invBankHolder')
-      },
-      rows:(typeof invRows!=='undefined'&&Array.isArray(invRows))?invRows:[]
-    });
+    // gatherInvoiceParams が未定義の環境でも動くよう、後段で参照する場合は防御する
+    const params=(typeof gatherInvoiceParams==='function')?gatherInvoiceParams():null;
+    if(!params){showToast('フォーム情報を取得できませんでした');return;}
+    window.ReportFeature.generateInvoicePdf(params);
   }catch(e){
     console.error(e);
     showToast('請求書PDF生成失敗: '+(e&&e.message?e.message:e));
@@ -828,15 +814,16 @@ async function fillInvoiceFromCalendar(){
       agg[k]=(agg[k]||0)+(e.work_type==='half'?0.5:1);
     });
     // 明細行生成：請負=1式×単価、それ以外=日数×単価
-    const specLabel=y+'年'+m+'月分';
+    // 仕様欄はカレンダー取り込み時は空欄（社長指定、Step5）
+    const specLabel=y+'年'+m+'月分';  // ← 件名(subject)の自動補完には使うが、明細の spec には入れない
     const newRows=[];
     clientSites.forEach(function(s){
       const days=agg[String(s.id)]||0;
       if(days<=0)return;
       if(s.type==='請負'){
-        newRows.push({name:s.name||'',spec:specLabel,qty:1,unit:'式',price:parseInt(s.price)||0});
+        newRows.push({name:s.name||'',spec:'',qty:1,unit:'式',price:parseInt(s.price)||0});
       }else{
-        newRows.push({name:s.name||'',spec:specLabel,qty:days,unit:'人',price:parseInt(s.price)||0});
+        newRows.push({name:s.name||'',spec:'',qty:days,unit:'人',price:parseInt(s.price)||0});
       }
     });
     if(newRows.length===0){showToast('該当月の出勤データがありません');return;}
@@ -1178,40 +1165,46 @@ async function deleteMasterItem(id){
     console.error(e);showToast('削除エラー: '+(e&&e.message?e.message:e));
   }
 }
+// プレビューは ReportFeature._internals.buildInvoiceHtml を使って PDF と完全一致させる
 function renderInvoicePreview(){
-  const no=document.getElementById('invNo').value||'';
-  const date=document.getElementById('invDate').value||'';
-  const due=document.getElementById('invDue').value||'';
-  const to=document.getElementById('invTo').value||'';
-  const tanto=document.getElementById('invTanto').value||'';
-  const siteNm=document.getElementById('invSiteName').value||'';
-  const from=document.getElementById('invFrom').value||'';
-  const remarks=document.getElementById('invRemarks').value||'';
-  const bankName=document.getElementById('invBankName').value||'';
-  const bankBr=document.getElementById('invBankBranch').value||'';
-  const bankTp=document.getElementById('invBankType').value||'';
-  const bankNo=document.getElementById('invBankNo').value||'';
-  const bankHd=document.getElementById('invBankHolder').value||'';
-  let subtotal=0;let rowHtml='';
-  invRows.forEach(function(r){
-    const amt=(r.qty||0)*(r.price||0);subtotal+=amt;
-    rowHtml+='<tr><td>'+escHtml(r.name||'')+'</td><td>'+escHtml(r.spec||'')+'</td><td style="text-align:right">'+(r.qty||0)+'</td><td>'+escHtml(r.unit||'')+'</td><td style="text-align:right">¥'+(r.price||0).toLocaleString()+'</td><td style="text-align:right">¥'+amt.toLocaleString()+'</td></tr>';
-  });
-  const tax=Math.floor(subtotal*0.10);
+  const RF=window.ReportFeature;
+  if(!RF||!RF._internals||!RF._internals.buildInvoiceHtml||!RF._internals.ensureInvoiceStyles){
+    // まだ読み込まれていない場合は何もしない（openInvoice 再実行で再描画される）
+    return;
+  }
+  RF._internals.ensureInvoiceStyles();
+  const params=gatherInvoiceParams();
+  let subtotal=0;
+  (params.rows||[]).forEach(function(r){subtotal+=(Number(r.qty)||0)*(Number(r.price)||0);});
+  const taxRate=(typeof params.taxRate==='number')?params.taxRate:0.10;
+  const tax=Math.floor(subtotal*taxRate);
   const total=subtotal+tax;
-  let html='<div class="invoice-page"><div class="title-line">請求書</div>';
-  html+='<div class="ln">請求番号：'+escHtml(no)+'　発行日：'+escHtml(date)+'　支払期日：'+escHtml(due)+'</div>';
-  html+='<div class="ln"><b style="font-size:12pt">'+escHtml(to)+' 御中</b>　'+escHtml(tanto)+' 様</div>';
-  html+='<div class="ln">件名：'+escHtml(siteNm)+'</div>';
-  html+='<div class="ln" style="text-align:right">'+escHtml(from)+'</div>';
-  html+='<div class="ln" style="text-align:center;font-size:14pt;margin:6mm 0">合計金額 ¥'+total.toLocaleString()+'（税込）</div>';
-  html+='<table class="inv-pre"><thead><tr><th>品名</th><th>仕様</th><th>数量</th><th>単位</th><th>単価</th><th>金額</th></tr></thead><tbody>'+rowHtml+'</tbody>';
-  html+='<tfoot><tr><td colspan="5" style="text-align:right">小計</td><td style="text-align:right">¥'+subtotal.toLocaleString()+'</td></tr>';
-  html+='<tr><td colspan="5" style="text-align:right">消費税(10%)</td><td style="text-align:right">¥'+tax.toLocaleString()+'</td></tr>';
-  html+='<tr><td colspan="5" style="text-align:right;font-weight:700">合計</td><td style="text-align:right;font-weight:700">¥'+total.toLocaleString()+'</td></tr></tfoot></table>';
-  html+='<div class="ln" style="margin-top:6mm">振込先：'+escHtml(bankName)+' '+escHtml(bankBr)+' '+escHtml(bankTp)+' '+escHtml(bankNo)+' '+escHtml(bankHd)+'</div>';
-  html+='<div class="ln">備考：'+escHtml(remarks)+'</div></div>';
-  document.getElementById('invoice-print-area').innerHTML=html;
+  document.getElementById('invoice-print-area').innerHTML=RF._internals.buildInvoiceHtml(params,subtotal,tax,total);
+}
+
+// 請求書フォームの全値を params オブジェクトに集める（PDF生成・プレビュー共通）
+function gatherInvoiceParams(){
+  const v=function(id){const el=document.getElementById(id);return el?el.value:'';};
+  return{
+    invoiceNo:v('invNo'),
+    issueDate:v('invDate'),
+    dueDate:v('invDue'),
+    clientCompany:v('invTo'),
+    clientTanto:v('invTanto'),
+    subject:v('invSiteName'),
+    from:v('invFrom'),
+    remarks:v('invRemarks'),
+    registrationNo:v('invRegNo'),
+    taxRate:0.10,
+    bank:{
+      name:v('invBankName'),
+      branch:v('invBankBranch'),
+      type:v('invBankType'),
+      no:v('invBankNo'),
+      holder:v('invBankHolder')
+    },
+    rows:(typeof invRows!=='undefined'&&Array.isArray(invRows))?invRows:[]
+  };
 }
 function openInvoice(prefill){
   currentInvoiceId=null;
@@ -1224,6 +1217,7 @@ function openInvoice(prefill){
   document.getElementById('invTanto').value=(prefill&&prefill.invTanto)||'';
   document.getElementById('invSiteName').value=(prefill&&prefill.construction_name)||'';
   document.getElementById('invFrom').value=(company&&company.name)||'';
+  document.getElementById('invRegNo').value=(company&&company.registration_no)||'';
   document.getElementById('invRemarks').value='';
   document.getElementById('invStatusSelect').value='下書き';
   document.getElementById('invBankName').value='';
@@ -1238,7 +1232,7 @@ function openInvoice(prefill){
   if(cm){cm.value=(prefill&&prefill.calMonth)||(y+'-'+m);}
   renderInvForm();renderInvoicePreview();
   // attach change listeners to preview inputs
-  ['invNo','invDate','invDue','invTo','invTanto','invSiteName','invFrom','invRemarks','invBankName','invBankBranch','invBankType','invBankNo','invBankHolder'].forEach(function(k){var el=document.getElementById(k);if(el)el.oninput=renderInvoicePreview;});
+  ['invNo','invDate','invDue','invTo','invTanto','invSiteName','invFrom','invRegNo','invRemarks','invBankName','invBankBranch','invBankType','invBankNo','invBankHolder'].forEach(function(k){var el=document.getElementById(k);if(el)el.oninput=renderInvoicePreview;});
   document.getElementById('invoiceOverlay').classList.add('show');
 }
 function openInvoiceEdit(id){
@@ -1251,6 +1245,7 @@ function openInvoiceEdit(id){
   document.getElementById('invTanto').value=iv.person_in_charge||'';
   document.getElementById('invSiteName').value=iv.construction_name||'';
   document.getElementById('invFrom').value=(company&&company.name)||'';
+  document.getElementById('invRegNo').value=iv.registration_no||(company&&company.registration_no)||'';
   document.getElementById('invRemarks').value=iv.memo||'';
   document.getElementById('invStatusSelect').value=iv.status||'下書き';
   const bi=iv.bank_info||{};
@@ -1278,7 +1273,7 @@ function openInvoiceEdit(id){
     }
   }
   renderInvForm();renderInvoicePreview();
-  ['invNo','invDate','invDue','invTo','invTanto','invSiteName','invFrom','invRemarks','invBankName','invBankBranch','invBankType','invBankNo','invBankHolder'].forEach(function(k){var el=document.getElementById(k);if(el)el.oninput=renderInvoicePreview;});
+  ['invNo','invDate','invDue','invTo','invTanto','invSiteName','invFrom','invRegNo','invRemarks','invBankName','invBankBranch','invBankType','invBankNo','invBankHolder'].forEach(function(k){var el=document.getElementById(k);if(el)el.oninput=renderInvoicePreview;});
   document.getElementById('invoiceOverlay').classList.add('show');
 }
 function closeInvoice(){document.getElementById('invoiceOverlay').classList.remove('show');}
