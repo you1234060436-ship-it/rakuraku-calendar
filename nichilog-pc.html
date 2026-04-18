@@ -812,22 +812,26 @@ async function fillInvoiceFromCalendar(){
     const y=parseInt(parts[0],10),m=parseInt(parts[1],10);
     const start=mStr+'-01';
     const end=localDateStr(new Date(y,m,0));
-    const clientSites=sites.filter(function(s){return s.client_company_id===cid;});
+    // 型セーフ比較: select.value は常に string、DB の id/client_company_id は bigint だと
+    // === で失敗する。buildSiteOpts と同じ方針で String() に寄せる。
+    const cidStr=String(cid);
+    const clientSites=sites.filter(function(s){return String(s.client_company_id)===cidStr;});
     if(clientSites.length===0){showToast('この取引先に紐づく現場がありません');return;}
     const siteIds=clientSites.map(function(s){return s.id;});
     let filter='company_id=eq.'+company.id+'&work_date=gte.'+start+'&work_date=lte.'+end+'&site_id=in.('+siteIds.join(',')+')';
     if(isWorker())filter+='&account_id=eq.'+currentUser.id;
     const list=await sbGet('attendance',filter)||[];
-    // site_idごとに日数を集計（full=1, half=0.5）
+    // site_idごとに日数を集計（full=1, half=0.5）。key を String で正規化
     const agg={};
     list.forEach(function(e){
-      agg[e.site_id]=(agg[e.site_id]||0)+(e.work_type==='half'?0.5:1);
+      const k=String(e.site_id);
+      agg[k]=(agg[k]||0)+(e.work_type==='half'?0.5:1);
     });
     // 明細行生成：請負=1式×単価、それ以外=日数×単価
     const specLabel=y+'年'+m+'月分';
     const newRows=[];
     clientSites.forEach(function(s){
-      const days=agg[s.id]||0;
+      const days=agg[String(s.id)]||0;
       if(days<=0)return;
       if(s.type==='請負'){
         newRows.push({name:s.name||'',spec:specLabel,qty:1,unit:'式',price:parseInt(s.price)||0});
@@ -844,8 +848,8 @@ async function fillInvoiceFromCalendar(){
       }
     }
     invRows=invRows.concat(newRows);
-    // 宛先・件名の自動補完（空欄時のみ）
-    const cc=clientCompanies.find(function(x){return x.id===cid;});
+    // 宛先・件名の自動補完（空欄時のみ）— ここも型セーフ比較
+    const cc=clientCompanies.find(function(x){return String(x.id)===cidStr;});
     const invToEl=document.getElementById('invTo');
     if(invToEl&&cc&&!invToEl.value)invToEl.value=cc.name;
     const subjEl=document.getElementById('invSiteName');
