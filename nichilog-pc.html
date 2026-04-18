@@ -449,11 +449,44 @@ async function sbDelete(table,filters){
   return true;
 }
 // エラー表示ヘルパ: Supabase エラーの詳細を toast + alert + console に出す
+// 本文パターンからカテゴリを自動判別してヒントを追加
 function sbErrMsg(prefix){
   const e=window._lastSbError;
   if(!e)return prefix||'エラー';
-  let detail=(e.body||'').slice(0,240);
-  return (prefix||'エラー')+' ['+e.status+'] '+detail;
+  const body=(e.body||'').slice(0,240);
+  let hint='';
+  if(/row[- ]?level security/i.test(body))hint=' (RLSポリシー違反: そのテーブルへの書込権限がありません)';
+  else if(/null value in column/i.test(body))hint=' (必須カラムがNULL)';
+  else if(/violates check constraint/i.test(body))hint=' (CHECK制約違反)';
+  else if(/violates foreign key/i.test(body))hint=' (外部キー参照先が存在しません)';
+  else if(/violates unique constraint/i.test(body))hint=' (重複エラー)';
+  else if(/invalid input syntax/i.test(body))hint=' (データ型不一致)';
+  else if(/column .* does not exist/i.test(body))hint=' (存在しないカラム)';
+  return (prefix||'エラー')+' ['+e.status+'] '+body+hint;
+}
+// signUp ラッパ: メール確認をスキップする意図を options に明示
+// （最終解は Supabase ダッシュボードで「Confirm email」OFF）
+async function signUpNoEmail(email,pw){
+  return await sb.auth.signUp({
+    email:email,
+    password:pw,
+    options:{
+      emailRedirectTo:undefined,
+      data:{skip_email_confirmation:true}
+    }
+  });
+}
+// signUp エラーを人に分かる日本語に変換
+function signUpErrMsg(err){
+  if(!err)return '';
+  const m=err.message||String(err);
+  if(/rate limit/i.test(m)){
+    return 'メンバー登録に失敗しました。しばらく待ってから再試行してください。';
+  }
+  if(/at least 6 characters/i.test(m)){
+    return 'Supabase の最小パスワード文字数は 6 です。ダッシュボードで Minimum password length を 4 に変更してください。';
+  }
+  return m;
 }
 
 // ============================================================
@@ -486,8 +519,8 @@ async function doRegister(){
   if(pw.length<4){showRegError('パスワードは4文字以上で入力してください');return;}
   try{
     const tempEmail=crypto.randomUUID()+'@nichilog.app';
-    const{data:authData,error:signUpErr}=await sb.auth.signUp({email:tempEmail,password:pw});
-    if(signUpErr){showRegError('登録エラー: '+signUpErr.message);return;}
+    const{data:authData,error:signUpErr}=await signUpNoEmail(tempEmail,pw);
+    if(signUpErr){showRegError('登録エラー: '+signUpErrMsg(signUpErr));return;}
     const{data:regData,error:regErr}=await sb.rpc('complete_registration',{p_company:comp,p_name:nm,p_role:role,p_team:''});
     if(regErr){showRegError('登録完了エラー: '+regErr.message);return;}
     const accs=await sbGet('accounts','auth_uid=eq.'+authData.user.id);
@@ -1025,8 +1058,8 @@ async function saveMember(){
     if(pw.length<4){showToast('パスワードは4文字以上で入力してください');return;}
     try{
       const tempEmail=crypto.randomUUID()+'@nichilog.app';
-      const{data:authData,error:signUpErr}=await sb.auth.signUp({email:tempEmail,password:pw});
-      if(signUpErr){showToast('登録失敗: '+signUpErr.message);return;}
+      const{data:authData,error:signUpErr}=await signUpNoEmail(tempEmail,pw);
+      if(signUpErr){showToast('登録失敗: '+signUpErrMsg(signUpErr));return;}
       const{error:regErr}=await sb.rpc('complete_registration',{p_company:company.name,p_name:name,p_role:role,p_team:team});
       if(regErr){showToast('登録エラー: '+regErr.message);return;}
       showToast('追加しました');clModal();await renderAll();renderMembers();
@@ -1424,8 +1457,8 @@ async function createNewAccount(){
   if(pw.length<4){showToast('パスワードは4文字以上で入力してください');return;}
   try{
     const tempEmail=crypto.randomUUID()+'@nichilog.app';
-    const{data:authData,error:signUpErr}=await sb.auth.signUp({email:tempEmail,password:pw});
-    if(signUpErr){showToast('登録失敗: '+signUpErr.message);return;}
+    const{data:authData,error:signUpErr}=await signUpNoEmail(tempEmail,pw);
+    if(signUpErr){showToast('登録失敗: '+signUpErrMsg(signUpErr));return;}
     const{error:regErr}=await sb.rpc('complete_registration',{p_company:company.name,p_name:name,p_role:role,p_team:team});
     if(regErr){showToast('登録エラー: '+regErr.message);return;}
     showToast('追加しました');document.getElementById('stNewName').value='';document.getElementById('stNewTeam').value='';document.getElementById('stNewPw2').value='';
