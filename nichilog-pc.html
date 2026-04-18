@@ -316,6 +316,12 @@ body{background:#fff!important}
 <div class="form-row"><div class="form-grp"><label>支払期日</label><input id="invDue" type="date"></div><div class="form-grp"><label>ステータス</label><select id="invStatusSelect"><option value="下書き">下書き</option><option value="発行済">発行済</option><option value="入金済">入金済</option></select></div></div>
 <div class="form-row"><div class="form-grp"><label>宛先（取引先）</label><input id="invTo" type="text"></div><div class="form-grp"><label>担当者</label><input id="invTanto" type="text"></div></div>
 <div class="form-row"><div class="form-grp"><label>工事名</label><input id="invSiteName" type="text"></div><div class="form-grp"><label>差出人</label><input id="invFrom" type="text"></div></div>
+<h4 style="margin-top:12px">カレンダーから自動反映</h4>
+<div class="form-row">
+<div class="form-grp"><label>取引先を選択</label><select id="invCalClient"></select></div>
+<div class="form-grp"><label>対象月</label><input type="month" id="invCalMonth"></div>
+<div class="form-grp" style="align-self:flex-end"><button class="btn btn-primary btn-sm" onclick="fillInvoiceFromCalendar()">▶ カレンダーから取り込む</button></div>
+</div>
 <h4 style="margin-top:12px">明細</h4>
 <table class="inv-detail-table" id="invDetailTable">
 <thead><tr><th style="width:30%">品名</th><th style="width:20%">仕様</th><th style="width:9%">数量</th><th style="width:12%">単位</th><th style="width:15%">単価</th><th style="width:9%">操作</th></tr></thead>
@@ -761,6 +767,69 @@ function onClickInvoicePdf(){
   }
 }
 
+// =========================================================
+// カレンダー自動反映（Step 3-d）
+//   選択取引先に紐づく work_sites の当月 attendance を集計し、
+//   明細行に追加する。請負タイプは 1式×site.price、それ以外は
+//   日数×単価の1行。既存明細には "追加" する（置換はしない）。
+// =========================================================
+async function fillInvoiceFromCalendar(){
+  try{
+    const cid=document.getElementById('invCalClient').value;
+    const mStr=document.getElementById('invCalMonth').value;
+    if(!cid){showToast('取引先を選択してください');return;}
+    if(!mStr||!/^\d{4}-\d{2}$/.test(mStr)){showToast('対象月を選択してください');return;}
+    const parts=mStr.split('-');
+    const y=parseInt(parts[0],10),m=parseInt(parts[1],10);
+    const start=mStr+'-01';
+    const end=localDateStr(new Date(y,m,0));
+    const clientSites=sites.filter(function(s){return s.client_company_id===cid;});
+    if(clientSites.length===0){showToast('この取引先に紐づく現場がありません');return;}
+    const siteIds=clientSites.map(function(s){return s.id;});
+    let filter='company_id=eq.'+company.id+'&work_date=gte.'+start+'&work_date=lte.'+end+'&site_id=in.('+siteIds.join(',')+')';
+    if(isWorker())filter+='&account_id=eq.'+currentUser.id;
+    const list=await sbGet('attendance',filter)||[];
+    // site_idごとに日数を集計（full=1, half=0.5）
+    const agg={};
+    list.forEach(function(e){
+      agg[e.site_id]=(agg[e.site_id]||0)+(e.work_type==='half'?0.5:1);
+    });
+    // 明細行生成：請負=1式×単価、それ以外=日数×単価
+    const specLabel=y+'年'+m+'月分';
+    const newRows=[];
+    clientSites.forEach(function(s){
+      const days=agg[s.id]||0;
+      if(days<=0)return;
+      if(s.type==='請負'){
+        newRows.push({name:s.name||'',spec:specLabel,qty:1,unit:'式',price:parseInt(s.price)||0});
+      }else{
+        newRows.push({name:s.name||'',spec:specLabel,qty:days,unit:'人',price:parseInt(s.price)||0});
+      }
+    });
+    if(newRows.length===0){showToast('該当月の出勤データがありません');return;}
+    // 空行1件だけ残っている初期状態なら捨ててから追加
+    if(invRows.length===1){
+      const r0=invRows[0];
+      if(!r0.name&&!r0.spec&&(!r0.price||r0.price===0)){
+        invRows=[];
+      }
+    }
+    invRows=invRows.concat(newRows);
+    // 宛先・件名の自動補完（空欄時のみ）
+    const cc=clientCompanies.find(function(x){return x.id===cid;});
+    const invToEl=document.getElementById('invTo');
+    if(invToEl&&cc&&!invToEl.value)invToEl.value=cc.name;
+    const subjEl=document.getElementById('invSiteName');
+    if(subjEl&&!subjEl.value)subjEl.value=specLabel;
+    renderInvForm();
+    renderInvoicePreview();
+    showToast(newRows.length+'件の明細を追加しました');
+  }catch(e){
+    console.error(e);
+    showToast('取り込み失敗: '+(e&&e.message?e.message:e));
+  }
+}
+
 // ============================================================
 // Tab 3: Sites / Client Companies
 // ============================================================
@@ -1130,6 +1199,10 @@ function openInvoice(prefill){
   document.getElementById('invBankNo').value='';
   document.getElementById('invBankHolder').value='';
   invRows=(prefill&&prefill.rows)||[{name:'',spec:'',qty:1,unit:'人',price:25000}];
+  // カレンダー自動反映フォーム初期化
+  const cc=document.getElementById('invCalClient');if(cc)cc.innerHTML=buildClientOpts();
+  const cm=document.getElementById('invCalMonth');
+  if(cm){cm.value=(prefill&&prefill.calMonth)||(y+'-'+m);}
   renderInvForm();renderInvoicePreview();
   // attach change listeners to preview inputs
   ['invNo','invDate','invDue','invTo','invTanto','invSiteName','invFrom','invRemarks','invBankName','invBankBranch','invBankType','invBankNo','invBankHolder'].forEach(function(k){var el=document.getElementById(k);if(el)el.oninput=renderInvoicePreview;});
@@ -1155,6 +1228,22 @@ function openInvoiceEdit(id){
   document.getElementById('invBankHolder').value=bi.holder||'';
   invRows=(iv.items||[]).map(function(it){return{name:it.name,spec:it.spec,qty:it.qty,unit:it.unit,price:it.unitPrice};});
   if(invRows.length===0)invRows=[{name:'',spec:'',qty:1,unit:'人',price:0}];
+  // カレンダー自動反映フォーム初期化（対象月は発行日の月に合わせる）
+  const ccEdit=document.getElementById('invCalClient');
+  if(ccEdit){
+    // 宛先名から逆引き。見つからなければ先頭要素に。
+    const matched=clientCompanies.find(function(c){return c.name===iv.client_company;});
+    ccEdit.innerHTML=buildClientOpts(matched?matched.id:null);
+  }
+  const cmEdit=document.getElementById('invCalMonth');
+  if(cmEdit){
+    if(iv.issue_date&&/^\d{4}-\d{2}/.test(iv.issue_date)){
+      cmEdit.value=iv.issue_date.slice(0,7);
+    }else{
+      const nowE=new Date();
+      cmEdit.value=nowE.getFullYear()+'-'+String(nowE.getMonth()+1).padStart(2,'0');
+    }
+  }
   renderInvForm();renderInvoicePreview();
   ['invNo','invDate','invDue','invTo','invTanto','invSiteName','invFrom','invRemarks','invBankName','invBankBranch','invBankType','invBankNo','invBankHolder'].forEach(function(k){var el=document.getElementById(k);if(el)el.oninput=renderInvoicePreview;});
   document.getElementById('invoiceOverlay').classList.add('show');
