@@ -7,6 +7,7 @@
  * Step 1 : nichiPrint / showPdfPreview 移設、ReportFeature 名前空間
  * Step 2 : generateKoujiNippo 実装（A4固定・28行最小・プレビュー）
  * Step 3 : generateInvoicePdf 実装（A4固定・1ページ・明細行padding）
+ * Step 4 : generateReceiptPdf 実装（A4上部配置・収入印紙欄・8%/10%分離）
  *
  * 依存ライブラリ（nichilog-pc.html 側で読込）:
  *   - jsPDF 2.5.1
@@ -504,19 +505,197 @@
   }
 
   // ============================================================
+  // 領収書 PDF
+  //   A4縦、内容は上部配置（下半分は空き）、¥50,000 以上で収入印紙欄、
+  //   内訳表は 8%/10% を分離して掲載。インボイス登録番号を右下に表示。
+  //
+  //   params = {
+  //     receiptNo, issueDate,               // string
+  //     issuer,                             // 発行元（自社名）
+  //     clientCompany,                      // 宛先（会社名のみ。'様' は自動付与）
+  //     total,                              // 合計金額（税込・整数円）
+  //     taxRate,                            // 0.08 | 0.10
+  //     description,                        // 但し書き
+  //     registrationNo                      // インボイス登録番号 (T + 13桁)
+  //   }
+  // ============================================================
+
+  // プレビューとPDFで共通利用する内訳計算
+  function calcReceiptBreakdown(total, taxRate) {
+    var t = Number(total) || 0;
+    var r = (typeof taxRate === 'number') ? taxRate : 0.10;
+    var excl = Math.round(t / (1 + r));
+    var tax = Math.round(t - excl);
+    return {
+      excl: excl,
+      tax: tax,
+      tax8: (r === 0.08) ? tax : 0,
+      tax10: (r === 0.10) ? tax : 0,
+      stamp: t >= 50000,
+      taxRate: r
+    };
+  }
+
+  function ensureReceiptStyles() {
+    if (document.getElementById('rf-receipt-styles')) return;
+    var s = document.createElement('style');
+    s.id = 'rf-receipt-styles';
+    s.textContent = [
+      '.rf-receipt-host{position:fixed;top:-10000px;left:-10000px;z-index:-1;pointer-events:none}',
+      // base: flexible (使える)
+      '.rf-receipt-page{background:#fff;color:#222;padding:14mm 14mm;',
+      'font-family:"Hiragino Mincho ProN","Yu Mincho","MS Mincho",serif;font-size:10pt;box-sizing:border-box}',
+      // PDF出力時のみ A4 固定
+      '.rf-receipt-host .rf-receipt-page{width:210mm;min-height:297mm}',
+      '.rf-rc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6mm}',
+      '.rf-rc-title{font-size:26pt;letter-spacing:12px;font-weight:700}',
+      '.rf-rc-meta{font-size:10pt;line-height:1.6;text-align:right;min-width:35mm}',
+      '.rf-rc-to{text-align:center;padding:3mm 0 3mm;border-bottom:1.5px solid #222;',
+      'font-size:14pt;font-weight:600;margin-bottom:5mm}',
+      '.rf-rc-amt-row{display:flex;align-items:stretch;border-top:2px solid #222;',
+      'border-bottom:2px solid #222;margin-bottom:5mm}',
+      '.rf-rc-amt-box{flex:1;text-align:center;padding:6mm 4mm;display:flex;align-items:center;justify-content:center}',
+      '.rf-rc-amt-val{font-size:28pt;font-weight:700;letter-spacing:3px}',
+      '.rf-rc-amt-suffix{font-size:16pt;margin-left:4mm;font-weight:600}',
+      '.rf-rc-stamp-box{width:32mm;display:flex;flex-direction:column;align-items:center;',
+      'justify-content:center;border-left:1px solid #333;padding:3mm}',
+      '.rf-rc-stamp-frame{width:22mm;height:22mm;border:1.5px dashed #888;display:flex;',
+      'align-items:center;justify-content:center;font-size:8pt;color:#888;text-align:center;line-height:1.4}',
+      '.rf-rc-desc{margin:4mm 0;font-size:11pt;line-height:1.7;padding:2mm 0}',
+      '.rf-rc-desc .rf-rc-lbl{margin-right:4mm;font-weight:600}',
+      '.rf-rc-break-wrap{display:flex;justify-content:space-between;gap:8mm;margin-top:4mm;align-items:flex-start}',
+      '.rf-rc-breakdown{width:90mm;border-collapse:collapse;font-size:9pt}',
+      '.rf-rc-breakdown th,.rf-rc-breakdown td{border:0.35mm solid #666;padding:1.6mm 2mm}',
+      '.rf-rc-breakdown th{background:#f3f4f6;text-align:center}',
+      '.rf-rc-breakdown td.rf-n{text-align:right}',
+      '.rf-rc-breakdown tr.rf-rc-sum td{background:#fafafa;font-weight:700}',
+      '.rf-rc-issuer{min-width:60mm;text-align:right;font-size:10pt;line-height:1.7}',
+      '.rf-rc-issuer .rf-rc-iss-name{font-size:13pt;font-weight:700;margin-bottom:2mm}',
+      '.rf-rc-issuer .rf-rc-reg-lbl{font-size:8.5pt;color:#555;margin-top:2mm}',
+      '.rf-rc-issuer .rf-rc-reg-no{font-size:9.5pt;letter-spacing:1px}'
+    ].join('');
+    document.head.appendChild(s);
+  }
+
+  function buildReceiptHtml(p, b) {
+    var issueDateStr = '';
+    if (p.issueDate) {
+      try {
+        issueDateStr = new Date(p.issueDate + 'T00:00:00').toLocaleDateString('ja-JP');
+      } catch (_) { issueDateStr = p.issueDate; }
+    }
+    var desc = p.description || '工事代金として';
+
+    var stampHtml = b.stamp
+      ? '<div class="rf-rc-stamp-box"><div class="rf-rc-stamp-frame">収入<br>印紙</div></div>'
+      : '';
+
+    return '' +
+      '<div class="rf-receipt-page">' +
+        '<div class="rf-rc-head">' +
+          '<div class="rf-rc-title">領　収　書</div>' +
+          '<div class="rf-rc-meta">' +
+            '<div>No. ' + escHtml(p.receiptNo || '') + '</div>' +
+            '<div>' + escHtml(issueDateStr) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="rf-rc-to">' + escHtml(p.clientCompany || '') + '　様</div>' +
+        '<div class="rf-rc-amt-row">' +
+          '<div class="rf-rc-amt-box">' +
+            '<div class="rf-rc-amt-val">' + yenFmt(b.total || 0) +
+            '<span class="rf-rc-amt-suffix">也</span></div>' +
+          '</div>' +
+          stampHtml +
+        '</div>' +
+        '<div class="rf-rc-desc">' +
+          '<span class="rf-rc-lbl">但し</span>' + escHtml(desc) +
+          ' として、上記正に領収いたしました。' +
+        '</div>' +
+        '<div class="rf-rc-break-wrap">' +
+          '<table class="rf-rc-breakdown">' +
+            '<thead><tr><th>内訳</th><th>金額</th></tr></thead>' +
+            '<tbody>' +
+              '<tr><td>小計 ①</td><td class="rf-n">' + yenFmt(b.excl) + '</td></tr>' +
+              '<tr><td>消費税等 ②（④＋⑤）</td><td class="rf-n">' + yenFmt(b.tax) + '</td></tr>' +
+              '<tr class="rf-rc-sum"><td>合計 ③（①＋②）</td><td class="rf-n">' + yenFmt(b.total) + '</td></tr>' +
+              '<tr><td>(8%)消費税合計 ④</td><td class="rf-n">' + yenFmt(b.tax8) + '</td></tr>' +
+              '<tr><td>(10%)消費税合計 ⑤</td><td class="rf-n">' + yenFmt(b.tax10) + '</td></tr>' +
+            '</tbody>' +
+          '</table>' +
+          '<div class="rf-rc-issuer">' +
+            '<div class="rf-rc-iss-name">' + escHtml(p.issuer || '') + '</div>' +
+            '<div class="rf-rc-reg-lbl">インボイス登録番号</div>' +
+            '<div class="rf-rc-reg-no">' + escHtml(p.registrationNo || 'T0000000000000') + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  async function generateReceiptPdf(params) {
+    var p = params || {};
+    var total = Number(p.total) || 0;
+    var taxRate = (typeof p.taxRate === 'number') ? p.taxRate : 0.10;
+    var b = calcReceiptBreakdown(total, taxRate);
+    b.total = total;
+
+    if (typeof html2canvas === 'undefined') { alert('html2canvas未読込'); return; }
+    if (typeof global.jspdf === 'undefined') { alert('jsPDF未読込'); return; }
+
+    ensureReceiptStyles();
+
+    var host = document.createElement('div');
+    host.className = 'rf-receipt-host';
+    host.innerHTML = buildReceiptHtml(p, b);
+    document.body.appendChild(host);
+
+    try {
+      var page = host.querySelector('.rf-receipt-page');
+      var canvas = await html2canvas(page, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+      var imgData = canvas.toDataURL('image/jpeg', 0.95);
+      var jsPDF = global.jspdf.jsPDF;
+      var pdf = new jsPDF('p', 'mm', 'a4');
+      var pageWidth = 210, pageHeight = 297;
+      var imgHeight = (canvas.height * pageWidth) / canvas.width;
+      var drawWidth = pageWidth, drawHeight = imgHeight;
+      if (imgHeight > pageHeight) {
+        drawHeight = pageHeight;
+        drawWidth = (canvas.width * pageHeight) / canvas.height;
+      }
+      var offsetX = (pageWidth - drawWidth) / 2;
+      pdf.addImage(imgData, 'JPEG', offsetX, 0, drawWidth, drawHeight);
+      var safeNo = (p.receiptNo || new Date().toISOString().slice(0, 10))
+        .replace(/[\/\\:*?"<>|]/g, '_');
+      showPdfPreview(pdf, '領収書_' + safeNo + '.pdf');
+    } catch (e) {
+      console.error('[ReportFeature] generateReceiptPdf failed:', e);
+      alert('PDF生成に失敗しました: ' + (e && e.message ? e.message : e));
+    } finally {
+      host.remove();
+    }
+  }
+
+  // ============================================================
   // 名前空間エクスポート
   // ============================================================
   var ReportFeature = {
-    version: '0.3.0',
+    version: '0.4.0',
     showPdfPreview: showPdfPreview,
     nichiPrint: nichiPrint,
     generateKoujiNippo: generateKoujiNippo,
     generateInvoicePdf: generateInvoicePdf,
+    generateReceiptPdf: generateReceiptPdf,
     _internals: {
       aggregateEntries: aggregateEntries,
       formatTimeRange: formatTimeRange,
       buildKoujiNippoHtml: buildKoujiNippoHtml,
-      buildInvoiceHtml: buildInvoiceHtml
+      buildInvoiceHtml: buildInvoiceHtml,
+      buildReceiptHtml: buildReceiptHtml,
+      calcReceiptBreakdown: calcReceiptBreakdown,
+      ensureReceiptStyles: ensureReceiptStyles
     }
   };
 

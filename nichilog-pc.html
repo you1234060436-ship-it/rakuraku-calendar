@@ -344,14 +344,29 @@ body{background:#fff!important}
 </div>
 
 <!-- ==================== Receipt Overlay ==================== -->
-<div class="receipt-overlay" id="receiptOverlay">
+<div class="inv-overlay" id="receiptOverlay">
 <div class="toolbar">
 <button class="btn-close" onclick="closeReceipt()">閉じる</button>
-<button class="btn-print" onclick="nichiPrint('receiptPage')">PDF作成</button>
+<button class="btn-print" onclick="saveReceipt()">保存</button>
+<button class="btn-print" onclick="onClickReceiptPdf()">PDF作成</button>
 <span style="flex:1"></span>
 <span style="font-size:13px">領収書</span>
 </div>
-<div class="receipt-page" id="receiptPage"></div>
+<div class="inv-wrap">
+<div class="inv-form-panel">
+<h4>領収書入力</h4>
+<div class="form-row"><div class="form-grp"><label>領収書No</label><input id="rcNo" type="text" readonly></div><div class="form-grp"><label>発行日</label><input id="rcDate" type="date"></div></div>
+<div class="form-row"><div class="form-grp"><label>宛先会社</label><select id="rcClient"></select></div></div>
+<div class="form-row"><div class="form-grp"><label>合計金額（税込）</label><input id="rcTotal" type="number" placeholder="0" min="0"></div><div class="form-grp"><label>税率</label><select id="rcTaxRate"><option value="0.08">8%</option><option value="0.10" selected>10%</option></select></div></div>
+<div class="form-row"><div class="form-grp"><label>但し書き</label><input id="rcDesc" type="text" value="工事代金として"></div></div>
+<div class="form-row"><div class="form-grp"><label>発行元</label><input id="rcIssuer" type="text" readonly></div><div class="form-grp"><label>インボイス登録番号</label><input id="rcRegNo" type="text" placeholder="T0000000000000"></div></div>
+<div class="rc-calc" id="rcCalc" style="background:#f5f5f5;border-radius:6px;padding:10px 14px;margin-top:10px;font-size:13px;color:#555"></div>
+</div>
+<div class="inv-preview-panel">
+<h4>プレビュー</h4>
+<div id="receiptPage"></div>
+</div>
+</div>
 </div>
 
 <script>
@@ -1280,23 +1295,133 @@ async function deleteInvoice(id){
   const r=await sbDelete('invoices','id=eq.'+id);
   if(r){showToast('削除しました');loadInvoiceList();}
 }
-function openReceiptForm(){
-  const amt=prompt('領収書の金額は？');if(!amt)return;
-  const desc=prompt('但し書きは？','サービス料として')||'';
-  showReceipt(parseInt(amt)||0,desc);
-}
-function showReceipt(amount,description){
-  const d=new Date();
-  const html='<div style="text-align:center;font-size:20pt;letter-spacing:8px;border-bottom:2px solid #333;padding-bottom:4mm;margin-bottom:6mm">領 収 書</div>'+
-    '<div style="font-size:11pt;margin-bottom:6mm">発行日：'+localDateStr(d)+'</div>'+
-    '<div style="margin-bottom:8mm"><span style="font-size:13pt;border-bottom:1px solid #999;padding-bottom:1mm"> 様</span></div>'+
-    '<div style="text-align:center;font-size:18pt;font-weight:700;border-top:1px solid #333;border-bottom:1px solid #333;padding:4mm 0;margin-bottom:6mm">金 ¥'+(amount||0).toLocaleString()+' 也</div>'+
-    '<div style="font-size:11pt;margin-bottom:4mm">但し　'+escHtml(description||'')+' として</div>'+
-    '<div style="font-size:11pt">上記正に領収いたしました。</div>'+
-    '<div style="text-align:right;margin-top:16mm;font-size:12pt">'+escHtml((company&&company.name)||'')+'</div>';
-  document.getElementById('receiptPage').innerHTML=html;
+// =========================================================
+// 領収書フォーム（Step 4）
+//   prompt廃止・PC専用フォーム。入力→プレビュー→PDF→保存。
+//   receipt-feature.js の計算ロジックは参考のみ（触らない）。
+// =========================================================
+async function openReceiptForm(){
+  if(!window.ReportFeature||typeof window.ReportFeature.generateReceiptPdf!=='function'){
+    showToast('report-feature.js 未読込');return;
+  }
+  // 報告書スタイルをプレビュー側にも注入
+  if(window.ReportFeature._internals&&window.ReportFeature._internals.ensureReceiptStyles){
+    window.ReportFeature._internals.ensureReceiptStyles();
+  }
+  const today=new Date();
+  const ymd=localDateStr(today);
+  const ym=today.getFullYear()+String(today.getMonth()+1).padStart(2,'0');
+  const prefix='R-'+ym+'-';
+  // 取引先セレクト
+  const clientSel=document.getElementById('rcClient');
+  clientSel.innerHTML=buildClientOpts();
+  // 既定値
+  document.getElementById('rcDate').value=ymd;
+  document.getElementById('rcIssuer').value=(company&&company.name)||'';
+  document.getElementById('rcTotal').value='';
+  document.getElementById('rcDesc').value='工事代金として';
+  document.getElementById('rcTaxRate').value='0.10';
+  // インボイス登録番号は company に保存されていれば流用（未使用なら空）
+  const curReg=document.getElementById('rcRegNo');
+  if(!curReg.value)curReg.value=(company&&company.registration_no)||'';
+  // 領収書Noを採番（同月・同社の最大+1）
+  document.getElementById('rcNo').value=prefix+'001';
+  try{
+    const rows=await sbGet('receipts','company_id=eq.'+company.id+'&receipt_no=like.'+encodeURIComponent(prefix+'*')+'&order=receipt_no.desc&limit=1');
+    if(Array.isArray(rows)&&rows.length){
+      const last=rows[0].receipt_no||'';
+      const num=parseInt(last.split('-').pop(),10)||0;
+      document.getElementById('rcNo').value=prefix+String(num+1).padStart(3,'0');
+    }
+  }catch(e){/* 採番できなくてもフォームは開く */console.warn('receipt numbering:',e);}
+  // プレビュー/計算欄の初期表示
+  refreshReceiptPreview();
+  // 入力変更時に自動リフレッシュ
+  ['rcTotal','rcTaxRate','rcDesc','rcClient','rcDate','rcRegNo','rcNo'].forEach(function(id){
+    const el=document.getElementById(id);if(el)el[el.tagName==='SELECT'?'onchange':'oninput']=refreshReceiptPreview;
+  });
   document.getElementById('receiptOverlay').classList.add('show');
 }
+
+function gatherReceiptParams(){
+  const clientSel=document.getElementById('rcClient');
+  const clientText=clientSel&&clientSel.options[clientSel.selectedIndex]?clientSel.options[clientSel.selectedIndex].text:'';
+  return{
+    receiptNo:document.getElementById('rcNo').value,
+    issueDate:document.getElementById('rcDate').value,
+    issuer:document.getElementById('rcIssuer').value,
+    clientCompany:clientText==='-- 選択 --'?'':clientText,
+    total:parseInt(document.getElementById('rcTotal').value)||0,
+    taxRate:parseFloat(document.getElementById('rcTaxRate').value)||0.10,
+    description:document.getElementById('rcDesc').value,
+    registrationNo:document.getElementById('rcRegNo').value
+  };
+}
+
+function refreshReceiptPreview(){
+  const params=gatherReceiptParams();
+  const RF=window.ReportFeature;
+  if(!RF||!RF._internals||!RF._internals.calcReceiptBreakdown||!RF._internals.buildReceiptHtml)return;
+  const b=RF._internals.calcReceiptBreakdown(params.total,params.taxRate);
+  b.total=params.total;
+  // プレビュー領域に描画
+  const page=document.getElementById('receiptPage');
+  if(page)page.innerHTML=RF._internals.buildReceiptHtml(params,b);
+  // 計算欄
+  const calc=document.getElementById('rcCalc');
+  if(calc){
+    calc.innerHTML='税抜: ¥'+b.excl.toLocaleString()+
+      '　／　消費税: ¥'+b.tax.toLocaleString()+
+      '　／　合計: <b>¥'+params.total.toLocaleString()+'</b>'+
+      (b.stamp?'　<span style="color:#f59e0b">※収入印紙欄あり</span>':'');
+  }
+}
+
+function onClickReceiptPdf(){
+  try{
+    if(!window.ReportFeature||typeof window.ReportFeature.generateReceiptPdf!=='function'){
+      showToast('report-feature.js 未読込');return;
+    }
+    const params=gatherReceiptParams();
+    if(!params.total){showToast('金額を入力してください');return;}
+    window.ReportFeature.generateReceiptPdf(params);
+  }catch(e){
+    console.error(e);
+    showToast('領収書PDF生成失敗: '+(e&&e.message?e.message:e));
+  }
+}
+
+async function saveReceipt(){
+  try{
+    const clientSel=document.getElementById('rcClient');
+    const cid=clientSel.value;
+    if(!cid){showToast('宛先会社を選択してください');return;}
+    const total=parseInt(document.getElementById('rcTotal').value)||0;
+    if(!total){showToast('金額を入力してください');return;}
+    const taxRate=parseFloat(document.getElementById('rcTaxRate').value)||0.10;
+    const excl=Math.round(total/(1+taxRate));
+    const tax=Math.round(total-excl);
+    const payload={
+      company_id:company.id,
+      client_company_id:cid,
+      receipt_no:document.getElementById('rcNo').value,
+      issue_date:document.getElementById('rcDate').value||null,
+      total_amount:total,
+      tax_rate:taxRate,
+      tax_excluded:excl,
+      tax_amount:tax,
+      description:document.getElementById('rcDesc').value||null,
+      registration_no:document.getElementById('rcRegNo').value||null
+    };
+    const r=await sbPost('receipts',payload);
+    if(r){showToast('領収書を保存しました');}
+    else{showToast('保存に失敗しました');}
+  }catch(e){
+    console.error(e);
+    showToast('保存エラー: '+(e&&e.message?e.message:e));
+  }
+}
+
 function closeReceipt(){document.getElementById('receiptOverlay').classList.remove('show');}
 
 // ============================================================
