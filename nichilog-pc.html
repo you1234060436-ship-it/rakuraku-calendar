@@ -304,7 +304,6 @@ body{background:#fff!important}
 <div class="inv-overlay" id="invoiceOverlay">
 <div class="toolbar">
 <button class="btn-close" onclick="closeInvoice()">閉じる</button>
-<button class="btn-print" onclick="saveInvoice()">保存</button>
 <button class="btn-print" onclick="onClickInvoicePdf()">PDF作成</button>
 <span style="flex:1"></span>
 <span style="font-size:13px">請求書</span>
@@ -389,7 +388,7 @@ let summaryYear=new Date().getFullYear(), summaryMonthNum=new Date().getMonth()+
 let selectedDate=null;
 let currentTab=1;
 let currentInvoiceId=null;
-let invRows=[{name:'',spec:'',qty:1,unit:'人',price:25000}];
+let invRows=[{name:'',spec:'',qty:1,unit:'人',price:0}];
 
 // ============================================================
 // Helpers
@@ -767,12 +766,15 @@ function openInvoicePrefill(y,m){
 }
 // 請求書PDF: report-feature.js の ReportFeature.generateInvoicePdf を呼ぶ。
 // 現状の請求書入力フォームと invRows を構造化して渡す。
-function onClickInvoicePdf(){
+// PDF作成ボタンの動作：保存 → 一覧更新 → PDF生成 を一連で実行
+async function onClickInvoicePdf(){
   try{
     if(!window.ReportFeature||typeof window.ReportFeature.generateInvoicePdf!=='function'){
       showToast('report-feature.js 未読込');return;
     }
-    // gatherInvoiceParams が未定義の環境でも動くよう、後段で参照する場合は防御する
+    // 先に保存（同時に一覧更新も saveInvoice 内で行う）
+    const ok=await saveInvoice();
+    if(ok===false)return;  // 保存失敗時は PDF を出さない
     const params=(typeof gatherInvoiceParams==='function')?gatherInvoiceParams():null;
     if(!params){showToast('フォーム情報を取得できませんでした');return;}
     window.ReportFeature.generateInvoicePdf(params);
@@ -1225,7 +1227,7 @@ function openInvoice(prefill){
   document.getElementById('invBankType').value='普通';
   document.getElementById('invBankNo').value='';
   document.getElementById('invBankHolder').value='';
-  invRows=(prefill&&prefill.rows)||[{name:'',spec:'',qty:1,unit:'人',price:25000}];
+  invRows=(prefill&&prefill.rows)||[{name:'',spec:'',qty:1,unit:'人',price:0}];
   // カレンダー自動反映フォーム初期化
   const cc=document.getElementById('invCalClient');if(cc)cc.innerHTML=buildClientOpts();
   const cm=document.getElementById('invCalMonth');
@@ -1299,9 +1301,9 @@ async function saveInvoice(){
     let r;
     if(currentInvoiceId)r=await sbPatch('invoices','id=eq.'+currentInvoiceId,payload);
     else r=await sbPost('invoices',payload);
-    if(r){if(!currentInvoiceId&&r.id)currentInvoiceId=r.id;showToast('保存しました');loadInvoiceList();}
-    else showToast('保存失敗');
-  }catch(e){showToast('保存失敗: '+e.message);}
+    if(r){if(!currentInvoiceId&&r.id)currentInvoiceId=r.id;showToast('保存しました');loadInvoiceList();return true;}
+    else{showToast('保存失敗');return false;}
+  }catch(e){showToast('保存失敗: '+e.message);return false;}
 }
 async function deleteInvoice(id){
   if(!confirm('この請求書を削除しますか？'))return;
