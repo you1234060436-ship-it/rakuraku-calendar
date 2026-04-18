@@ -653,7 +653,7 @@ async function renderSummary(){
   html+='<button class="btn btn-secondary" onclick="nextSummaryMonth()">次月 ▶</button>';
   html+='<span style="flex:1"></span>';
   if(canSeeRevenue()){
-    html+='<button class="btn btn-primary" onclick="generateKoujiNippo('+y+','+m+')">工事日報PDF</button>';
+    html+='<button class="btn btn-primary" onclick="onClickKoujiNippoPdf('+y+','+m+')">工事日報PDF</button>';
     html+='<button class="btn btn-success" onclick="openInvoicePrefill('+y+','+m+')">＋ 請求書作成</button>';
   }
   html+='</div>';
@@ -672,19 +672,45 @@ async function renderSummary(){
   html+='</table>';
   document.getElementById('tab2').innerHTML=html;
 }
-async function generateKoujiNippo(y,m){
-  // Simple PDF of the summary table
+// 工事日報PDF: report-feature.js の ReportFeature.generateKoujiNippo を呼ぶ。
+// 当月 attendance を取得し、社員名/現場/取引先を解決してから構造化データで渡す。
+async function onClickKoujiNippoPdf(y,m){
   try{
-    const el=document.getElementById('tab2');
-    if(typeof html2canvas==='undefined'||typeof window.jspdf==='undefined'){showToast('ライブラリ未読込');return;}
-    const canvas=await html2canvas(el,{scale:2,backgroundColor:'#ffffff'});
-    const imgData=canvas.toDataURL('image/jpeg',0.92);
-    const{jsPDF}=window.jspdf;
-    const pageWidth=210;const imgH=(canvas.height*pageWidth)/canvas.width;
-    const pdf=new jsPDF('p','mm',[pageWidth,Math.max(imgH,297)]);
-    pdf.addImage(imgData,'JPEG',0,0,pageWidth,imgH);
-    pdf.save('工事日報_'+y+'_'+String(m).padStart(2,'0')+'.pdf');
-  }catch(e){showToast('PDF生成失敗: '+e.message);}
+    if(!window.ReportFeature||typeof window.ReportFeature.generateKoujiNippo!=='function'){
+      showToast('report-feature.js 未読込');return;
+    }
+    const start=y+'-'+String(m).padStart(2,'0')+'-01';
+    const end=localDateStr(new Date(y,m,0));
+    let aq='company_id=eq.'+company.id+'&work_date=gte.'+start+'&work_date=lte.'+end+'&order=work_date.asc';
+    if(isWorker())aq+='&account_id=eq.'+currentUser.id;
+    const list=await sbGet('attendance',aq);
+    const entries=(list||[]).map(function(a){
+      const mb=members.find(function(x){return x.id===a.account_id;});
+      const st=sites.find(function(x){return x.id===a.site_id;});
+      const cc=st?clientCompanies.find(function(x){return x.id===st.client_company_id;}):null;
+      // DBに time_slot が無いため、half は当面 am 固定で渡す（将来 time_slot 追加時は a.time_slot を採用）
+      const ts=a.time_slot||(a.work_type==='half'?'am':'full');
+      return{
+        work_date:a.work_date,
+        member_name:mb?mb.name:'',
+        site_name:st?st.name:'',
+        client_name:cc?cc.name:'',
+        work_type:a.work_type||'full',
+        time_slot:ts,
+        note:a.note||''
+      };
+    });
+    window.ReportFeature.generateKoujiNippo({
+      year:y,
+      month:m,
+      companyName:(company&&company.name)||'',
+      ownerName:(currentUser&&currentUser.name)||'',
+      entries:entries
+    });
+  }catch(e){
+    console.error(e);
+    showToast('工事日報PDF生成失敗: '+(e&&e.message?e.message:e));
+  }
 }
 function openInvoicePrefill(y,m){
   const title=y+'年'+m+'月分 請求書';
