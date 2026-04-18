@@ -1069,28 +1069,10 @@ async function createNewAccount(){
 }
 
 // ============================================================
-// Print / PDF (copied pattern from existing pc.html)
+// Print / PDF
+//   nichiPrint / showPdfPreview は report-feature.js に移設済み
+//   （window.ReportFeature.* および window.* 経由で参照可能）
 // ============================================================
-async function nichiPrint(id){
-  try{
-    const element=document.getElementById(id);if(!element){alert('要素が見つかりません: '+id);return;}
-    if(typeof html2canvas==='undefined'){alert('html2canvas未読込');return;}
-    if(typeof window.jspdf==='undefined'){alert('jsPDF未読込');return;}
-    const canvas=await html2canvas(element,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
-    const imgData=canvas.toDataURL('image/jpeg',0.95);
-    const{jsPDF}=window.jspdf;
-    const pageWidth=210;const imgHeight=(canvas.height*pageWidth)/canvas.width;
-    const pdf=new jsPDF('p','mm',[pageWidth,Math.max(imgHeight,297)]);
-    pdf.addImage(imgData,'JPEG',0,0,pageWidth,imgHeight);
-    showPdfPreview(pdf,'nichilog_'+id+'_'+new Date().toISOString().slice(0,10)+'.pdf');
-  }catch(e){alert('エラー: '+e.message);}
-}
-function showPdfPreview(pdf,filename){
-  const dataUrl=pdf.output('datauristring');
-  const w=window.open('','_blank');
-  if(w){w.document.write('<html><head><title>'+filename+'<\/title><\/head><body style="margin:0;padding:0;"><embed src="'+dataUrl+'" type="application/pdf" width="100%" height="100%"><\/body><\/html>');}
-  else{pdf.save(filename);}
-}
 function openWithSession(page){
   sb.auth.getSession().then(function(result){
     var session=result.data.session;
@@ -1140,6 +1122,7 @@ document.addEventListener('keydown',function(e){
   }
 });
 </script>
+<script src="report-feature.js"></script>
 <script src="receipt-feature.js"></script>
 </body>
 </html>
