@@ -383,7 +383,7 @@ const sb=window.supabase.createClient(SB,SK,{auth:{persistSession:true,storageKe
 // Global state
 // ============================================================
 let currentUser=null, company=null;
-let entries=[], sites=[], clientCompanies=[], members=[], invoices=[];
+let entries=[], sites=[], clientCompanies=[], members=[], invoices=[], receipts=[];
 let viewMonth=new Date();
 let summaryYear=new Date().getFullYear(), summaryMonthNum=new Date().getMonth()+1;
 let selectedDate=null;
@@ -544,7 +544,7 @@ async function doRegister(){
 }
 async function doLogout(){
   try{await sb.auth.signOut();}catch(e){}
-  currentUser=null;company=null;entries=[];sites=[];clientCompanies=[];members=[];invoices=[];
+  currentUser=null;company=null;entries=[];sites=[];clientCompanies=[];members=[];invoices=[];receipts=[];
   document.body.classList.remove('logged-in');document.body.classList.add('logged-out');
   document.getElementById('loginPassword').value='';
   document.getElementById('loginError').style.display='none';
@@ -589,6 +589,7 @@ async function renderAll(){
   await ldMo();
   if(!isWorker()){
     try{invoices=await sbGet('invoices','account_id=eq.'+currentUser.id+'&order=issue_date.desc');}catch(e){invoices=[];}
+    try{receipts=await sbGet('receipts','company_id=eq.'+company.id+'&order=issue_date.desc,receipt_no.desc');}catch(e){receipts=[];}
   }
 }
 async function ldMo(){
@@ -1135,6 +1136,7 @@ function statusBadgeCls(s){if(s==='発行済')return'badge-issued';if(s==='入�
 function renderInvoices(){
   let html='<h2>請求・領収書</h2>';
   html+='<div class="btn-row"><button class="btn btn-primary" onclick="openInvoice()">＋ 請求書作成</button><button class="btn btn-success" onclick="openReceiptForm()">＋ 領収書作成</button></div>';
+  // 請求書一覧
   html+='<h3 style="font-size:15px;margin:12px 0 8px">請求書一覧</h3>';
   html+='<table><thead><tr><th>請求番号</th><th>発行日</th><th>宛先</th><th>工事名</th><th style="text-align:right">金額</th><th>ステータス</th><th>操作</th></tr></thead><tbody>';
   if(!invoices||invoices.length===0)html+='<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:20px">請求書なし</td></tr>';
@@ -1150,11 +1152,39 @@ function renderInvoices(){
     });
   }
   html+='</tbody></table>';
+  // 領収書一覧
+  html+='<h3 style="font-size:15px;margin:24px 0 8px">領収書一覧</h3>';
+  html+='<table><thead><tr><th>領収書No</th><th>発行日</th><th>宛先</th><th style="text-align:right">金額</th><th>税率</th><th>但し書き</th><th>操作</th></tr></thead><tbody>';
+  if(!receipts||receipts.length===0)html+='<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:20px">領収書なし</td></tr>';
+  else{
+    receipts.forEach(function(rc){
+      const cc=clientCompanies.find(function(x){return String(x.id)===String(rc.client_company_id);});
+      const pct=Math.round((Number(rc.tax_rate)||0)*100);
+      html+='<tr><td>'+escHtml(rc.receipt_no||'-')+'</td>';
+      html+='<td>'+escHtml(rc.issue_date||'-')+'</td>';
+      html+='<td>'+escHtml(cc?cc.name:'-')+'</td>';
+      html+='<td style="text-align:right">¥'+(Number(rc.total_amount)||0).toLocaleString()+'</td>';
+      html+='<td>'+pct+'%</td>';
+      html+='<td>'+escHtml(rc.description||'')+'</td>';
+      html+='<td><button class="btn btn-sm btn-danger" onclick="deleteReceipt(\''+rc.id+'\')">削除</button></td></tr>';
+    });
+  }
+  html+='</tbody></table>';
   document.getElementById('tab5').innerHTML=html;
 }
 async function loadInvoiceList(){
   try{invoices=await sbGet('invoices','account_id=eq.'+currentUser.id+'&order=issue_date.desc');}catch(e){invoices=[];}
   if(currentTab===5)renderInvoices();
+}
+async function loadReceiptList(){
+  try{receipts=await sbGet('receipts','company_id=eq.'+company.id+'&order=issue_date.desc,receipt_no.desc');}catch(e){receipts=[];}
+  if(currentTab===5)renderInvoices();
+}
+async function deleteReceipt(id){
+  if(!confirm('この領収書を削除しますか？'))return;
+  const r=await sbDelete('receipts','id=eq.'+id);
+  if(r){showToast('削除しました');await loadReceiptList();}
+  else{showToast('削除失敗: '+sbErrMsg(''));}
 }
 // 単位セレクトの選択肢（10種）と、既存データ保持用のフォールバック組み立て
 const INV_UNITS=['人','式','m','m²','m³','個','本','枚','kg','t'];
@@ -1326,8 +1356,8 @@ async function saveInvoice(){
     let r;
     if(currentInvoiceId)r=await sbPatch('invoices','id=eq.'+currentInvoiceId,payload);
     else r=await sbPost('invoices',payload);
-    if(r){if(!currentInvoiceId&&r.id)currentInvoiceId=r.id;showToast('保存しました');loadInvoiceList();return true;}
-    else{showToast('保存失敗');return false;}
+    if(r){if(!currentInvoiceId&&r.id)currentInvoiceId=r.id;showToast('保存しました');await loadInvoiceList();return true;}
+    else{showToast('保存失敗: '+sbErrMsg(''));return false;}
   }catch(e){showToast('保存失敗: '+e.message);return false;}
 }
 async function deleteInvoice(id){
@@ -1450,7 +1480,7 @@ async function saveReceipt(){
       registration_no:document.getElementById('rcRegNo').value||null
     };
     const r=await sbPost('receipts',payload);
-    if(r){showToast('領収書を保存しました');return true;}
+    if(r){showToast('領収書を保存しました');await loadReceiptList();return true;}
     else{showToast('保存に失敗しました: '+sbErrMsg(''));return false;}
   }catch(e){
     console.error(e);
