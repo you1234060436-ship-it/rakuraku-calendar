@@ -710,7 +710,8 @@ async function saveEntry(){
   else{showToast('保存失敗');}
 }
 function editE(id){
-  const e=entries.find(function(x){return x.id===id;});if(!e)return;
+  const _sid=String(id);
+  const e=entries.find(function(x){return String(x.id)===_sid;});if(!e)return;
   const st=sites.find(function(x){return x.id===e.site_id;});
   clModal();
   document.getElementById('eeId').value=e.id;
@@ -955,8 +956,9 @@ function openSiteModal(id){
   clModal();
   document.getElementById('smTitle').textContent=id?'現場を編集':'現場を追加';
   document.getElementById('smId').value=id||'';
-  document.getElementById('smClient').innerHTML=buildClientOpts(id?(sites.find(function(x){return x.id===id;})||{}).client_company_id:null);
-  const s=id?sites.find(function(x){return x.id===id;}):null;
+  const _sid=id==null?'':String(id);
+  document.getElementById('smClient').innerHTML=buildClientOpts(_sid?(sites.find(function(x){return String(x.id)===_sid;})||{}).client_company_id:null);
+  const s=_sid?sites.find(function(x){return String(x.id)===_sid;}):null;
   document.getElementById('smName').value=s?(s.name||''):'';
   document.getElementById('smPrice').value=s?(s.price||25000):25000;
   document.getElementById('smType').value=s?(s.type||'人工'):'人工';
@@ -991,7 +993,8 @@ async function deleteSite(id){
 }
 function openClientModal(id){
   clModal();
-  const c=id?clientCompanies.find(function(x){return x.id===id;}):null;
+  const _sid=id==null?'':String(id);
+  const c=_sid?clientCompanies.find(function(x){return String(x.id)===_sid;}):null;
   document.getElementById('cmTitle').textContent=id?'取引先を編集':'取引先を追加';
   document.getElementById('cmId').value=id||'';
   document.getElementById('cmName').value=c?(c.name||''):'';
@@ -1052,9 +1055,11 @@ function renderMembers(){
 }
 function openMemberModal(id){
   clModal();
-  const m=id?members.find(function(x){return x.id===id;}):null;
-  document.getElementById('mmTitle').textContent=id?'メンバーを編集':'メンバーを追加';
-  document.getElementById('mmId').value=id||'';
+  // 型セーフ比較: onclick から渡る id は string、DB の x.id は数値の可能性
+  const sid=id==null?'':String(id);
+  const m=sid?members.find(function(x){return String(x.id)===sid;}):null;
+  document.getElementById('mmTitle').textContent=sid?'メンバーを編集':'メンバーを追加';
+  document.getElementById('mmId').value=sid;
   document.getElementById('mmName').value=m?(m.name||''):'';
   document.getElementById('mmRole').value=m?(m.role||'worker'):'worker';
   document.getElementById('mmTeam').value=m?(m.team||''):'';
@@ -1246,7 +1251,8 @@ function openInvoice(prefill){
   document.getElementById('invoiceOverlay').classList.add('show');
 }
 function openInvoiceEdit(id){
-  const iv=invoices.find(function(x){return x.id===id;});if(!iv)return;
+  const _sid=String(id);
+  const iv=invoices.find(function(x){return String(x.id)===_sid;});if(!iv)return;
   currentInvoiceId=id;
   document.getElementById('invNo').value=iv.invoice_no||'';
   document.getElementById('invDate').value=iv.issue_date||'';
