@@ -294,6 +294,23 @@ body{background:#fff!important}
 </div>
 </div>
 
+<!-- PDF 保存方法の案内モーダル（PDF作成後に表示。overlay より前面にするため z-index 上書き） -->
+<div class="modal" id="pdfSaveInfoModal" style="z-index:10001">
+<div class="modal-box">
+<h3>📄 PDFを保存するには</h3>
+<div style="margin:14px 0;line-height:1.7;font-size:13px">
+<p style="margin:8px 0"><b>iOSアプリをご利用の方</b><br>
+画面下部の共有ボタン（□↑）から保存先をお選びください。</p>
+<p style="margin:8px 0"><b>Safariをご利用の方</b><br>
+新しいタブでPDFが開きます。<br>
+⌘+S を押して保存先をお選びください。</p>
+<p style="margin:8px 0"><b>Chrome・Edgeをご利用の方</b><br>
+「名前をつけて保存」ダイアログが自動的に表示されます。</p>
+</div>
+<div class="btn-group"><button class="btn btn-primary" onclick="closePdfSaveInfoModal()">OK</button></div>
+</div>
+</div>
+
 <!-- Password reset modal (admin only) -->
 <div class="modal" id="pwResetModal">
 <div class="modal-box">
@@ -404,6 +421,15 @@ function roleLabel(r){return{master:'社長',admin:'管理者',worker:'作業員
 function showToast(msg){var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){t.remove();},300);},2200);}
 function escHtml(s){if(s==null)return '';return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function clModal(){document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('show');});}
+// PDF保存方法の案内モーダル（全PDF作成後に表示）
+function showPdfSaveInfoModal(){
+  const el=document.getElementById('pdfSaveInfoModal');
+  if(el)el.classList.add('show');
+}
+function closePdfSaveInfoModal(){
+  const el=document.getElementById('pdfSaveInfoModal');
+  if(el)el.classList.remove('show');
+}
 // パスワード表示/非表示トグル（type属性 password ↔ text）
 function togglePw(inputId,btn){
   var el=document.getElementById(inputId);if(!el)return;
@@ -840,6 +866,8 @@ async function onClickKoujiNippoPdf(y,m){
       ownerName:(currentUser&&currentUser.name)||'',
       entries:entries
     });
+    // PDF 保存方法の案内
+    showPdfSaveInfoModal();
   }catch(e){
     console.error(e);
     showToast('工事日報PDF生成失敗: '+(e&&e.message?e.message:e));
@@ -851,18 +879,20 @@ function openInvoicePrefill(y,m){
 }
 // 請求書PDF: report-feature.js の ReportFeature.generateInvoicePdf を呼ぶ。
 // 現状の請求書入力フォームと invRows を構造化して渡す。
-// PDF作成ボタンの動作：保存 → 一覧更新 → PDF生成 を一連で実行
+// PDF作成ボタンの動作：保存 → 一覧更新 → PDF生成 → オーバーレイを閉じて一覧に戻る → 保存案内モーダル
 async function onClickInvoicePdf(){
   try{
     if(!window.ReportFeature||typeof window.ReportFeature.generateInvoicePdf!=='function'){
       showToast('report-feature.js 未読込');return;
     }
-    // 先に保存（同時に一覧更新も saveInvoice 内で行う）
     const ok=await saveInvoice();
     if(ok===false)return;  // 保存失敗時は PDF を出さない
     const params=(typeof gatherInvoiceParams==='function')?gatherInvoiceParams():null;
     if(!params){showToast('フォーム情報を取得できませんでした');return;}
     window.ReportFeature.generateInvoicePdf(params);
+    closeInvoice();           // 一覧が見える状態に戻す
+    await loadInvoiceList();  // 念のため最新を再フェッチ
+    showPdfSaveInfoModal();
   }catch(e){
     console.error(e);
     showToast('請求書PDF生成失敗: '+(e&&e.message?e.message:e));
@@ -1439,7 +1469,7 @@ function refreshReceiptPreview(){
   }
 }
 
-// PDF作成ボタン: 保存 → 一覧更新 → PDF生成 を一連で実行
+// PDF作成ボタン: 保存 → 一覧更新 → PDF生成 → オーバーレイを閉じて一覧 → 保存案内モーダル
 async function onClickReceiptPdf(){
   try{
     if(!window.ReportFeature||typeof window.ReportFeature.generateReceiptPdf!=='function'){
@@ -1447,10 +1477,12 @@ async function onClickReceiptPdf(){
     }
     const params=gatherReceiptParams();
     if(!params.total){showToast('金額を入力してください');return;}
-    // 保存を先に実行（失敗時は PDF を出さない）
     const ok=await saveReceipt();
     if(ok===false)return;
     window.ReportFeature.generateReceiptPdf(params);
+    closeReceipt();             // 一覧が見える状態に戻す
+    await loadReceiptList();    // 念のため最新を再フェッチ
+    showPdfSaveInfoModal();
   }catch(e){
     console.error(e);
     showToast('領収書PDF生成失敗: '+(e&&e.message?e.message:e));
