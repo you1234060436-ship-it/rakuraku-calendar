@@ -294,6 +294,17 @@ body{background:#fff!important}
 </div>
 </div>
 
+<!-- Password reset modal (admin only) -->
+<div class="modal" id="pwResetModal">
+<div class="modal-box">
+<h3>パスワード変更</h3>
+<input type="hidden" id="prAccountId">
+<p style="color:#6b7280;font-size:13px;margin-bottom:10px">対象メンバー: <b id="prTargetName"></b></p>
+<div class="form-row"><div class="form-grp"><label>新しいパスワード（4文字以上）</label><div class="pw-wrap"><input type="password" id="prNewPw" placeholder="新パスワードを入力"><button type="button" class="pw-toggle" onclick="togglePw('prNewPw',this)" title="表示/非表示" aria-label="パスワード表示切替">👁</button></div></div></div>
+<div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">キャンセル</button><button class="btn btn-primary" onclick="saveMemberPassword()">変更</button></div>
+</div>
+</div>
+
 <!-- ==================== Invoice Overlay ==================== -->
 <div class="inv-overlay" id="invoiceOverlay">
 <div class="toolbar">
@@ -1017,17 +1028,24 @@ async function deleteClient(id){
 // Tab 4: Members
 // ============================================================
 function renderMembers(){
+  const manage=canManage();
   let html='<h2>メンバー</h2>';
-  if(canManage())html+='<div class="btn-row"><button class="btn btn-primary" onclick="openMemberModal()">＋ メンバー追加</button></div>';
-  html+='<table><thead><tr><th>名前</th><th>ロール</th><th>チーム</th><th>操作</th></tr></thead><tbody>';
+  if(manage)html+='<div class="btn-row"><button class="btn btn-primary" onclick="openMemberModal()">＋ メンバー追加</button></div>';
+  // 管理者のみ「パスワード」列を表示
+  html+='<table><thead><tr><th>名前</th><th>ロール</th><th>チーム</th>'+(manage?'<th>パスワード</th>':'')+'<th>操作</th></tr></thead><tbody>';
   members.forEach(function(m){
     const roleCls=m.role==='master'?'badge-master':(m.role==='worker'?'badge-worker':'badge-admin');
     html+='<tr><td>'+escHtml(m.name)+'</td>';
     html+='<td><span class="badge '+roleCls+'">'+escHtml(roleLabel(m.role))+'</span></td>';
     html+='<td>'+escHtml(m.team||'-')+'</td>';
-    html+='<td>'+(canManage()?'<button class="btn btn-sm btn-secondary" onclick="openMemberModal(\''+m.id+'\')">編集</button> <button class="btn btn-sm btn-danger" onclick="deleteMember(\''+m.id+'\')">削除</button>':'')+'</td></tr>';
+    if(manage){
+      // パスワードは Supabase auth 側にあり取得不可。見た目は伏字＋変更ボタン。
+      html+='<td style="white-space:nowrap"><span style="letter-spacing:2px;color:#9ca3af;font-family:monospace">••••••</span> <button class="btn btn-sm btn-secondary" onclick="openPwResetModal(\''+m.id+'\')">変更</button></td>';
+    }
+    html+='<td>'+(manage?'<button class="btn btn-sm btn-secondary" onclick="openMemberModal(\''+m.id+'\')">編集</button> <button class="btn btn-sm btn-danger" onclick="deleteMember(\''+m.id+'\')">削除</button>':'')+'</td></tr>';
   });
-  if(members.length===0)html+='<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px">メンバーなし</td></tr>';
+  const cols=manage?5:4;
+  if(members.length===0)html+='<tr><td colspan="'+cols+'" style="text-align:center;color:#9ca3af;padding:20px">メンバーなし</td></tr>';
   html+='</tbody></table>';
   document.getElementById('tab4').innerHTML=html;
 }
@@ -1418,9 +1436,12 @@ function renderSettings(){
   html+='<div class="form-row"><div class="form-grp"><label>会社名</label><input type="text" value="'+escHtml((company&&company.name)||'')+'" disabled></div><div class="form-grp"><label>お名前</label><input type="text" value="'+escHtml((currentUser&&currentUser.name)||'')+'" disabled></div></div>';
   html+='<div class="form-row"><div class="form-grp"><label>ロール</label><input type="text" value="'+escHtml(roleLabel(currentUser&&currentUser.role))+'" disabled></div><div class="form-grp"><label>チーム</label><input type="text" value="'+escHtml((currentUser&&currentUser.team)||'')+'" disabled></div></div>';
   html+='</div>';
-  html+='<div class="form-card"><h3>パスワード変更</h3>';
-  html+='<div class="form-row"><div class="form-grp"><label>新しいパスワード</label><input type="password" id="stNewPw"></div></div>';
-  html+='<div class="btn-row"><button class="btn btn-primary" onclick="changeUserPassword()">パスワード変更</button></div></div>';
+  // パスワード変更セクションは作業員のみ（管理者・社長はメンバー一覧から変更する）
+  if(isWorker()){
+    html+='<div class="form-card"><h3>パスワード変更</h3>';
+    html+='<div class="form-row"><div class="form-grp"><label>新しいパスワード（4文字以上）</label><div class="pw-wrap"><input type="password" id="stNewPw"><button type="button" class="pw-toggle" onclick="togglePw(\'stNewPw\',this)" title="表示/非表示" aria-label="パスワード表示切替">👁</button></div></div></div>';
+    html+='<div class="btn-row"><button class="btn btn-primary" onclick="changeUserPassword()">パスワード変更</button></div></div>';
+  }
   if(currentUser&&currentUser.role==='master'){
     html+='<div class="form-card"><h3>会社設定（社長のみ）</h3>';
     html+='<div class="form-row"><div class="form-grp"><label>会社名</label><input type="text" id="stCoName" value="'+escHtml((company&&company.name)||'')+'"></div></div>';
@@ -1440,6 +1461,41 @@ async function changeUserPassword(){
     if(error){showToast('変更失敗: '+error.message);return;}
     showToast('パスワード変更完了');document.getElementById('stNewPw').value='';
   }catch(e){showToast('エラー: '+e.message);}
+}
+// 管理者が対象メンバーのパスワード変更モーダルを開く
+function openPwResetModal(id){
+  if(!canManage())return;
+  const m=members.find(function(x){return String(x.id)===String(id);});
+  if(!m){showToast('メンバーが見つかりません');return;}
+  clModal();
+  document.getElementById('prAccountId').value=id;
+  document.getElementById('prTargetName').textContent=m.name||'';
+  document.getElementById('prNewPw').value='';
+  document.getElementById('pwResetModal').classList.add('show');
+}
+// admin_reset_password RPC 経由で対象メンバーのパスワードを更新
+async function saveMemberPassword(){
+  const id=document.getElementById('prAccountId').value;
+  const newPw=document.getElementById('prNewPw').value;
+  if(!id){showToast('対象が指定されていません');return;}
+  if(!newPw||newPw.length<4){showToast('パスワードは4文字以上で入力してください');return;}
+  try{
+    const{error}=await sb.rpc('admin_reset_password',{p_account_id:id,p_new_password:newPw});
+    if(error){
+      // 未デプロイ時は PostgREST が 404 "Could not find the function" を返す
+      let msg=error.message||String(error);
+      if(/not find the function|schema cache/i.test(msg)){
+        msg='admin_reset_password 関数が未デプロイです。Supabase で admin_reset_password.sql を実行してください。';
+      }
+      showToast('変更失敗: '+msg);
+      return;
+    }
+    showToast('パスワード変更完了');
+    clModal();
+  }catch(e){
+    console.error(e);
+    showToast('エラー: '+(e&&e.message?e.message:e));
+  }
 }
 async function updateCompany(){
   const nm=document.getElementById('stCoName').value.trim();
