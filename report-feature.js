@@ -31,29 +31,107 @@
   }
 
   // ============================================================
-  // PDF プレビュー表示
-  //   pdf.output('datauristring') を新規タブで <embed> 表示する。
-  //   ポップアップブロック等で window.open が null の場合は
-  //   pdf.save() にフォールバックする。
+  // 先に開いたタブ(previewTab)に PDF を書き込むヘルパ。
+  //   Safari ポップアップブロック回避のため、generateXxxPdf の冒頭で
+  //   window.open('', '_blank') を行い、PDF 生成後にここで書き込む。
+  //   タブがブロックされた/閉じられた場合は pdf.save() で直接ダウンロード。
   // ============================================================
-  function showPdfPreview(pdf, filename) {
+  function writePdfToTab(previewTab, pdf, filename) {
     try {
       var dataUrl = pdf.output('datauristring');
+      var html =
+        '<!doctype html><html><head><meta charset="utf-8"><title>' + filename + '<\/title>' +
+        '<style>html,body{margin:0;padding:0;height:100%}embed{width:100%;height:100%;border:none}<\/style>' +
+        '<\/head><body>' +
+        '<embed src="' + dataUrl + '" type="application/pdf">' +
+        '<\/body><\/html>';
+      if (previewTab && !previewTab.closed) {
+        try {
+          previewTab.document.open();
+          previewTab.document.write(html);
+          previewTab.document.close();
+          return;
+        } catch (e) {
+          console.warn('[ReportFeature] previewTab.document.write failed:', e);
+          try { previewTab.close(); } catch (_) {}
+        }
+      }
+      // フォールバック: 直接ダウンロード
+      pdf.save(filename);
+    } catch (e) {
+      console.error('[ReportFeature] writePdfToTab failed:', e);
+      try { pdf.save(filename); } catch (_) {}
+    }
+  }
+
+  // ============================================================
+  // PDF 保存（プレビュー＋保存ダイアログ）
+  //   Safari のポップアップブロック対策として、呼び出し側は click ハンドラ内で
+  //   先に window.open('') を同期で実行し、そのウィンドウ参照を previewWindow
+  //   として渡せる。showPdfPreview はそのウィンドウに後から PDF を書き込む。
+  //
+  //   1) showSaveFilePicker (Chromium) があれば「名前をつけて保存」ダイアログ。
+  //      このパスでは previewWindow は不要なので閉じる。
+  //   2) previewWindow が渡されていれば、そこへ blob URL を遷移させて表示。
+  //   3) previewWindow が無ければ global.open() を試す（ブロックされる可能性）。
+  //   4) 全て失敗時は pdf.save() で Downloads に直接保存。
+  // ============================================================
+  async function showPdfPreview(pdf, filename, previewWindow) {
+    var closePreview = function () {
+      try { if (previewWindow && !previewWindow.closed) previewWindow.close(); } catch (_) {}
+    };
+    // 1) Chrome/Edge: 保存ダイアログ
+    if (typeof global.showSaveFilePicker === 'function') {
+      try {
+        var handle = await global.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'PDF File', accept: { 'application/pdf': ['.pdf'] } }]
+        });
+        var blobOut = pdf.output('blob');
+        var writable = await handle.createWritable();
+        await writable.write(blobOut);
+        await writable.close();
+        closePreview();
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') { closePreview(); return; }
+        console.warn('[ReportFeature] showSaveFilePicker failed, fallback to preview tab:', e);
+      }
+    }
+    // 2) previewWindow (事前に開いた空タブ) に PDF を埋め込む（Safari 対応: dataURI+embed）
+    try {
+      var dataUri = pdf.output('datauristring');
+      var htmlDoc =
+        '<!doctype html><html><head><meta charset="utf-8"><title>' + filename + '<\/title>' +
+        '<style>html,body{margin:0;padding:0;height:100%}embed{width:100%;height:100%;border:none}<\/style>' +
+        '<\/head><body>' +
+        '<embed src="' + dataUri + '" type="application/pdf">' +
+        '<\/body><\/html>';
+      if (previewWindow && !previewWindow.closed) {
+        try {
+          previewWindow.document.open();
+          previewWindow.document.write(htmlDoc);
+          previewWindow.document.close();
+          return;
+        } catch (e) {
+          console.warn('[ReportFeature] document.write failed, trying location:', e);
+          try { previewWindow.location = dataUri; return; } catch (_) {}
+        }
+      }
+      // 3) previewWindow 無し → 新規開く（popup ブロックの可能性あり）
       var w = global.open('', '_blank');
       if (w) {
-        w.document.write(
-          '<html><head><title>' + filename + '<\/title><\/head>' +
-          '<body style="margin:0;padding:0;">' +
-          '<embed src="' + dataUrl + '" type="application/pdf" width="100%" height="100%">' +
-          '<\/body><\/html>'
-        );
-      } else {
-        pdf.save(filename);
+        w.document.open();
+        w.document.write(htmlDoc);
+        w.document.close();
+        return;
       }
     } catch (e) {
-      console.error('[ReportFeature] showPdfPreview error:', e);
-      try { pdf.save(filename); } catch (_) { /* noop */ }
+      console.warn('[ReportFeature] preview failed:', e);
     }
+    // 4) 最終フォールバック: 直接ダウンロード
+    try { pdf.save(filename); }
+    catch (e) { console.error('[ReportFeature] pdf.save() failed:', e); }
   }
 
   // ============================================================
@@ -255,6 +333,9 @@
   }
 
   async function generateKoujiNippo(params) {
+    // ① 最初に同期で空タブを開く（Safari ポップアップブロック回避）
+    var previewTab = global.open('', '_blank');
+
     var p = params || {};
     var year = p.year;
     var month = p.month;
@@ -262,9 +343,11 @@
     var ownerName = p.ownerName || '';
     var entries = Array.isArray(p.entries) ? p.entries : [];
 
-    if (typeof html2canvas === 'undefined') { alert('html2canvas未読込'); return; }
-    if (typeof global.jspdf === 'undefined') { alert('jsPDF未読込'); return; }
-    if (!year || !month) { alert('年月が指定されていません'); return; }
+    var closeTab = function () { try { if (previewTab && !previewTab.closed) previewTab.close(); } catch (_) {} };
+
+    if (typeof html2canvas === 'undefined') { alert('html2canvas未読込'); closeTab(); return; }
+    if (typeof global.jspdf === 'undefined') { alert('jsPDF未読込'); closeTab(); return; }
+    if (!year || !month) { alert('年月が指定されていません'); closeTab(); return; }
 
     ensureReportStyles();
 
@@ -275,33 +358,27 @@
 
     try {
       var page = host.querySelector('.rf-report-page');
-      var canvas = await html2canvas(page, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff'
-      });
+      // ② PDF生成（非同期）
+      var canvas = await html2canvas(page, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
       var imgData = canvas.toDataURL('image/jpeg', 0.95);
       var jsPDF = global.jspdf.jsPDF;
-      // A4縦 固定
       var pdf = new jsPDF('p', 'mm', 'a4');
-      var pageWidth = 210;
-      var pageHeight = 297;
+      var pageWidth = 210, pageHeight = 297;
       var imgHeight = (canvas.height * pageWidth) / canvas.width;
-      // 高さがA4を超える場合はA4に合わせて縮小（歪まないよう幅も同比率で調整）
-      var drawWidth = pageWidth;
-      var drawHeight = imgHeight;
+      var drawWidth = pageWidth, drawHeight = imgHeight;
       if (imgHeight > pageHeight) {
         drawHeight = pageHeight;
         drawWidth = (canvas.width * pageHeight) / canvas.height;
       }
       var offsetX = (pageWidth - drawWidth) / 2;
-      var offsetY = 0;
-      pdf.addImage(imgData, 'JPEG', offsetX, offsetY, drawWidth, drawHeight);
+      pdf.addImage(imgData, 'JPEG', offsetX, 0, drawWidth, drawHeight);
 
       var filename = '工事日報_' + year + '_' + String(month).padStart(2, '0') + '.pdf';
-      showPdfPreview(pdf, filename);
+      // ③ 先に開いたタブへ dataURI + <embed> を書き込む
+      writePdfToTab(previewTab, pdf, filename);
     } catch (e) {
       console.error('[ReportFeature] generateKoujiNippo failed:', e);
+      closeTab();
       alert('PDF生成に失敗しました: ' + (e && e.message ? e.message : e));
     } finally {
       host.remove();
@@ -500,6 +577,9 @@
   }
 
   async function generateInvoicePdf(params) {
+    // ① 最初に同期で空タブを開く（Safari ポップアップブロック回避）
+    var previewTab = global.open('', '_blank');
+
     var p = params || {};
     var rows = Array.isArray(p.rows) ? p.rows : [];
     var subtotal = 0;
@@ -510,8 +590,10 @@
     var tax = Math.floor(subtotal * taxRate);
     var total = subtotal + tax;
 
-    if (typeof html2canvas === 'undefined') { alert('html2canvas未読込'); return; }
-    if (typeof global.jspdf === 'undefined') { alert('jsPDF未読込'); return; }
+    var closeTab = function () { try { if (previewTab && !previewTab.closed) previewTab.close(); } catch (_) {} };
+
+    if (typeof html2canvas === 'undefined') { alert('html2canvas未読込'); closeTab(); return; }
+    if (typeof global.jspdf === 'undefined') { alert('jsPDF未読込'); closeTab(); return; }
 
     ensureInvoiceStyles();
 
@@ -522,20 +604,14 @@
 
     try {
       var page = host.querySelector('.rf-invoice-page');
-      var canvas = await html2canvas(page, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff'
-      });
+      // ② PDF生成
+      var canvas = await html2canvas(page, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
       var imgData = canvas.toDataURL('image/jpeg', 0.95);
       var jsPDF = global.jspdf.jsPDF;
       var pdf = new jsPDF('p', 'mm', 'a4');
-      var pageWidth = 210;
-      var pageHeight = 297;
+      var pageWidth = 210, pageHeight = 297;
       var imgHeight = (canvas.height * pageWidth) / canvas.width;
-      var drawWidth = pageWidth;
-      var drawHeight = imgHeight;
-      // 高さオーバー時はA4に収まるよう縮小（1ページ固定）
+      var drawWidth = pageWidth, drawHeight = imgHeight;
       if (imgHeight > pageHeight) {
         drawHeight = pageHeight;
         drawWidth = (canvas.width * pageHeight) / canvas.height;
@@ -543,11 +619,12 @@
       var offsetX = (pageWidth - drawWidth) / 2;
       pdf.addImage(imgData, 'JPEG', offsetX, 0, drawWidth, drawHeight);
 
-      var safeNo = (p.invoiceNo || new Date().toISOString().slice(0, 10))
-        .replace(/[\/\\:*?"<>|]/g, '_');
-      showPdfPreview(pdf, '請求書_' + safeNo + '.pdf');
+      var safeNo = (p.invoiceNo || new Date().toISOString().slice(0, 10)).replace(/[\/\\:*?"<>|]/g, '_');
+      // ③ タブへ書き込み
+      writePdfToTab(previewTab, pdf, '請求書_' + safeNo + '.pdf');
     } catch (e) {
       console.error('[ReportFeature] generateInvoicePdf failed:', e);
+      closeTab();
       alert('PDF生成に失敗しました: ' + (e && e.message ? e.message : e));
     } finally {
       host.remove();
@@ -685,14 +762,19 @@
   }
 
   async function generateReceiptPdf(params) {
+    // ① 最初に同期で空タブを開く
+    var previewTab = global.open('', '_blank');
+
     var p = params || {};
     var total = Number(p.total) || 0;
     var taxRate = (typeof p.taxRate === 'number') ? p.taxRate : 0.10;
     var b = calcReceiptBreakdown(total, taxRate);
     b.total = total;
 
-    if (typeof html2canvas === 'undefined') { alert('html2canvas未読込'); return; }
-    if (typeof global.jspdf === 'undefined') { alert('jsPDF未読込'); return; }
+    var closeTab = function () { try { if (previewTab && !previewTab.closed) previewTab.close(); } catch (_) {} };
+
+    if (typeof html2canvas === 'undefined') { alert('html2canvas未読込'); closeTab(); return; }
+    if (typeof global.jspdf === 'undefined') { alert('jsPDF未読込'); closeTab(); return; }
 
     ensureReceiptStyles();
 
@@ -703,11 +785,8 @@
 
     try {
       var page = host.querySelector('.rf-receipt-page');
-      var canvas = await html2canvas(page, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff'
-      });
+      // ② PDF生成
+      var canvas = await html2canvas(page, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
       var imgData = canvas.toDataURL('image/jpeg', 0.95);
       var jsPDF = global.jspdf.jsPDF;
       var pdf = new jsPDF('p', 'mm', 'a4');
@@ -720,11 +799,12 @@
       }
       var offsetX = (pageWidth - drawWidth) / 2;
       pdf.addImage(imgData, 'JPEG', offsetX, 0, drawWidth, drawHeight);
-      var safeNo = (p.receiptNo || new Date().toISOString().slice(0, 10))
-        .replace(/[\/\\:*?"<>|]/g, '_');
-      showPdfPreview(pdf, '領収書_' + safeNo + '.pdf');
+      var safeNo = (p.receiptNo || new Date().toISOString().slice(0, 10)).replace(/[\/\\:*?"<>|]/g, '_');
+      // ③ タブへ書き込み
+      writePdfToTab(previewTab, pdf, '領収書_' + safeNo + '.pdf');
     } catch (e) {
       console.error('[ReportFeature] generateReceiptPdf failed:', e);
+      closeTab();
       alert('PDF生成に失敗しました: ' + (e && e.message ? e.message : e));
     } finally {
       host.remove();
