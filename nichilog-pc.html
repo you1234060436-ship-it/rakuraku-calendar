@@ -289,19 +289,8 @@ body{background:#fff!important}
 <input type="hidden" id="mmId">
 <div class="form-row"><div class="form-grp"><label>名前</label><input type="text" id="mmName"></div></div>
 <div class="form-row"><div class="form-grp"><label>ロール</label><select id="mmRole"><option value="master">社長</option><option value="admin">管理者</option><option value="worker">作業員</option></select></div><div class="form-grp"><label>チーム</label><input type="text" id="mmTeam"></div></div>
-<div class="form-row"><div class="form-grp"><label>新規パスワード（登録時のみ必須・4文字以上）</label><div class="pw-wrap"><input type="password" id="mmPw" placeholder="変更しない場合は空欄"><button type="button" class="pw-toggle" onclick="togglePw('mmPw',this)" title="表示/非表示" aria-label="パスワード表示切替">👁</button></div></div></div>
+<div class="form-row"><div class="form-grp"><label>パスワード（新規作成は必須／編集時は変更する場合のみ入力・6文字以上）</label><div class="pw-wrap"><input type="password" id="mmPw" placeholder="変更しない場合は空欄"><button type="button" class="pw-toggle" onclick="togglePw('mmPw',this)" title="表示/非表示" aria-label="パスワード表示切替">👁</button></div></div></div>
 <div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">キャンセル</button><button class="btn btn-primary" onclick="saveMember()">保存</button></div>
-</div>
-</div>
-
-<!-- Password reset modal (admin only) -->
-<div class="modal" id="pwResetModal">
-<div class="modal-box">
-<h3>パスワード変更</h3>
-<input type="hidden" id="prAccountId">
-<p style="color:#6b7280;font-size:13px;margin-bottom:10px">対象メンバー: <b id="prTargetName"></b></p>
-<div class="form-row"><div class="form-grp"><label>新しいパスワード（6文字以上）</label><div class="pw-wrap"><input type="password" id="prNewPw" placeholder="新パスワードを入力"><button type="button" class="pw-toggle" onclick="togglePw('prNewPw',this)" title="表示/非表示" aria-label="パスワード表示切替">👁</button></div></div></div>
-<div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">キャンセル</button><button class="btn btn-primary" onclick="saveMemberPassword()">変更</button></div>
 </div>
 </div>
 
@@ -1031,25 +1020,33 @@ function renderMembers(){
   const manage=canManage();
   let html='<h2>メンバー</h2>';
   if(manage)html+='<div class="btn-row"><button class="btn btn-primary" onclick="openMemberModal()">＋ メンバー追加</button></div>';
-  // 列: 名前 / ロール / チーム / 操作（管理者は 編集・削除・パスワードリセット）
-  html+='<table><thead><tr><th>名前</th><th>ロール</th><th>チーム</th><th>操作</th></tr></thead><tbody>';
+  // 列: 名前 / ロール / チーム / パスワード(管理者のみ) / 操作
+  html+='<table><thead><tr><th>名前</th><th>ロール</th><th>チーム</th>'+(manage?'<th>パスワード</th>':'')+'<th>操作</th></tr></thead><tbody>';
   members.forEach(function(m){
     const roleCls=m.role==='master'?'badge-master':(m.role==='worker'?'badge-worker':'badge-admin');
     html+='<tr><td>'+escHtml(m.name)+'</td>';
     html+='<td><span class="badge '+roleCls+'">'+escHtml(roleLabel(m.role))+'</span></td>';
     html+='<td>'+escHtml(m.team||'-')+'</td>';
     if(manage){
+      const pw=m.plain_password;
+      if(pw){
+        html+='<td style="font-family:monospace;letter-spacing:0.5px">'+escHtml(pw)+'</td>';
+      }else{
+        html+='<td><span style="color:#9ca3af;font-size:12px">（編集で設定）</span></td>';
+      }
+    }
+    if(manage){
       html+='<td style="white-space:nowrap">'+
         '<button class="btn btn-sm btn-secondary" onclick="openMemberModal(\''+m.id+'\')">編集</button> '+
-        '<button class="btn btn-sm btn-danger" onclick="deleteMember(\''+m.id+'\')">削除</button> '+
-        '<button class="btn btn-sm" style="background:#f59e0b;color:#fff" onclick="openPwResetModal(\''+m.id+'\')">パスワードリセット</button>'+
+        '<button class="btn btn-sm btn-danger" onclick="deleteMember(\''+m.id+'\')">削除</button>'+
         '</td>';
     }else{
       html+='<td></td>';
     }
     html+='</tr>';
   });
-  if(members.length===0)html+='<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px">メンバーなし</td></tr>';
+  const cols=manage?5:4;
+  if(members.length===0)html+='<tr><td colspan="'+cols+'" style="text-align:center;color:#9ca3af;padding:20px">メンバーなし</td></tr>';
   html+='</tbody></table>';
   document.getElementById('tab4').innerHTML=html;
 }
@@ -1072,18 +1069,37 @@ async function saveMember(){
   const pw=document.getElementById('mmPw').value;
   if(!name){showToast('名前を入力してください');return;}
   if(id){
+    // 編集: 基本情報を更新。pw が入力されていればパスワードもリセット。
     const r=await sbPatch('accounts','id=eq.'+id,{name:name,role:role,team:team});
-    if(r){showToast('更新しました');clModal();await renderAll();renderMembers();}
-    else{showToast('更新失敗');}
+    if(!r){showToast('更新失敗');return;}
+    if(pw){
+      if(pw.length<6){showToast('パスワードは6文字以上で入力してください');return;}
+      const{error:pwErr}=await sb.rpc('admin_reset_password',{p_account_id:id,p_new_password:pw});
+      if(pwErr){
+        let m=pwErr.message||String(pwErr);
+        if(/not find the function|schema cache/i.test(m))m='admin_reset_password 関数が未デプロイです。admin_reset_password.sql を実行してください。';
+        showToast('パスワード変更失敗: '+m);return;
+      }
+    }
+    showToast('更新しました');clModal();await renderAll();renderMembers();
+    return;
   }else{
     if(!pw){showToast('新規追加時はパスワードが必要です');return;}
-    if(pw.length<4){showToast('パスワードは4文字以上で入力してください');return;}
+    if(pw.length<6){showToast('パスワードは6文字以上で入力してください');return;}
     try{
       const tempEmail=crypto.randomUUID()+'@nichilog.app';
       const{data:authData,error:signUpErr}=await signUpNoEmail(tempEmail,pw);
       if(signUpErr){showToast('登録失敗: '+signUpErrMsg(signUpErr));return;}
       const{error:regErr}=await sb.rpc('complete_registration',{p_company:company.name,p_name:name,p_role:role,p_team:team});
       if(regErr){showToast('登録エラー: '+regErr.message);return;}
+      // 平文パスワードを accounts に保存（管理者が一覧で参照できるように）
+      try{
+        const newAcc=await sbGet('accounts','auth_uid=eq.'+authData.user.id+'&limit=1');
+        if(Array.isArray(newAcc)&&newAcc[0]){
+          const{error:plErr}=await sb.rpc('admin_set_plain_password',{p_account_id:newAcc[0].id,p_plain_password:pw});
+          if(plErr)console.warn('plain_password 保存失敗:',plErr);
+        }
+      }catch(e){console.warn('plain_password 保存スキップ:',e);}
       showToast('追加しました');clModal();await renderAll();renderMembers();
     }catch(e){showToast('エラー: '+e.message);}
   }
@@ -1463,41 +1479,8 @@ async function changeUserPassword(){
     showToast('パスワード変更完了');document.getElementById('stNewPw').value='';
   }catch(e){showToast('エラー: '+e.message);}
 }
-// 管理者が対象メンバーのパスワード変更モーダルを開く
-function openPwResetModal(id){
-  if(!canManage())return;
-  const m=members.find(function(x){return String(x.id)===String(id);});
-  if(!m){showToast('メンバーが見つかりません');return;}
-  clModal();
-  document.getElementById('prAccountId').value=id;
-  document.getElementById('prTargetName').textContent=m.name||'';
-  document.getElementById('prNewPw').value='';
-  document.getElementById('pwResetModal').classList.add('show');
-}
-// admin_reset_password RPC 経由で対象メンバーのパスワードを更新
-async function saveMemberPassword(){
-  const id=document.getElementById('prAccountId').value;
-  const newPw=document.getElementById('prNewPw').value;
-  if(!id){showToast('対象が指定されていません');return;}
-  if(!newPw||newPw.length<6){showToast('パスワードは6文字以上で入力してください');return;}
-  try{
-    const{error}=await sb.rpc('admin_reset_password',{p_account_id:id,p_new_password:newPw});
-    if(error){
-      // 未デプロイ時は PostgREST が 404 "Could not find the function" を返す
-      let msg=error.message||String(error);
-      if(/not find the function|schema cache/i.test(msg)){
-        msg='admin_reset_password 関数が未デプロイです。Supabase で admin_reset_password.sql を実行してください。';
-      }
-      showToast('変更失敗: '+msg);
-      return;
-    }
-    showToast('パスワード変更完了');
-    clModal();
-  }catch(e){
-    console.error(e);
-    showToast('エラー: '+(e&&e.message?e.message:e));
-  }
-}
+// 旧 openPwResetModal / saveMemberPassword は廃止。
+// パスワード変更はメンバー編集モーダル(mmPw)経由で admin_reset_password を呼ぶ。
 async function updateCompany(){
   const nm=document.getElementById('stCoName').value.trim();
   if(!nm){showToast('会社名を入力してください');return;}
