@@ -658,8 +658,10 @@
           stampHtml +
         '</div>' +
         '<div class="rf-rc-desc">' +
+          // desc には既に「として」が含まれている想定（デフォルト値「工事代金として」）。
+          // 重複を避けるため " として" 接頭辞は付けず、desc 直後に読点で繋ぐ。
           '<span class="rf-rc-lbl">但し</span>' + escHtml(desc) +
-          ' として、上記正に領収いたしました。' +
+          '、上記正に領収いたしました。' +
         '</div>' +
         '<div class="rf-rc-break-wrap">' +
           '<table class="rf-rc-breakdown">' +

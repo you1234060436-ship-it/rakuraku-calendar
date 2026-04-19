@@ -294,6 +294,17 @@ body{background:#fff!important}
 </div>
 </div>
 
+<!-- Password reset modal (admin only) -->
+<div class="modal" id="pwResetModal">
+<div class="modal-box">
+<h3>パスワードリセット</h3>
+<input type="hidden" id="prAccountId">
+<p style="color:#6b7280;font-size:13px;margin-bottom:10px">対象メンバー: <b id="prTargetName"></b></p>
+<div class="form-row"><div class="form-grp"><label>新しいパスワード（6文字以上）</label><div class="pw-wrap"><input type="password" id="prNewPw" placeholder="新パスワードを入力"><button type="button" class="pw-toggle" onclick="togglePw('prNewPw',this)" title="表示/非表示" aria-label="パスワード表示切替">👁</button></div></div></div>
+<div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">キャンセル</button><button class="btn btn-primary" onclick="saveMemberPassword()">変更</button></div>
+</div>
+</div>
+
 <!-- ==================== Invoice Overlay ==================== -->
 <div class="inv-overlay" id="invoiceOverlay">
 <div class="toolbar">
@@ -1041,7 +1052,8 @@ function renderMembers(){
     if(manage){
       html+='<td style="white-space:nowrap">'+
         '<button class="btn btn-sm btn-secondary" onclick="openMemberModal(\''+m.id+'\')">編集</button> '+
-        '<button class="btn btn-sm btn-danger" onclick="deleteMember(\''+m.id+'\')">削除</button>'+
+        '<button class="btn btn-sm btn-danger" onclick="deleteMember(\''+m.id+'\')">削除</button> '+
+        '<button class="btn btn-sm" style="background:#f59e0b;color:#fff" onclick="openPwResetModal(\''+m.id+'\')">パスワードリセット</button>'+
         '</td>';
     }else{
       html+='<td></td>';
@@ -1353,16 +1365,8 @@ async function openReceiptForm(){
   // インボイス登録番号は company に保存されていれば流用（未使用なら空）
   const curReg=document.getElementById('rcRegNo');
   if(!curReg.value)curReg.value=(company&&company.registration_no)||'';
-  // 領収書Noを採番（同月・同社の最大+1）
+  // 領収書No: 常に 001 スタート（自動採番は廃止。同月に複数作る場合は手動で編集）
   document.getElementById('rcNo').value=prefix+'001';
-  try{
-    const rows=await sbGet('receipts','company_id=eq.'+company.id+'&receipt_no=like.'+encodeURIComponent(prefix+'*')+'&order=receipt_no.desc&limit=1');
-    if(Array.isArray(rows)&&rows.length){
-      const last=rows[0].receipt_no||'';
-      const num=parseInt(last.split('-').pop(),10)||0;
-      document.getElementById('rcNo').value=prefix+String(num+1).padStart(3,'0');
-    }
-  }catch(e){/* 採番できなくてもフォームは開く */console.warn('receipt numbering:',e);}
   // プレビュー/計算欄の初期表示
   refreshReceiptPreview();
   // 入力変更時に自動リフレッシュ
@@ -1485,8 +1489,42 @@ async function changeUserPassword(){
     showToast('パスワード変更完了');document.getElementById('stNewPw').value='';
   }catch(e){showToast('エラー: '+e.message);}
 }
-// 旧 openPwResetModal / saveMemberPassword は廃止。
-// パスワード変更はメンバー編集モーダル(mmPw)経由で admin_reset_password を呼ぶ。
+// パスワードリセット専用モーダル（メンバー一覧の「パスワードリセット」ボタンから開く）
+function openPwResetModal(id){
+  if(!canManage())return;
+  const sid=id==null?'':String(id);
+  const m=members.find(function(x){return String(x.id)===sid;});
+  if(!m){showToast('メンバーが見つかりません');return;}
+  clModal();
+  document.getElementById('prAccountId').value=sid;
+  document.getElementById('prTargetName').textContent=m.name||'';
+  document.getElementById('prNewPw').value='';
+  document.getElementById('pwResetModal').classList.add('show');
+}
+async function saveMemberPassword(){
+  const id=document.getElementById('prAccountId').value;
+  const newPw=document.getElementById('prNewPw').value;
+  if(!id){showToast('対象が指定されていません');return;}
+  if(!newPw||newPw.length<6){showToast('パスワードは6文字以上で入力してください');return;}
+  try{
+    const{error}=await sb.rpc('admin_reset_password',{p_account_id:id,p_new_password:newPw});
+    if(error){
+      let msg=error.message||String(error);
+      if(/not find the function|schema cache/i.test(msg)){
+        msg='admin_reset_password 関数が未デプロイです。admin_reset_password.sql を実行してください。';
+      }
+      showToast('変更失敗: '+msg);
+      return;
+    }
+    showToast('パスワード変更完了');
+    clModal();
+    await renderAll();
+    renderMembers();
+  }catch(e){
+    console.error(e);
+    showToast('エラー: '+(e&&e.message?e.message:e));
+  }
+}
 async function updateCompany(){
   const nm=document.getElementById('stCoName').value.trim();
   if(!nm){showToast('会社名を入力してください');return;}
