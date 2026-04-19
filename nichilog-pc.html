@@ -300,7 +300,7 @@ body{background:#fff!important}
 <h3>パスワード変更</h3>
 <input type="hidden" id="prAccountId">
 <p style="color:#6b7280;font-size:13px;margin-bottom:10px">対象メンバー: <b id="prTargetName"></b></p>
-<div class="form-row"><div class="form-grp"><label>新しいパスワード（4文字以上）</label><div class="pw-wrap"><input type="password" id="prNewPw" placeholder="新パスワードを入力"><button type="button" class="pw-toggle" onclick="togglePw('prNewPw',this)" title="表示/非表示" aria-label="パスワード表示切替">👁</button></div></div></div>
+<div class="form-row"><div class="form-grp"><label>新しいパスワード（6文字以上）</label><div class="pw-wrap"><input type="password" id="prNewPw" placeholder="新パスワードを入力"><button type="button" class="pw-toggle" onclick="togglePw('prNewPw',this)" title="表示/非表示" aria-label="パスワード表示切替">👁</button></div></div></div>
 <div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">キャンセル</button><button class="btn btn-primary" onclick="saveMemberPassword()">変更</button></div>
 </div>
 </div>
@@ -1031,21 +1031,25 @@ function renderMembers(){
   const manage=canManage();
   let html='<h2>メンバー</h2>';
   if(manage)html+='<div class="btn-row"><button class="btn btn-primary" onclick="openMemberModal()">＋ メンバー追加</button></div>';
-  // 管理者のみ「パスワード」列を表示
-  html+='<table><thead><tr><th>名前</th><th>ロール</th><th>チーム</th>'+(manage?'<th>パスワード</th>':'')+'<th>操作</th></tr></thead><tbody>';
+  // 列: 名前 / ロール / チーム / 操作（管理者は 編集・削除・パスワードリセット）
+  html+='<table><thead><tr><th>名前</th><th>ロール</th><th>チーム</th><th>操作</th></tr></thead><tbody>';
   members.forEach(function(m){
     const roleCls=m.role==='master'?'badge-master':(m.role==='worker'?'badge-worker':'badge-admin');
     html+='<tr><td>'+escHtml(m.name)+'</td>';
     html+='<td><span class="badge '+roleCls+'">'+escHtml(roleLabel(m.role))+'</span></td>';
     html+='<td>'+escHtml(m.team||'-')+'</td>';
     if(manage){
-      // パスワードは Supabase auth 側にあり取得不可。見た目は伏字＋変更ボタン。
-      html+='<td style="white-space:nowrap"><span style="letter-spacing:2px;color:#9ca3af;font-family:monospace">••••••</span> <button class="btn btn-sm btn-secondary" onclick="openPwResetModal(\''+m.id+'\')">変更</button></td>';
+      html+='<td style="white-space:nowrap">'+
+        '<button class="btn btn-sm btn-secondary" onclick="openMemberModal(\''+m.id+'\')">編集</button> '+
+        '<button class="btn btn-sm btn-danger" onclick="deleteMember(\''+m.id+'\')">削除</button> '+
+        '<button class="btn btn-sm" style="background:#f59e0b;color:#fff" onclick="openPwResetModal(\''+m.id+'\')">パスワードリセット</button>'+
+        '</td>';
+    }else{
+      html+='<td></td>';
     }
-    html+='<td>'+(manage?'<button class="btn btn-sm btn-secondary" onclick="openMemberModal(\''+m.id+'\')">編集</button> <button class="btn btn-sm btn-danger" onclick="deleteMember(\''+m.id+'\')">削除</button>':'')+'</td></tr>';
+    html+='</tr>';
   });
-  const cols=manage?5:4;
-  if(members.length===0)html+='<tr><td colspan="'+cols+'" style="text-align:center;color:#9ca3af;padding:20px">メンバーなし</td></tr>';
+  if(members.length===0)html+='<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px">メンバーなし</td></tr>';
   html+='</tbody></table>';
   document.getElementById('tab4').innerHTML=html;
 }
@@ -1436,12 +1440,9 @@ function renderSettings(){
   html+='<div class="form-row"><div class="form-grp"><label>会社名</label><input type="text" value="'+escHtml((company&&company.name)||'')+'" disabled></div><div class="form-grp"><label>お名前</label><input type="text" value="'+escHtml((currentUser&&currentUser.name)||'')+'" disabled></div></div>';
   html+='<div class="form-row"><div class="form-grp"><label>ロール</label><input type="text" value="'+escHtml(roleLabel(currentUser&&currentUser.role))+'" disabled></div><div class="form-grp"><label>チーム</label><input type="text" value="'+escHtml((currentUser&&currentUser.team)||'')+'" disabled></div></div>';
   html+='</div>';
-  // パスワード変更セクションは作業員のみ（管理者・社長はメンバー一覧から変更する）
-  if(isWorker()){
-    html+='<div class="form-card"><h3>パスワード変更</h3>';
-    html+='<div class="form-row"><div class="form-grp"><label>新しいパスワード（4文字以上）</label><div class="pw-wrap"><input type="password" id="stNewPw"><button type="button" class="pw-toggle" onclick="togglePw(\'stNewPw\',this)" title="表示/非表示" aria-label="パスワード表示切替">👁</button></div></div></div>';
-    html+='<div class="btn-row"><button class="btn btn-primary" onclick="changeUserPassword()">パスワード変更</button></div></div>';
-  }
+  // パスワード変更セクションは廃止（全ロール）。
+  // 管理者(master/admin)はメンバー一覧の「パスワードリセット」から実施。
+  // 作業員が自分で変更する機能は提供しない（管理者が都度リセット運用）。
   if(currentUser&&currentUser.role==='master'){
     html+='<div class="form-card"><h3>会社設定（社長のみ）</h3>';
     html+='<div class="form-row"><div class="form-grp"><label>会社名</label><input type="text" id="stCoName" value="'+escHtml((company&&company.name)||'')+'"></div></div>';
@@ -1478,7 +1479,7 @@ async function saveMemberPassword(){
   const id=document.getElementById('prAccountId').value;
   const newPw=document.getElementById('prNewPw').value;
   if(!id){showToast('対象が指定されていません');return;}
-  if(!newPw||newPw.length<4){showToast('パスワードは4文字以上で入力してください');return;}
+  if(!newPw||newPw.length<6){showToast('パスワードは6文字以上で入力してください');return;}
   try{
     const{error}=await sb.rpc('admin_reset_password',{p_account_id:id,p_new_password:newPw});
     if(error){
