@@ -349,7 +349,6 @@ body{background:#fff!important}
 <div class="inv-overlay" id="receiptOverlay">
 <div class="toolbar">
 <button class="btn-close" onclick="closeReceipt()">閉じる</button>
-<button class="btn-print" onclick="saveReceipt()">保存</button>
 <button class="btn-print" onclick="onClickReceiptPdf()">PDF作成</button>
 <span style="flex:1"></span>
 <span style="font-size:13px">領収書</span>
@@ -1410,13 +1409,17 @@ function refreshReceiptPreview(){
   }
 }
 
-function onClickReceiptPdf(){
+// PDF作成ボタン: 保存 → 一覧更新 → PDF生成 を一連で実行
+async function onClickReceiptPdf(){
   try{
     if(!window.ReportFeature||typeof window.ReportFeature.generateReceiptPdf!=='function'){
       showToast('report-feature.js 未読込');return;
     }
     const params=gatherReceiptParams();
     if(!params.total){showToast('金額を入力してください');return;}
+    // 保存を先に実行（失敗時は PDF を出さない）
+    const ok=await saveReceipt();
+    if(ok===false)return;
     window.ReportFeature.generateReceiptPdf(params);
   }catch(e){
     console.error(e);
@@ -1428,9 +1431,9 @@ async function saveReceipt(){
   try{
     const clientSel=document.getElementById('rcClient');
     const cid=clientSel.value;
-    if(!cid){showToast('宛先会社を選択してください');return;}
+    if(!cid){showToast('宛先会社を選択してください');return false;}
     const total=parseInt(document.getElementById('rcTotal').value)||0;
-    if(!total){showToast('金額を入力してください');return;}
+    if(!total){showToast('金額を入力してください');return false;}
     const taxRate=parseFloat(document.getElementById('rcTaxRate').value)||0.10;
     const excl=Math.round(total/(1+taxRate));
     const tax=Math.round(total-excl);
@@ -1447,11 +1450,12 @@ async function saveReceipt(){
       registration_no:document.getElementById('rcRegNo').value||null
     };
     const r=await sbPost('receipts',payload);
-    if(r){showToast('領収書を保存しました');}
-    else{showToast('保存に失敗しました');}
+    if(r){showToast('領収書を保存しました');return true;}
+    else{showToast('保存に失敗しました: '+sbErrMsg(''));return false;}
   }catch(e){
     console.error(e);
     showToast('保存エラー: '+(e&&e.message?e.message:e));
+    return false;
   }
 }
 

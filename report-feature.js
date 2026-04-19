@@ -649,7 +649,8 @@
             '<div>' + escHtml(issueDateStr) + '</div>' +
           '</div>' +
         '</div>' +
-        '<div class="rf-rc-to">' + escHtml(p.clientCompany || '') + '　様</div>' +
+        // 宛先が空の場合は「様」も出さない
+        '<div class="rf-rc-to">' + (p.clientCompany ? escHtml(p.clientCompany) + '　様' : '') + '</div>' +
         '<div class="rf-rc-amt-row">' +
           '<div class="rf-rc-amt-box">' +
             '<div class="rf-rc-amt-val">' + yenFmt(b.total || 0) +
