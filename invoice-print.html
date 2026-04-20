@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>請求書 — 印刷</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  /* ========== 画面表示（操作用） ========== */
+  html,body{margin:0;padding:0;background:#f3f4f6;font-family:"Hiragino Sans","Yu Gothic",sans-serif;color:#222}
+  .print-controls{position:sticky;top:0;background:#1f2937;color:#fff;padding:10px 16px;display:flex;gap:10px;align-items:center;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+  .print-controls button{background:#1a73e8;color:#fff;border:none;padding:8px 22px;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600}
+  .print-controls button:hover{background:#1557b0}
+  .print-controls .hint{color:#cbd5e1;font-size:12px;margin-left:auto}
+  .container{max-width:960px;margin:20px auto;padding:0 12px}
+  .state{text-align:center;padding:60px 20px;font-size:16px;color:#374151;background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+  .state.error{color:#dc2626}
+
+  /* ========== 請求書用紙 (report-feature.js から移植) ========== */
+  .rf-invoice-page{background:#fff;color:#222;padding:8mm 10mm;font-family:"Hiragino Mincho ProN","Yu Mincho","MS Mincho",serif;font-size:10pt;box-sizing:border-box;position:relative;width:210mm;min-height:297mm;margin:0 auto;box-shadow:0 1px 6px rgba(0,0,0,.15)}
+  .rf-iv-top-right{position:absolute;top:5mm;right:10mm;text-align:right;font-size:9.5pt;line-height:1.5}
+  .rf-iv-page-num{margin-bottom:1mm}
+  .rf-iv-no-line{border-bottom:0.4mm solid #222;padding:0 2mm 0.8mm 2mm;display:inline-block;min-width:38mm}
+  .rf-iv-title-bar{background:#1a4b8c;color:#fff;font-size:18pt;font-weight:700;padding:3mm 8mm;letter-spacing:6px;text-align:left;margin:10mm 0 5mm 0}
+  .rf-iv-to-center{text-align:center;margin:3mm 0 5mm 0}
+  .rf-iv-to-name{font-size:16pt;font-weight:700;border-bottom:0.4mm solid #222;padding:0 6mm 1.5mm 6mm;display:inline-block;min-width:120mm;letter-spacing:2px}
+  .rf-iv-from-right{text-align:right;margin-bottom:4mm;font-size:10pt;line-height:1.6}
+  .rf-iv-from-line{border-bottom:0.3mm solid #666;padding:0 3mm 0.6mm 3mm;display:inline-block;min-width:55mm;margin-bottom:0.8mm}
+  .rf-iv-greeting{font-size:10pt;line-height:1.6;margin:3mm 0 4mm 0}
+  .rf-iv-header-info{margin:3mm 0 3mm 0}
+  .rf-iv-hi-row{display:flex;border-bottom:0.3mm solid #666;padding:1.2mm 0;font-size:10pt;line-height:1.35}
+  .rf-iv-hi-label{width:40mm;font-weight:600}
+  .rf-iv-hi-value{flex:1}
+  .rf-iv-hi-row.rf-iv-hi-total .rf-iv-hi-value{font-weight:700;font-size:12pt}
+  .rf-iv-table{width:100%;border-collapse:collapse;font-size:9pt;margin-top:3mm;table-layout:fixed}
+  .rf-iv-table th,.rf-iv-table td{border:0.35mm solid #333;padding:1.4mm 1.3mm;vertical-align:middle;overflow:hidden;word-break:break-all}
+  .rf-iv-table th{background:#e8eef5;text-align:center;font-weight:600}
+  .rf-iv-table td.rf-n{text-align:right}
+  .rf-iv-table td.rf-c{text-align:center}
+  .rf-iv-table tr.rf-empty td{height:5.5mm}
+  .rf-iv-table th:nth-child(1),.rf-iv-table td:nth-child(1){width:33%}
+  .rf-iv-table th:nth-child(2),.rf-iv-table td:nth-child(2){width:27%}
+  .rf-iv-table th:nth-child(3),.rf-iv-table td:nth-child(3){width:8%;text-align:right}
+  .rf-iv-table th:nth-child(4),.rf-iv-table td:nth-child(4){width:7%;text-align:center}
+  .rf-iv-table th:nth-child(5),.rf-iv-table td:nth-child(5){width:12%;text-align:right}
+  .rf-iv-table th:nth-child(6),.rf-iv-table td:nth-child(6){width:13%;text-align:right}
+  .rf-iv-table tfoot .rf-iv-remark{vertical-align:top;text-align:left;background:#fafafa;padding:2mm 2.5mm}
+  .rf-iv-table tfoot .rf-iv-remark .rf-iv-remark-lbl{font-weight:700;margin-bottom:1mm;font-size:9.5pt}
+  .rf-iv-table tfoot .rf-iv-remark .rf-iv-remark-body{min-height:12mm;font-size:9pt;white-space:pre-wrap;line-height:1.5}
+  .rf-iv-table tfoot .rf-iv-sum-lbl{text-align:center;background:#f3f4f6;font-weight:600}
+  .rf-iv-table tfoot .rf-iv-sum-val{text-align:right;background:#fafafa;font-weight:600}
+  .rf-iv-table tfoot .rf-iv-total .rf-iv-sum-lbl{background:#f0eae0;font-weight:700;font-size:10pt}
+  .rf-iv-table tfoot .rf-iv-total .rf-iv-sum-val{background:#f0eae0;font-weight:700;font-size:10pt}
+  .rf-iv-tax-breakdown{margin-top:3mm;text-align:right;font-size:9.5pt;line-height:1.9}
+  .rf-iv-tax-breakdown div{text-align:right}
+
+  /* ========== 印刷時（A4縦・余白なし） ========== */
+  @page{size:A4 portrait;margin:0}
+  @media print{
+    html,body{background:#fff;margin:0;padding:0}
+    .print-controls{display:none !important}
+    .container{max-width:none;margin:0;padding:0}
+    .rf-invoice-page{width:210mm;min-height:297mm;margin:0;box-shadow:none;page-break-after:always}
+  }
+</style>
+</head>
+<body>
+
+<div class="print-controls">
+  <button onclick="window.print()">🖨 印刷してPDFとして保存</button>
+  <span class="hint">印刷ダイアログで「PDFとして保存」を選ぶと、好きな場所にPDF保存できます。</span>
+</div>
+
+<div class="container">
+  <div id="content">
+    <div class="state">読み込み中...</div>
+  </div>
+</div>
+
+<script>
+// -------------------------------------------------
+// Supabase 接続（nichilog-pc.html と同じ storageKey でセッション共有）
+// -------------------------------------------------
+function _d(s){return atob(s).split('').reverse().join('');}
+const SB=_d('b2MuZXNhYmFwdXMueWVpdnljc21pcHl3cnh1c3RtamgvLzpzcHR0aA==');
+const SK=_d('Z3lIR1JrcVp0Wk5IWnZUSHpkeFVDcFRPYlp2d0VmeXRzX2RnSVFMdnhSSS4wWE8xY1RPNFVUTzRBak02SUNjNFZtSXNrVE4zTVRNd1F6TjNFak9pUVhZcEpDTGk0MmJ1Rm1JNklTWnM5bWNpd2lJNVZXYTJsM1l6MVdhd2wzZHloWGR6UlhicWhtSTZJaVpsSm5Jc0lTWnpGbVloQlhkekppT2lNM2NwSnllLjlKQ1ZYcGtJNklDYzVSbklzSWlOMUl6VUlKaU9pY0diaEp5ZQ==');
+const sb=window.supabase.createClient(SB,SK,{auth:{persistSession:true,storageKey:'nichilog-auth'}});
+
+// -------------------------------------------------
+// ユーティリティ（report-feature.js と同等）
+// -------------------------------------------------
+function escHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function yenFmt(n){return '¥'+Math.round(Number(n)||0).toLocaleString();}
+function yenSuffix(n){return Math.round(Number(n)||0).toLocaleString()+'円';}
+function dateSlash(s){
+  if(!s||typeof s!=='string')return '';
+  var m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(!m)return s;
+  return m[1]+'/'+String(m[2]).padStart(2,'0')+'/'+String(m[3]).padStart(2,'0');
+}
+
+// -------------------------------------------------
+// 請求書HTML組み立て (buildInvoiceHtml 相当)
+// -------------------------------------------------
+const INVOICE_MIN_ROWS=15;
+function buildInvoiceHtml(p,subtotal,tax,total){
+  var rows=Array.isArray(p.rows)?p.rows:[];
+  var rowHtml='';
+  rows.forEach(function(r){
+    var qty=Number(r.qty)||0;
+    var price=Number(r.price)||0;
+    var amt=qty*price;
+    rowHtml+='<tr>'+
+      '<td>'+escHtml(r.name||'')+'</td>'+
+      '<td>'+escHtml(r.spec||'')+'</td>'+
+      '<td class="rf-n">'+qty+'</td>'+
+      '<td class="rf-c">'+escHtml(r.unit||'')+'</td>'+
+      '<td class="rf-n">'+yenSuffix(price)+'</td>'+
+      '<td class="rf-n">'+yenSuffix(amt)+'</td>'+
+    '</tr>';
+  });
+  var padCount=Math.max(0,INVOICE_MIN_ROWS-rows.length);
+  for(var i=0;i<padCount;i++){
+    rowHtml+='<tr class="rf-empty"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>';
+  }
+  var taxRate=(typeof p.taxRate==='number')?p.taxRate:0.10;
+  var tax8=(taxRate===0.08)?tax:0;
+  var tax10=(taxRate===0.10)?tax:0;
+
+  return ''+
+    '<div class="rf-invoice-page">'+
+      '<div class="rf-iv-top-right">'+
+        '<div class="rf-iv-page-num">1/1 ページ</div>'+
+        '<div class="rf-iv-no-line">No. '+escHtml(p.invoiceNo||'')+'</div>'+
+      '</div>'+
+      '<div class="rf-iv-title-bar">御請求書</div>'+
+      '<div class="rf-iv-to-center">'+
+        '<span class="rf-iv-to-name">'+escHtml(p.clientCompany||'')+'　御中</span>'+
+      '</div>'+
+      '<div class="rf-iv-from-right">'+
+        '<div class="rf-iv-from-line">'+escHtml(p.from||'')+'</div>'+
+        '<div class="rf-iv-from-line">登録番号: '+escHtml(p.registrationNo||'')+'</div>'+
+      '</div>'+
+      '<div class="rf-iv-greeting">'+
+        '平素は格別のお引き立てを賜り厚く御礼申し上げます。<br>'+
+        '下記の通りご請求申し上げます。'+
+      '</div>'+
+      '<div class="rf-iv-header-info">'+
+        '<div class="rf-iv-hi-row"><span class="rf-iv-hi-label">請求日</span><span class="rf-iv-hi-value">'+escHtml(dateSlash(p.issueDate||''))+'</span></div>'+
+        '<div class="rf-iv-hi-row"><span class="rf-iv-hi-label">振込期限</span><span class="rf-iv-hi-value">'+escHtml(dateSlash(p.dueDate||''))+'</span></div>'+
+        '<div class="rf-iv-hi-row rf-iv-hi-total"><span class="rf-iv-hi-label">御請求金額（税込）</span><span class="rf-iv-hi-value">'+yenFmt(total)+'</span></div>'+
+      '</div>'+
+      '<table class="rf-iv-table">'+
+        '<thead><tr>'+
+          '<th>名称</th><th>仕様</th><th>数量</th>'+
+          '<th>単位</th><th>単価</th><th>金額</th>'+
+        '</tr></thead>'+
+        '<tbody>'+rowHtml+'</tbody>'+
+        '<tfoot>'+
+          '<tr>'+
+            '<td colspan="4" rowspan="3" class="rf-iv-remark">'+
+              '<div class="rf-iv-remark-lbl">備考</div>'+
+              '<div class="rf-iv-remark-body">'+escHtml(p.remarks||'')+'</div>'+
+            '</td>'+
+            '<td class="rf-iv-sum-lbl">小計　①</td>'+
+            '<td class="rf-iv-sum-val">'+yenSuffix(subtotal)+'</td>'+
+          '</tr>'+
+          '<tr>'+
+            '<td class="rf-iv-sum-lbl">消費税等　②（④＋⑤）</td>'+
+            '<td class="rf-iv-sum-val">'+yenSuffix(tax)+'</td>'+
+          '</tr>'+
+          '<tr class="rf-iv-total">'+
+            '<td class="rf-iv-sum-lbl">合計金額　③（①＋②）</td>'+
+            '<td class="rf-iv-sum-val">'+yenSuffix(total)+'</td>'+
+          '</tr>'+
+        '</tfoot>'+
+      '</table>'+
+      '<div class="rf-iv-tax-breakdown">'+
+        '<div>（8%）消費税合計　④　'+yenSuffix(tax8)+'</div>'+
+        '<div>（10%）消費税合計　⑤　'+yenSuffix(tax10)+'</div>'+
+      '</div>'+
+    '</div>';
+}
+
+// -------------------------------------------------
+// データ取得 → 描画
+// -------------------------------------------------
+function showState(text,isError){
+  const el=document.getElementById('content');
+  el.innerHTML='<div class="state'+(isError?' error':'')+'">'+escHtml(text)+'</div>';
+}
+
+async function load(){
+  const params=new URLSearchParams(location.search);
+  const id=params.get('id');
+  if(!id){
+    showState('IDが指定されていません（?id=xxx を URL に付けてください）',true);
+    return;
+  }
+  try{
+    // 1) 請求書本体
+    const{data:iv,error:ivErr}=await sb.from('invoices').select('*').eq('id',id).single();
+    if(ivErr||!iv){
+      showState('データが見つかりません',true);
+      console.error(ivErr);
+      return;
+    }
+    // 2) 発行元の会社名・登録番号（account_id → accounts → companies）
+    let fromName='';
+    let regNo=iv.registration_no||'';
+    try{
+      if(iv.account_id){
+        const{data:acc}=await sb.from('accounts').select('company_id').eq('id',iv.account_id).single();
+        if(acc&&acc.company_id){
+          const{data:comp}=await sb.from('companies').select('name,registration_no').eq('id',acc.company_id).single();
+          if(comp){
+            fromName=comp.name||'';
+            if(!regNo)regNo=comp.registration_no||'';
+          }
+        }
+      }
+    }catch(e){console.warn('company lookup:',e);}
+
+    // 3) buildInvoiceHtml のパラメータ形に変換
+    const itemRows=(Array.isArray(iv.items)?iv.items:[]).map(function(it){
+      return{
+        name:it.name||'',
+        spec:it.spec||'',
+        qty:it.qty||0,
+        unit:it.unit||'',
+        price:(it.unitPrice!=null?it.unitPrice:(it.price||0))
+      };
+    });
+    const p={
+      invoiceNo:iv.invoice_no||'',
+      issueDate:iv.issue_date||'',
+      dueDate:iv.due_date||'',
+      clientCompany:iv.client_company||'',
+      subject:iv.construction_name||'',
+      from:fromName,
+      registrationNo:regNo,
+      remarks:iv.memo||'',
+      taxRate:0.10,
+      rows:itemRows
+    };
+    const subtotal=Number(iv.subtotal)||0;
+    const tax=Number(iv.tax_10)||0;
+    const total=Number(iv.total)||(subtotal+tax);
+
+    document.getElementById('content').innerHTML=buildInvoiceHtml(p,subtotal,tax,total);
+    // タイトルに請求番号を反映
+    if(iv.invoice_no)document.title='請求書 '+iv.invoice_no;
+  }catch(e){
+    console.error(e);
+    showState('読み込み失敗: '+(e&&e.message?e.message:e),true);
+  }
+}
+
+load();
+</script>
+
+</body>
+</html>
