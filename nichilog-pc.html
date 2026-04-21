@@ -242,7 +242,16 @@ body{background:#fff!important}
 <div class="form-row"><div class="form-grp"><label>日付</label><input type="date" id="aeDate"></div></div>
 <div class="form-row"><div class="form-grp"><label>メンバー</label><select id="aeMember"></select></div></div>
 <div class="form-row"><div class="form-grp"><label>取引先</label><select id="aeClient" onchange="filterSitesByClient()"></select></div></div>
-<div class="form-row"><div class="form-grp"><label>現場</label><select id="aeSite"></select></div></div>
+<div class="form-row"><div class="form-grp"><label>現場</label><select id="aeSite"></select>
+<div style="margin-top:4px;font-size:12px">
+<a href="#" id="aeSiteAddLink" onclick="showQuickAddSite('ae');return false" style="color:#1976D2;text-decoration:none">＋ 新しい現場を追加</a>
+<div id="aeSiteAddBox" style="display:none;margin-top:6px;padding:8px;background:#f3f4f6;border-radius:4px">
+<input type="text" id="aeSiteNewName" placeholder="現場名を入力" style="width:55%;padding:4px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:13px">
+<button type="button" class="btn btn-sm btn-primary" onclick="quickAddSite('ae')">追加</button>
+<button type="button" class="btn btn-sm btn-secondary" onclick="hideQuickAddSite('ae')">キャンセル</button>
+</div>
+</div>
+</div></div>
 <div class="form-row"><div class="form-grp"><label>勤務区分</label><select id="aeType"><option value="full">1日（全日）</option><option value="half">半日</option></select></div></div>
 <div class="form-row"><div class="form-grp"><label>備考</label><textarea id="aeNote"></textarea></div></div>
 <div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">キャンセル</button><button class="btn btn-primary" onclick="saveEntry()">保存</button></div>
@@ -256,7 +265,16 @@ body{background:#fff!important}
 <div class="form-row"><div class="form-grp"><label>日付</label><input type="date" id="eeDate"></div></div>
 <div class="form-row"><div class="form-grp"><label>メンバー</label><select id="eeMember"></select></div></div>
 <div class="form-row"><div class="form-grp"><label>取引先</label><select id="eeClient" onchange="filterEditSites()"></select></div></div>
-<div class="form-row"><div class="form-grp"><label>現場</label><select id="eeSite"></select></div></div>
+<div class="form-row"><div class="form-grp"><label>現場</label><select id="eeSite"></select>
+<div style="margin-top:4px;font-size:12px">
+<a href="#" id="eeSiteAddLink" onclick="showQuickAddSite('ee');return false" style="color:#1976D2;text-decoration:none">＋ 新しい現場を追加</a>
+<div id="eeSiteAddBox" style="display:none;margin-top:6px;padding:8px;background:#f3f4f6;border-radius:4px">
+<input type="text" id="eeSiteNewName" placeholder="現場名を入力" style="width:55%;padding:4px 6px;border:1px solid #d1d5db;border-radius:4px;font-size:13px">
+<button type="button" class="btn btn-sm btn-primary" onclick="quickAddSite('ee')">追加</button>
+<button type="button" class="btn btn-sm btn-secondary" onclick="hideQuickAddSite('ee')">キャンセル</button>
+</div>
+</div>
+</div></div>
 <div class="form-row"><div class="form-grp"><label>勤務区分</label><select id="eeType"><option value="full">1日（全日）</option><option value="half">半日</option></select></div></div>
 <div class="form-row"><div class="form-grp"><label>備考</label><textarea id="eeNote"></textarea></div></div>
 <div class="btn-group"><button class="btn btn-secondary" onclick="clModal()">キャンセル</button><button class="btn btn-primary" onclick="updateEntry()">更新</button></div>
@@ -728,10 +746,55 @@ function showAddE(){
   document.getElementById('aeSite').innerHTML=buildSiteOpts();
   document.getElementById('aeType').value='full';
   document.getElementById('aeNote').value='';
+  if(typeof hideQuickAddSite==='function')hideQuickAddSite('ae');
   document.getElementById('addEntryModal').classList.add('show');
 }
 function filterSitesByClient(){var cid=document.getElementById('aeClient').value;document.getElementById('aeSite').innerHTML=buildSiteOpts(cid);}
 function filterEditSites(){var cid=document.getElementById('eeClient').value;document.getElementById('eeSite').innerHTML=buildSiteOpts(cid);}
+
+// =========================================================
+// 現場クイック追加（出勤記録モーダル内から）
+//   prefix: 'ae' (addEntryModal) | 'ee' (editEntryModal)
+// =========================================================
+function showQuickAddSite(prefix){
+  const cid=document.getElementById(prefix+'Client').value;
+  if(!cid){showToast('先に取引先を選んでください');return;}
+  document.getElementById(prefix+'SiteAddLink').style.display='none';
+  document.getElementById(prefix+'SiteAddBox').style.display='block';
+  const input=document.getElementById(prefix+'SiteNewName');
+  input.value='';input.focus();
+}
+function hideQuickAddSite(prefix){
+  document.getElementById(prefix+'SiteAddLink').style.display='';
+  document.getElementById(prefix+'SiteAddBox').style.display='none';
+}
+async function quickAddSite(prefix){
+  const cid=document.getElementById(prefix+'Client').value;
+  const name=(document.getElementById(prefix+'SiteNewName').value||'').trim();
+  if(!cid){showToast('先に取引先を選んでください');return;}
+  if(!name){showToast('現場名を入力してください');return;}
+  const payload={
+    company_id:company.id,
+    client_company_id:cid,
+    name:name,
+    price:0,
+    type:'人工'
+  };
+  const r=await sbPost('work_sites',payload);
+  if(!r){showToast('追加失敗: '+sbErrMsg(''));return;}
+  // sites をリロード
+  try{sites=await sbGet('work_sites','company_id=eq.'+company.id);}catch(e){console.warn(e);}
+  // 新規ID を特定: RLS で r が空配列の場合は name + client_company_id で逆引き
+  let newId=(r&&r.id)||null;
+  if(!newId){
+    const matched=sites.find(function(s){return String(s.client_company_id)===String(cid)&&s.name===name;});
+    if(matched)newId=matched.id;
+  }
+  // セレクトボックス再構築（新規ID を選択状態に）
+  document.getElementById(prefix+'Site').innerHTML=buildSiteOpts(cid,newId);
+  hideQuickAddSite(prefix);
+  showToast('現場を追加しました');
+}
 async function saveEntry(){
   const payload={
     company_id:company.id,
@@ -758,6 +821,7 @@ function editE(id){
   document.getElementById('eeSite').innerHTML=buildSiteOpts(st?st.client_company_id:null,e.site_id);
   document.getElementById('eeType').value=e.work_type||'full';
   document.getElementById('eeNote').value=e.note||'';
+  if(typeof hideQuickAddSite==='function')hideQuickAddSite('ee');
   document.getElementById('editEntryModal').classList.add('show');
 }
 async function updateEntry(){
