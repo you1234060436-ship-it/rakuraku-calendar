@@ -834,9 +834,12 @@ async function renderSummary(){
 // 工事日報PDF: report-feature.js の ReportFeature.generateKoujiNippo を呼ぶ。
 // 当月 attendance を取得し、社員名/現場/取引先を解決してから構造化データで渡す。
 async function onClickKoujiNippoPdf(y,m){
+  // ポップアップブロック回避: click イベント内で空タブを即時open
+  const previewWindow=window.open('','_blank');
   try{
     if(!window.ReportFeature||typeof window.ReportFeature.generateKoujiNippo!=='function'){
-      showToast('report-feature.js 未読込');return;
+      showToast('report-feature.js 未読込');
+      if(previewWindow&&!previewWindow.closed)previewWindow.close();return;
     }
     const start=y+'-'+String(m).padStart(2,'0')+'-01';
     const end=localDateStr(new Date(y,m,0));
@@ -859,17 +862,18 @@ async function onClickKoujiNippoPdf(y,m){
         note:a.note||''
       };
     });
-    window.ReportFeature.generateKoujiNippo({
+    await window.ReportFeature.generateKoujiNippo({
       year:y,
       month:m,
       companyName:(company&&company.name)||'',
       ownerName:(currentUser&&currentUser.name)||'',
       entries:entries
-    });
+    },previewWindow);
     // PDF 保存方法の案内
     showPdfSaveInfoModal();
   }catch(e){
     console.error(e);
+    if(previewWindow&&!previewWindow.closed)previewWindow.close();
     showToast('工事日報PDF生成失敗: '+(e&&e.message?e.message:e));
   }
 }
@@ -878,23 +882,36 @@ function openInvoicePrefill(y,m){
   openInvoice({invNo:y+'-'+String(m).padStart(2,'0')+'-001',invDate:localDateStr(new Date()),construction_name:title});
 }
 // 請求書PDF: report-feature.js の ReportFeature.generateInvoicePdf を呼ぶ。
-// 現状の請求書入力フォームと invRows を構造化して渡す。
-// PDF作成ボタンの動作：保存 → 一覧更新 → PDF生成 → オーバーレイを閉じて一覧に戻る → 保存案内モーダル
+// PDF作成ボタン：
+//   1) Supabase に保存（既存 saveInvoice）
+//   2) 成功したら invoice-print.html?id=xxx を新規タブで開く（ブラウザ印刷 → PDF保存）
+//   3) オーバーレイを閉じて一覧を再描画
+//   4) 保存方法の案内モーダルを表示
+// Safari のポップアップブロック回避のため、click イベント内で空タブを事前確保し、
+// 保存成功後に location を印刷ページに遷移させる。
 async function onClickInvoicePdf(){
+  const previewTab=window.open('','_blank');
   try{
-    if(!window.ReportFeature||typeof window.ReportFeature.generateInvoicePdf!=='function'){
-      showToast('report-feature.js 未読込');return;
-    }
     const ok=await saveInvoice();
-    if(ok===false)return;  // 保存失敗時は PDF を出さない
-    const params=(typeof gatherInvoiceParams==='function')?gatherInvoiceParams():null;
-    if(!params){showToast('フォーム情報を取得できませんでした');return;}
-    window.ReportFeature.generateInvoicePdf(params);
-    closeInvoice();           // 一覧が見える状態に戻す
-    await loadInvoiceList();  // 念のため最新を再フェッチ
+    if(ok===false){if(previewTab&&!previewTab.closed)previewTab.close();return;}
+    const id=currentInvoiceId;
+    if(!id){
+      showToast('保存IDを取得できませんでした');
+      if(previewTab&&!previewTab.closed)previewTab.close();
+      return;
+    }
+    const printUrl='/invoice-print.html?id='+encodeURIComponent(id);
+    if(previewTab&&!previewTab.closed){
+      previewTab.location=printUrl;
+    }else{
+      window.open(printUrl,'_blank');
+    }
+    closeInvoice();
+    await loadInvoiceList();
     showPdfSaveInfoModal();
   }catch(e){
     console.error(e);
+    if(previewTab&&!previewTab.closed)previewTab.close();
     showToast('請求書PDF生成失敗: '+(e&&e.message?e.message:e));
   }
 }
@@ -1469,22 +1486,25 @@ function refreshReceiptPreview(){
   }
 }
 
-// PDF作成ボタン: 保存 → 一覧更新 → PDF生成 → オーバーレイを閉じて一覧 → 保存案内モーダル
+// PDF作成ボタン: ポップアップブロック回避のため window.open('') を同期実行
 async function onClickReceiptPdf(){
+  const previewWindow=window.open('','_blank');
   try{
     if(!window.ReportFeature||typeof window.ReportFeature.generateReceiptPdf!=='function'){
-      showToast('report-feature.js 未読込');return;
+      showToast('report-feature.js 未読込');
+      if(previewWindow&&!previewWindow.closed)previewWindow.close();return;
     }
     const params=gatherReceiptParams();
-    if(!params.total){showToast('金額を入力してください');return;}
+    if(!params.total){showToast('金額を入力してください');if(previewWindow&&!previewWindow.closed)previewWindow.close();return;}
     const ok=await saveReceipt();
-    if(ok===false)return;
-    window.ReportFeature.generateReceiptPdf(params);
-    closeReceipt();             // 一覧が見える状態に戻す
-    await loadReceiptList();    // 念のため最新を再フェッチ
+    if(ok===false){if(previewWindow&&!previewWindow.closed)previewWindow.close();return;}
+    await window.ReportFeature.generateReceiptPdf(params,previewWindow);
+    closeReceipt();
+    await loadReceiptList();
     showPdfSaveInfoModal();
   }catch(e){
     console.error(e);
+    if(previewWindow&&!previewWindow.closed)previewWindow.close();
     showToast('領収書PDF生成失敗: '+(e&&e.message?e.message:e));
   }
 }
