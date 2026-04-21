@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>領収書 — 印刷</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  /* ========== 画面表示（操作用） ========== */
+  html,body{margin:0;padding:0;background:#f3f4f6;font-family:"Hiragino Sans","Yu Gothic",sans-serif;color:#222}
+  .print-controls{position:sticky;top:0;background:#1f2937;color:#fff;padding:10px 16px;display:flex;gap:10px;align-items:center;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+  .print-controls button{background:#1a73e8;color:#fff;border:none;padding:8px 22px;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600}
+  .print-controls button:hover{background:#1557b0}
+  .print-controls .hint{color:#cbd5e1;font-size:12px;margin-left:auto}
+  .container{max-width:960px;margin:20px auto;padding:0 12px}
+  .state{text-align:center;padding:60px 20px;font-size:16px;color:#374151;background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+  .state.error{color:#dc2626}
+
+  /* ========== 領収書用紙 (report-feature.js から移植) ========== */
+  .rf-receipt-page{background:#fff;color:#222;padding:14mm 14mm;font-family:"Hiragino Mincho ProN","Yu Mincho","MS Mincho",serif;font-size:10pt;box-sizing:border-box;width:210mm;min-height:297mm;margin:0 auto;box-shadow:0 1px 6px rgba(0,0,0,.15)}
+  .rf-rc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6mm}
+  .rf-rc-title{font-size:26pt;letter-spacing:12px;font-weight:700}
+  .rf-rc-meta{font-size:10pt;line-height:1.6;text-align:right;min-width:35mm}
+  .rf-rc-to{text-align:center;padding:3mm 0 3mm;border-bottom:1.5px solid #222;font-size:14pt;font-weight:600;margin-bottom:5mm}
+  .rf-rc-amt-row{display:flex;align-items:stretch;border-top:2px solid #222;border-bottom:2px solid #222;margin-bottom:5mm}
+  .rf-rc-amt-box{flex:1;text-align:center;padding:6mm 4mm;display:flex;align-items:center;justify-content:center}
+  .rf-rc-amt-val{font-size:28pt;font-weight:700;letter-spacing:3px}
+  .rf-rc-amt-suffix{font-size:16pt;margin-left:4mm;font-weight:600}
+  .rf-rc-stamp-box{width:32mm;display:flex;flex-direction:column;align-items:center;justify-content:center;border-left:1px solid #333;padding:3mm}
+  .rf-rc-stamp-frame{width:22mm;height:22mm;border:1.5px dashed #888;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#888;text-align:center;line-height:1.4}
+  .rf-rc-desc{margin:4mm 0;font-size:11pt;line-height:1.7;padding:2mm 0}
+  .rf-rc-desc .rf-rc-lbl{margin-right:4mm;font-weight:600}
+  .rf-rc-break-wrap{display:flex;justify-content:space-between;gap:8mm;margin-top:4mm;align-items:flex-start}
+  .rf-rc-breakdown{width:90mm;border-collapse:collapse;font-size:9pt}
+  .rf-rc-breakdown th,.rf-rc-breakdown td{border:0.35mm solid #666;padding:1.6mm 2mm}
+  .rf-rc-breakdown th{background:#f3f4f6;text-align:center}
+  .rf-rc-breakdown td.rf-n{text-align:right}
+  .rf-rc-breakdown tr.rf-rc-sum td{background:#fafafa;font-weight:700}
+  .rf-rc-issuer{min-width:60mm;text-align:right;font-size:10pt;line-height:1.7}
+  .rf-rc-issuer .rf-rc-iss-name{font-size:13pt;font-weight:700;margin-bottom:2mm}
+  .rf-rc-issuer .rf-rc-reg-lbl{font-size:8.5pt;color:#555;margin-top:2mm}
+  .rf-rc-issuer .rf-rc-reg-no{font-size:9.5pt;letter-spacing:1px}
+
+  /* ========== 印刷時（A4縦・余白0） ========== */
+  @page{size:A4 portrait;margin:0}
+  @media print{
+    html,body{background:#fff;margin:0;padding:0}
+    .print-controls{display:none !important}
+    .container{max-width:none;margin:0;padding:0}
+    .rf-receipt-page{width:210mm;min-height:297mm;margin:0;box-shadow:none;page-break-after:always}
+  }
+</style>
+</head>
+<body>
+
+<div class="print-controls">
+  <button onclick="window.print()">🖨 印刷 / PDFとして保存</button>
+  <span class="hint">印刷ダイアログで「PDFとして保存」を選ぶと、好きな場所にPDF保存できます。</span>
+</div>
+
+<div class="container">
+  <div id="content">
+    <div class="state">読み込み中...</div>
+  </div>
+</div>
+
+<script>
+// Supabase 接続（nichilog-pc.html と同じ storageKey でセッション共有）
+function _d(s){return atob(s).split('').reverse().join('');}
+const SB=_d('b2MuZXNhYmFwdXMueWVpdnljc21pcHl3cnh1c3RtamgvLzpzcHR0aA==');
+const SK=_d('Z3lIR1JrcVp0Wk5IWnZUSHpkeFVDcFRPYlp2d0VmeXRzX2RnSVFMdnhSSS4wWE8xY1RPNFVUTzRBak02SUNjNFZtSXNrVE4zTVRNd1F6TjNFak9pUVhZcEpDTGk0MmJ1Rm1JNklTWnM5bWNpd2lJNVZXYTJsM1l6MVdhd2wzZHloWGR6UlhicWhtSTZJaVpsSm5Jc0lTWnpGbVloQlhkekppT2lNM2NwSnllLjlKQ1ZYcGtJNklDYzVSbklzSWlOMUl6VUlKaU9pY0diaEp5ZQ==');
+const sb=window.supabase.createClient(SB,SK,{auth:{persistSession:true,storageKey:'nichilog-auth'}});
+
+// ユーティリティ
+function escHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function yenFmt(n){return '¥'+Math.round(Number(n)||0).toLocaleString();}
+
+// 内訳計算 (report-feature.js の calcReceiptBreakdown と同じ)
+function calcReceiptBreakdown(total,taxRate){
+  var t=Number(total)||0;
+  var r=(typeof taxRate==='number')?taxRate:0.10;
+  var excl=Math.round(t/(1+r));
+  var tax=Math.round(t-excl);
+  return{
+    excl:excl,tax:tax,
+    tax8:(r===0.08)?tax:0,
+    tax10:(r===0.10)?tax:0,
+    stamp:t>=50000,
+    taxRate:r,
+    total:t
+  };
+}
+
+// 領収書HTML組み立て (buildReceiptHtml 相当)
+function buildReceiptHtml(p,b){
+  var issueDateStr='';
+  if(p.issueDate){
+    try{issueDateStr=new Date(p.issueDate+'T00:00:00').toLocaleDateString('ja-JP');}
+    catch(_){issueDateStr=p.issueDate;}
+  }
+  var desc=p.description||'工事代金として';
+  var stampHtml=b.stamp
+    ? '<div class="rf-rc-stamp-box"><div class="rf-rc-stamp-frame">収入<br>印紙</div></div>'
+    : '';
+  return ''+
+    '<div class="rf-receipt-page">'+
+      '<div class="rf-rc-head">'+
+        '<div class="rf-rc-title">領　収　書</div>'+
+        '<div class="rf-rc-meta">'+
+          '<div>No. '+escHtml(p.receiptNo||'')+'</div>'+
+          '<div>'+escHtml(issueDateStr)+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="rf-rc-to">'+(p.clientCompany?escHtml(p.clientCompany)+'　様':'')+'</div>'+
+      '<div class="rf-rc-amt-row">'+
+        '<div class="rf-rc-amt-box">'+
+          '<div class="rf-rc-amt-val">'+yenFmt(b.total||0)+
+          '<span class="rf-rc-amt-suffix">也</span></div>'+
+        '</div>'+
+        stampHtml+
+      '</div>'+
+      '<div class="rf-rc-desc">'+
+        '<span class="rf-rc-lbl">但し</span>'+escHtml(desc)+
+        '、上記正に領収いたしました。'+
+      '</div>'+
+      '<div class="rf-rc-break-wrap">'+
+        '<table class="rf-rc-breakdown">'+
+          '<thead><tr><th>内訳</th><th>金額</th></tr></thead>'+
+          '<tbody>'+
+            '<tr><td>小計 ①</td><td class="rf-n">'+yenFmt(b.excl)+'</td></tr>'+
+            '<tr><td>消費税等 ②（④＋⑤）</td><td class="rf-n">'+yenFmt(b.tax)+'</td></tr>'+
+            '<tr class="rf-rc-sum"><td>合計 ③（①＋②）</td><td class="rf-n">'+yenFmt(b.total)+'</td></tr>'+
+            '<tr><td>(8%)消費税合計 ④</td><td class="rf-n">'+yenFmt(b.tax8)+'</td></tr>'+
+            '<tr><td>(10%)消費税合計 ⑤</td><td class="rf-n">'+yenFmt(b.tax10)+'</td></tr>'+
+          '</tbody>'+
+        '</table>'+
+        '<div class="rf-rc-issuer">'+
+          '<div class="rf-rc-iss-name">'+escHtml(p.issuer||'')+'</div>'+
+          '<div class="rf-rc-reg-lbl">インボイス登録番号</div>'+
+          '<div class="rf-rc-reg-no">'+escHtml(p.registrationNo||'T0000000000000')+'</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+}
+
+function showState(text,isError){
+  const el=document.getElementById('content');
+  el.innerHTML='<div class="state'+(isError?' error':'')+'">'+escHtml(text)+'</div>';
+}
+
+async function load(){
+  const params=new URLSearchParams(location.search);
+  const id=params.get('id');
+  if(!id){
+    showState('IDが指定されていません（?id=xxx を URL に付けてください）',true);
+    return;
+  }
+  try{
+    // 1) receipt 本体
+    const{data:rc,error:rcErr}=await sb.from('receipts').select('*').eq('id',id).single();
+    if(rcErr||!rc){
+      showState('データが見つかりません',true);
+      console.error(rcErr);
+      return;
+    }
+    // 2) 宛先会社名
+    let clientCompany='';
+    if(rc.client_company_id){
+      try{
+        const{data:cc}=await sb.from('client_companies').select('name').eq('id',rc.client_company_id).single();
+        if(cc)clientCompany=cc.name||'';
+      }catch(e){console.warn('client_companies lookup:',e);}
+    }
+    // 3) 発行元会社名 + インボイス登録番号
+    let issuer='';
+    let regNo=rc.registration_no||'';
+    if(rc.company_id){
+      try{
+        const{data:co}=await sb.from('companies').select('name,registration_no').eq('id',rc.company_id).single();
+        if(co){
+          issuer=co.name||'';
+          if(!regNo)regNo=co.registration_no||'';
+        }
+      }catch(e){console.warn('companies lookup:',e);}
+    }
+    // 4) buildReceiptHtml 入力を組み立て
+    const p={
+      receiptNo:rc.receipt_no||'',
+      issueDate:rc.issue_date||'',
+      issuer:issuer,
+      clientCompany:clientCompany,
+      total:Number(rc.total_amount)||0,
+      taxRate:Number(rc.tax_rate)||0.10,
+      description:rc.description||'工事代金として',
+      registrationNo:regNo
+    };
+    const b=calcReceiptBreakdown(p.total,p.taxRate);
+    // DB に保存済みの excl/tax を優先 (表示値のブレ回避)
+    if(rc.tax_excluded!=null)b.excl=Number(rc.tax_excluded);
+    if(rc.tax_amount!=null){
+      b.tax=Number(rc.tax_amount);
+      if(p.taxRate===0.08)b.tax8=b.tax;
+      if(p.taxRate===0.10)b.tax10=b.tax;
+    }
+    b.total=p.total;
+    document.getElementById('content').innerHTML=buildReceiptHtml(p,b);
+    if(rc.receipt_no)document.title='領収書 '+rc.receipt_no;
+  }catch(e){
+    console.error(e);
+    showState('読み込み失敗: '+(e&&e.message?e.message:e),true);
+  }
+}
+
+load();
+</script>
+
+</body>
+</html>

@@ -1546,33 +1546,46 @@ function refreshReceiptPreview(){
   }
 }
 
-// PDF作成ボタン: generateReceiptPdf が内部で同期的に window.open を呼ぶため、ここでは呼ばない
+// PDF作成ボタン: 保存後に /receipt-print.html?id=xxx を新規タブで開いてブラウザ印刷
 async function onClickReceiptPdf(){
+  // Safari ポップアップブロック回避: click 同期で空タブを確保
+  const previewTab=window.open('','_blank');
   try{
-    if(!window.ReportFeature||typeof window.ReportFeature.generateReceiptPdf!=='function'){
-      showToast('report-feature.js 未読込');return;
-    }
     const params=gatherReceiptParams();
-    if(!params.total){showToast('金額を入力してください');return;}
-    const ok=await saveReceipt();
-    if(ok===false)return;
-    await window.ReportFeature.generateReceiptPdf(params);
+    if(!params.total){
+      showToast('金額を入力してください');
+      if(previewTab&&!previewTab.closed)previewTab.close();
+      return;
+    }
+    const savedId=await saveReceipt();
+    if(!savedId){
+      if(previewTab&&!previewTab.closed)previewTab.close();
+      return;
+    }
+    const printUrl=location.origin+'/receipt-print.html?id='+encodeURIComponent(savedId);
+    if(previewTab&&!previewTab.closed){
+      previewTab.location.href=printUrl;
+    }else{
+      window.open(printUrl,'_blank');
+    }
     closeReceipt();
     await loadReceiptList();
     showPdfSaveInfoModal();
   }catch(e){
     console.error(e);
+    if(previewTab&&!previewTab.closed)previewTab.close();
     showToast('領収書PDF生成失敗: '+(e&&e.message?e.message:e));
   }
 }
 
+// 保存成功時は新規 receipt.id を返す。失敗時は null（受付側は false と同一に扱える）。
 async function saveReceipt(){
   try{
     const clientSel=document.getElementById('rcClient');
     const cid=clientSel.value;
-    if(!cid){showToast('宛先会社を選択してください');return false;}
+    if(!cid){showToast('宛先会社を選択してください');return null;}
     const total=parseInt(document.getElementById('rcTotal').value)||0;
-    if(!total){showToast('金額を入力してください');return false;}
+    if(!total){showToast('金額を入力してください');return null;}
     const taxRate=parseFloat(document.getElementById('rcTaxRate').value)||0.10;
     const excl=Math.round(total/(1+taxRate));
     const tax=Math.round(total-excl);
@@ -1589,12 +1602,22 @@ async function saveReceipt(){
       registration_no:document.getElementById('rcRegNo').value||null
     };
     const r=await sbPost('receipts',payload);
-    if(r){showToast('領収書を保存しました');await loadReceiptList();return true;}
-    else{showToast('保存に失敗しました: '+sbErrMsg(''));return false;}
+    if(!r){showToast('保存に失敗しました: '+sbErrMsg(''));return null;}
+    // 新規IDを特定。RLS で r が空配列の場合は receipt_no で逆引き
+    let newId=(r&&r.id)||null;
+    if(!newId&&payload.receipt_no){
+      try{
+        const fetched=await sbGet('receipts','company_id=eq.'+company.id+'&receipt_no=eq.'+encodeURIComponent(payload.receipt_no)+'&order=id.desc&limit=1');
+        if(Array.isArray(fetched)&&fetched.length)newId=fetched[0].id;
+      }catch(_){}
+    }
+    showToast('領収書を保存しました');
+    await loadReceiptList();
+    return newId;
   }catch(e){
     console.error(e);
     showToast('保存エラー: '+(e&&e.message?e.message:e));
-    return false;
+    return null;
   }
 }
 
