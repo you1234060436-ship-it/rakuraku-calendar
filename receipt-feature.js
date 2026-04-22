@@ -158,7 +158,7 @@ function previewRcpt() {
   const tax8 = pct === '8' ? tax : 0;
   const tax10 = pct === '10' ? tax : 0;
 
-  const body = `<div class="rp-a4"><div class="rp-b5">
+  const body = `<div class="rp-a4 receipt-page"><div class="rp-b5 receipt-page">
   <div class="rp-head"><div class="rp-title">\u9818\u3000\u53CE\u3000\u66F8</div><div class="rp-date"><span>No. ${no}</span><span>${fmtDate}</span></div></div>
   <div class="rp-to">${cname}\u3000\u69D8</div>
   <div class="rp-amt-row"><div class="rp-amt-box"><div class="rp-amt-val">${fmt(total)}-</div></div>${stamp ? '<div class="rp-stamp-box"><div class="rp-stamp-frame">\u53CE\u5165\u5370\u7D19</div></div>' : '<div class="rp-stamp-box"></div>'}</div>
