@@ -56,6 +56,11 @@ function initReceiptFeature() {
       .rp-iss{width:200px;text-align:center;padding-left:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
       .rp-iss .nm{font-size:13px;font-weight:700;color:#1a237e}
       .rp-iss .rg{font-size:9px;color:#888}
+      /* ========== スマホ表示：A4を transform:scale で丸ごと縮小（レイアウト非改変） ========== */
+      @media screen and (max-width:768px){
+        .rp-a4{transform-origin:top left;transform:scale(calc(100vw / 210mm))}
+        .rcpt-preview-wrap{height:calc(297mm * (100vw / 210mm));overflow:hidden}
+      }
     `;
     document.head.appendChild(s);
   }
