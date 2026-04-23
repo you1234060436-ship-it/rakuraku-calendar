@@ -3,43 +3,134 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>領収書 — 印刷</title>
+<title>領収書</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   /* ========== 画面表示（操作用） ========== */
-  html,body{margin:0;padding:0;background:#f3f4f6;font-family:"Hiragino Sans","Yu Gothic",sans-serif;color:#222}
+  html,body{margin:0;padding:0;background:#f3f4f6;font-family:"Hiragino Sans","Yu Gothic","Helvetica Neue",sans-serif;color:#222}
   .print-controls{position:sticky;top:0;background:#1f2937;color:#fff;padding:10px 16px;display:flex;gap:10px;align-items:center;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-  .print-controls button{background:#1a73e8;color:#fff;border:none;padding:8px 22px;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600}
-  .print-controls button:hover{background:#1557b0}
+  .print-controls button{background:#2563EB;color:#fff;border:none;padding:8px 22px;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600}
+  .print-controls button:hover{background:#1d4ed8}
   .print-controls .hint{color:#cbd5e1;font-size:12px;margin-left:auto}
   .container{max-width:960px;margin:20px auto;padding:0 12px}
   .state{text-align:center;padding:60px 20px;font-size:16px;color:#374151;background:#fff;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
   .state.error{color:#dc2626}
 
-  /* ========== 領収書用紙 (report-feature.js から移植) ========== */
-  .rf-receipt-page{background:#fff;color:#222;padding:14mm 14mm;font-family:"Hiragino Mincho ProN","Yu Mincho","MS Mincho",serif;font-size:10pt;box-sizing:border-box;width:210mm;min-height:297mm;margin:0 auto;box-shadow:0 1px 6px rgba(0,0,0,.15)}
-  .rf-rc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6mm}
-  .rf-rc-title{font-size:26pt;letter-spacing:12px;font-weight:700}
-  .rf-rc-meta{font-size:10pt;line-height:1.6;text-align:right;min-width:35mm}
-  .rf-rc-to{text-align:center;padding:3mm 0 3mm;border-bottom:1.5px solid #222;font-size:14pt;font-weight:600;margin-bottom:5mm}
-  .rf-rc-amt-row{display:flex;align-items:stretch;border-top:2px solid #222;border-bottom:2px solid #222;margin-bottom:5mm}
-  .rf-rc-amt-box{flex:1;text-align:center;padding:6mm 4mm;display:flex;align-items:center;justify-content:center}
-  .rf-rc-amt-val{font-size:28pt;font-weight:700;letter-spacing:3px}
-  .rf-rc-amt-suffix{font-size:16pt;margin-left:4mm;font-weight:600}
-  .rf-rc-stamp-box{width:32mm;display:flex;flex-direction:column;align-items:center;justify-content:center;border-left:1px solid #333;padding:3mm}
-  .rf-rc-stamp-frame{width:22mm;height:22mm;border:1.5px dashed #888;display:flex;align-items:center;justify-content:center;font-size:8pt;color:#888;text-align:center;line-height:1.4}
-  .rf-rc-desc{margin:4mm 0;font-size:11pt;line-height:1.7;padding:2mm 0}
-  .rf-rc-desc .rf-rc-lbl{margin-right:4mm;font-weight:600}
-  .rf-rc-break-wrap{display:flex;justify-content:space-between;gap:8mm;margin-top:4mm;align-items:flex-start}
-  .rf-rc-breakdown{width:90mm;border-collapse:collapse;font-size:9pt}
-  .rf-rc-breakdown th,.rf-rc-breakdown td{border:0.35mm solid #666;padding:1.6mm 2mm}
-  .rf-rc-breakdown th{background:#f3f4f6;text-align:center}
-  .rf-rc-breakdown td.rf-n{text-align:right}
-  .rf-rc-breakdown tr.rf-rc-sum td{background:#fafafa;font-weight:700}
-  .rf-rc-issuer{min-width:60mm;text-align:right;font-size:10pt;line-height:1.7}
-  .rf-rc-issuer .rf-rc-iss-name{font-size:13pt;font-weight:700;margin-bottom:2mm}
-  .rf-rc-issuer .rf-rc-reg-lbl{font-size:8.5pt;color:#555;margin-top:2mm}
-  .rf-rc-issuer .rf-rc-reg-no{font-size:9.5pt;letter-spacing:1px}
+  /* ========== 領収書 用紙（A4・見本画像 IMG_2839 準拠） ========== */
+  .rf-receipt-page{
+    background:#fff;color:#222;
+    width:210mm;min-height:297mm;
+    margin:0 auto;
+    padding:14mm 14mm;
+    box-sizing:border-box;
+    border:1px solid #000;
+    font-family:"Hiragino Sans","Yu Gothic","Helvetica Neue",sans-serif;
+    font-size:10pt;
+    box-shadow:0 1px 6px rgba(0,0,0,.15);
+    position:relative;
+  }
+
+  /* ヘッダ: 紺色タイトル帯 + 日付 */
+  .rf-rc-top{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:10mm;
+  }
+  .rf-rc-title{
+    background:#2563EB;color:#fff;
+    font-weight:600;
+    font-size:22pt;letter-spacing:12px;
+    padding:4mm 8mm;
+    width:58%;box-sizing:border-box;
+    text-align:center;
+  }
+  .rf-rc-date{
+    font-size:11pt;
+  }
+
+  /* 宛先: 中央・下線 */
+  .rf-rc-to{
+    text-align:center;
+    font-size:14pt;
+    padding:2mm 0 4mm;
+    border-bottom:1px solid #222;
+    margin:0 10mm 4mm;
+    min-height:8mm;
+  }
+
+  /* 金額行: 中央の大きな金額 + 右の印紙枠 */
+  .rf-rc-amt-row{
+    display:flex;align-items:stretch;gap:6mm;
+    margin:2mm 0 5mm;
+  }
+  .rf-rc-amt-inner{
+    flex:1;
+    text-align:center;
+    padding:4mm 0 5mm;
+    border-bottom:1px solid #222;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .rf-rc-amt-val{
+    font-size:32pt;
+    font-weight:700;
+    letter-spacing:2px;
+  }
+  .rf-rc-stamp{
+    width:28mm;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .rf-rc-stamp-frame{
+    width:22mm;height:22mm;
+    border:1px dashed #666;
+    display:flex;align-items:center;justify-content:center;
+    font-size:10pt;color:#444;
+    text-align:center;line-height:1.5;
+  }
+
+  /* 但し書き */
+  .rf-rc-desc{
+    font-size:11pt;
+    padding:2mm 0 8mm;
+  }
+
+  /* 下部: 内訳 + 発行元 */
+  .rf-rc-body{
+    display:flex;gap:10mm;
+    margin-top:2mm;
+    align-items:flex-start;
+  }
+  .rf-rc-break{
+    flex:1;
+  }
+  .rf-rc-break-hdr{
+    font-size:11pt;
+    border-bottom:1px solid #222;
+    padding-bottom:2mm;
+    margin-bottom:2mm;
+    width:80%;
+  }
+  .rf-rc-tbl{
+    width:100%;border-collapse:collapse;
+  }
+  .rf-rc-tbl td{
+    padding:2mm 3mm;
+    font-size:10pt;
+    vertical-align:middle;
+    border:none;
+  }
+  .rf-rc-tbl td.l{width:22mm}
+  .rf-rc-tbl td.m{text-align:left;font-size:10pt}
+  .rf-rc-tbl td.r{text-align:right;width:30mm}
+  .rf-rc-tbl tr.sub td{color:#444;font-size:9pt;padding:1.2mm 3mm}
+  .rf-rc-tbl tr.sub td.m{padding-left:18mm}
+
+  .rf-rc-issuer{
+    width:60mm;
+    padding-top:14mm;
+    font-size:11pt;
+    line-height:1.6;
+    text-align:left;
+  }
+  .rf-rc-issuer .iss{font-weight:500;letter-spacing:0.5px}
 
   /* ========== 印刷時（A4縦・余白0） ========== */
   @page{size:A4 portrait;margin:0}
@@ -71,77 +162,73 @@ const SB=_d('b2MuZXNhYmFwdXMueWVpdnljc21pcHl3cnh1c3RtamgvLzpzcHR0aA==');
 const SK=_d('Z3lIR1JrcVp0Wk5IWnZUSHpkeFVDcFRPYlp2d0VmeXRzX2RnSVFMdnhSSS4wWE8xY1RPNFVUTzRBak02SUNjNFZtSXNrVE4zTVRNd1F6TjNFak9pUVhZcEpDTGk0MmJ1Rm1JNklTWnM5bWNpd2lJNVZXYTJsM1l6MVdhd2wzZHloWGR6UlhicWhtSTZJaVpsSm5Jc0lTWnpGbVloQlhkekppT2lNM2NwSnllLjlKQ1ZYcGtJNklDYzVSbklzSWlOMUl6VUlKaU9pY0diaEp5ZQ==');
 const sb=window.supabase.createClient(SB,SK,{auth:{persistSession:true,storageKey:'nichilog-auth'}});
 
-// ユーティリティ
 function escHtml(s){
   return String(s==null?'':s).replace(/[&<>"']/g,function(c){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });
 }
 function yenFmt(n){return '¥'+Math.round(Number(n)||0).toLocaleString();}
+function yenFmtDash(n){return yenFmt(n)+'-';}
+function fmtDate(iso){
+  if(!iso)return '';
+  try{
+    var d=new Date(iso+'T00:00:00');
+    if(isNaN(d.getTime()))return String(iso);
+    var y=d.getFullYear();
+    var m=String(d.getMonth()+1).padStart(2,'0');
+    var dd=String(d.getDate()).padStart(2,'0');
+    return y+'/'+m+'/'+dd;
+  }catch(_){return String(iso);}
+}
 
 // 内訳計算 (report-feature.js の calcReceiptBreakdown と同じ)
 function calcReceiptBreakdown(total,taxRate){
-  var t=Number(total)||0;
-  var r=(typeof taxRate==='number')?taxRate:0.10;
-  var excl=Math.round(t/(1+r));
-  var tax=Math.round(t-excl);
-  return{
-    excl:excl,tax:tax,
-    tax8:(r===0.08)?tax:0,
-    tax10:(r===0.10)?tax:0,
-    stamp:t>=50000,
-    taxRate:r,
-    total:t
-  };
+  var t=Math.round(Number(total)||0);
+  var rate=Number(taxRate)||0.10;
+  var excl=Math.round(t/(1+rate));
+  var tax=t-excl;
+  var tax8=(Math.abs(rate-0.08)<1e-6)?tax:0;
+  var tax10=(Math.abs(rate-0.10)<1e-6)?tax:0;
+  var stamp=t>=50000;
+  return{total:t,excl:excl,tax:tax,tax8:tax8,tax10:tax10,stamp:stamp};
 }
 
-// 領収書HTML組み立て (buildReceiptHtml 相当)
+// 領収書HTML組み立て（IMG_2839 準拠レイアウト）
 function buildReceiptHtml(p,b){
-  var issueDateStr='';
-  if(p.issueDate){
-    try{issueDateStr=new Date(p.issueDate+'T00:00:00').toLocaleDateString('ja-JP');}
-    catch(_){issueDateStr=p.issueDate;}
-  }
-  var desc=p.description||'工事代金として';
+  var dateStr=fmtDate(p.issueDate);
+  var toLine=p.clientCompany?escHtml(p.clientCompany)+'　御中':'';
   var stampHtml=b.stamp
-    ? '<div class="rf-rc-stamp-box"><div class="rf-rc-stamp-frame">収入<br>印紙</div></div>'
+    ? '<div class="rf-rc-stamp-frame">収入<br>印紙</div>'
     : '';
+  var desc=p.description||'工事代金として';
+  var issuerLine=[p.issuer||'',p.registrationNo||''].filter(Boolean).join('　');
   return ''+
     '<div class="rf-receipt-page">'+
-      '<div class="rf-rc-head">'+
+      '<div class="rf-rc-top">'+
         '<div class="rf-rc-title">領　収　書</div>'+
-        '<div class="rf-rc-meta">'+
-          '<div>No. '+escHtml(p.receiptNo||'')+'</div>'+
-          '<div>'+escHtml(issueDateStr)+'</div>'+
-        '</div>'+
+        '<div class="rf-rc-date">'+escHtml(dateStr)+'</div>'+
       '</div>'+
-      '<div class="rf-rc-to">'+(p.clientCompany?escHtml(p.clientCompany)+'　様':'')+'</div>'+
+      '<div class="rf-rc-to">'+toLine+'</div>'+
       '<div class="rf-rc-amt-row">'+
-        '<div class="rf-rc-amt-box">'+
-          '<div class="rf-rc-amt-val">'+yenFmt(b.total||0)+
-          '<span class="rf-rc-amt-suffix">也</span></div>'+
+        '<div class="rf-rc-amt-inner">'+
+          '<div class="rf-rc-amt-val">'+yenFmtDash(b.total||0)+'</div>'+
         '</div>'+
-        stampHtml+
+        '<div class="rf-rc-stamp">'+stampHtml+'</div>'+
       '</div>'+
-      '<div class="rf-rc-desc">'+
-        '<span class="rf-rc-lbl">但し</span>'+escHtml(desc)+
-        '、上記正に領収いたしました。'+
-      '</div>'+
-      '<div class="rf-rc-break-wrap">'+
-        '<table class="rf-rc-breakdown">'+
-          '<thead><tr><th>内訳</th><th>金額</th></tr></thead>'+
-          '<tbody>'+
-            '<tr><td>小計 ①</td><td class="rf-n">'+yenFmt(b.excl)+'</td></tr>'+
-            '<tr><td>消費税等 ②（④＋⑤）</td><td class="rf-n">'+yenFmt(b.tax)+'</td></tr>'+
-            '<tr class="rf-rc-sum"><td>合計 ③（①＋②）</td><td class="rf-n">'+yenFmt(b.total)+'</td></tr>'+
-            '<tr><td>(8%)消費税合計 ④</td><td class="rf-n">'+yenFmt(b.tax8)+'</td></tr>'+
-            '<tr><td>(10%)消費税合計 ⑤</td><td class="rf-n">'+yenFmt(b.tax10)+'</td></tr>'+
-          '</tbody>'+
-        '</table>'+
+      '<div class="rf-rc-desc">但　'+escHtml(desc)+'　上記正に領収いたしました。</div>'+
+      '<div class="rf-rc-body">'+
+        '<div class="rf-rc-break">'+
+          '<div class="rf-rc-break-hdr">内訳</div>'+
+          '<table class="rf-rc-tbl">'+
+            '<tr><td class="l">小計</td><td class="m">①</td><td class="r">'+yenFmtDash(b.excl)+'</td></tr>'+
+            '<tr><td class="l">消費税等</td><td class="m">②（❹＋❺）</td><td class="r">'+yenFmtDash(b.tax)+'</td></tr>'+
+            '<tr><td class="l">合計</td><td class="m">③（①＋②）</td><td class="r">'+yenFmtDash(b.total)+'</td></tr>'+
+            '<tr class="sub"><td class="l"></td><td class="m">(8%)消費税合計　❹</td><td class="r">'+yenFmtDash(b.tax8)+'</td></tr>'+
+            '<tr class="sub"><td class="l"></td><td class="m">(10%)消費税合計　❺</td><td class="r">'+yenFmtDash(b.tax10)+'</td></tr>'+
+          '</table>'+
+        '</div>'+
         '<div class="rf-rc-issuer">'+
-          '<div class="rf-rc-iss-name">'+escHtml(p.issuer||'')+'</div>'+
-          '<div class="rf-rc-reg-lbl">インボイス登録番号</div>'+
-          '<div class="rf-rc-reg-no">'+escHtml(p.registrationNo||'T0000000000000')+'</div>'+
+          '<div class="iss">'+escHtml(issuerLine)+'</div>'+
         '</div>'+
       '</div>'+
     '</div>';
